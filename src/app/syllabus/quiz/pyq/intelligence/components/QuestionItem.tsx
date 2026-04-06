@@ -2,14 +2,18 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ChevronDown, ChevronUp, Repeat } from 'lucide-react';
+import { ArrowRight, ChevronDown, ChevronUp, Repeat, Sparkles, Brain, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { YearBadge } from './shared/UnitBadge';
 import { UPSCQuestionRenderer } from '@/features/tests/components/UPSCQuestionRenderer';
 import { UPSCPremiumQuestionCard } from '@/components/ui/UPSCPremiumQuestionCard';
+import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
+import { SUBJECT_VARIANTS, SUBJECTS } from '@/lib/pyq-ui-constants';
+import { RenderTableQuestion } from '@/features/tests/utils/questionFormatter';
 
 export interface QuestionData {
   id: string;
@@ -23,6 +27,10 @@ export interface QuestionData {
   optionsEn?: string[];
   correctAnswer?: number | string;
   extendedData?: any;
+  explanation?: string | null;
+  explanationEn?: string | null;
+  type?: string;
+  matchPairs?: any[];
 }
 
 interface QuestionItemProps {
@@ -34,6 +42,7 @@ interface QuestionItemProps {
   variant?: 'compact' | 'full' | 'card';
   defaultExpanded?: boolean;
   examId?: string;
+  isFreeAccess?: boolean;
 }
 
 export function QuestionItem({
@@ -45,6 +54,7 @@ export function QuestionItem({
   variant = 'compact',
   defaultExpanded = false,
   examId,
+  isFreeAccess = false,
 }: QuestionItemProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const displayText = isHindi ? question.text : question.textEn || question.text;
@@ -108,120 +118,227 @@ export function QuestionItem({
   if (variant === 'card') {
     return (
       <div
-        className={cn(
-          'rounded-xl border border-white/[0.03] bg-black/20 p-4 transition-all hover:bg-black/30',
-          isExpanded && 'bg-black/40 ring-1 ring-emerald-500/20'
-        )}
+        className={cn('group relative transition-all duration-300', isFreeAccess && 'scale-[1.01]')}
       >
-        <div
-          className="flex cursor-pointer items-start gap-3"
-          onClick={() => setIsExpanded(!isExpanded)}
+        <Card
+          className={cn(
+            'relative z-10 overflow-hidden rounded-[2rem] border-white/[0.03] bg-slate-900/40 shadow-2xl backdrop-blur-sm transition-all duration-300',
+            isExpanded ? 'bg-[#0b081a]/80 ring-1 ring-violet-500/20' : 'hover:bg-slate-900/60',
+            isFreeAccess &&
+              'border-amber-500/60 bg-amber-500/[0.02] shadow-[0_0_40px_rgba(245,158,11,0.15)] ring-2 ring-amber-500/30'
+          )}
         >
-          {/* Question Number */}
-          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-[10px] font-black text-emerald-500">
-            {index + 1}
-          </div>
+          {/* Free Access Header Ribbon */}
+          {isFreeAccess && (
+            <div className="absolute top-0 right-10">
+              <div className="relative">
+                <div className="absolute inset-0 bg-amber-500 opacity-20 blur-md" />
+                <div className="relative flex items-center gap-1.5 rounded-b-xl bg-amber-500 px-4 py-1.5 text-[9px] font-black tracking-[0.2em] text-black uppercase shadow-lg">
+                  <Sparkles className="h-3 w-3 fill-black" />
+                  {isHindi ? 'फ्री एक्सेस' : 'FREE ACCESS'}
+                </div>
+              </div>
+            </div>
+          )}
 
-          {/* Question Content */}
-          <div className="min-w-0 flex-1">
-            {examId === 'upsc' ? (
-              <UPSCQuestionRenderer question={question as any} isHindi={isHindi} />
-            ) : question.extendedData ? (
-              <UPSCPremiumQuestionCard
-                extendedData={question.extendedData}
-                isHindi={isHindi}
-                isExpanded={isExpanded}
-              />
-            ) : (
-              <p
+          {/* Question Header Area */}
+          <div
+            className="flex cursor-pointer items-start gap-5 p-5 sm:p-7"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            {/* Styled Numbering */}
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center">
+              <div
                 className={cn(
-                  'mb-2 text-xs leading-relaxed font-medium text-slate-300 transition-colors',
-                  isExpanded ? 'text-white' : 'line-clamp-2'
+                  'absolute inset-0 rotate-45 rounded-xl transition-colors',
+                  isFreeAccess
+                    ? 'bg-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.2)] group-hover:bg-amber-500/40'
+                    : 'bg-amber-500/10 group-hover:bg-amber-500/20'
+                )}
+              />
+              <span
+                className={cn(
+                  'relative text-sm font-black',
+                  isFreeAccess ? 'text-amber-400' : 'text-amber-500'
                 )}
               >
-                {displayText}
-              </p>
-            )}
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[9px] font-black tracking-widest text-slate-500 uppercase">
-              <span className="text-emerald-500/80">{question.year}</span>
-              <span className="h-1 w-1 rounded-full bg-slate-800" />
-              <span className="truncate">
-                {question.testTitle || `Q${question.qNo || index + 1}`}
+                {index + 1}
               </span>
-              {question.subject && (
-                <>
-                  <span className="h-1 w-1 rounded-full bg-slate-800" />
-                  <span className="truncate text-emerald-400/80">{question.subject}</span>
-                </>
-              )}
-              {repeatCount > 1 && (
-                <>
-                  <span className="h-1 w-1 rounded-full bg-slate-800" />
-                  <span className="text-rose-400">{repeatCount}x REPEAT</span>
-                </>
-              )}
-              <div className="ml-auto flex items-center gap-1 text-slate-600">
-                {isExpanded ? (
-                  <ChevronUp className="h-3 w-3" />
-                ) : (
-                  <ChevronDown className="h-3 w-3" />
+            </div>
+
+            <div className="min-w-0 flex-1 pt-1">
+              <div
+                className={cn(
+                  'text-[15px] leading-[1.6] font-medium tracking-tight text-slate-100 sm:text-[17px]',
+                  !isExpanded && 'line-clamp-2'
+                )}
+                dangerouslySetInnerHTML={{
+                  __html: isExpanded
+                    ? displayText
+                    : displayText.slice(0, 180) + (displayText.length > 180 ? '...' : ''),
+                }}
+              />
+
+              <div className="mt-3 flex items-center gap-3">
+                <YearBadge
+                  year={question.year ?? 2020}
+                  variant="amber"
+                  className="border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[10px] font-black text-amber-500 uppercase"
+                />
+                {question.subject && (
+                  <Badge
+                    className={cn(
+                      'border px-3 py-1 text-[10px] font-black tracking-widest uppercase transition-all',
+                      (() => {
+                        const subMeta = SUBJECTS.find(
+                          (s) => s.name === question.subject || s.nameHi === question.subject
+                        );
+                        const variantStyle = SUBJECT_VARIANTS[subMeta?.color || 'slate'];
+                        return cn(variantStyle.bg, variantStyle.text, variantStyle.border);
+                      })()
+                    )}
+                  >
+                    {question.subject}
+                  </Badge>
+                )}
+                {question.qNo && (
+                  <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">
+                    SET-Q{question.qNo}
+                  </span>
+                )}
+                {repeatCount > 1 && (
+                  <Badge className="h-5 border-none bg-rose-500/20 px-1.5 text-[10px] text-rose-400">
+                    <Repeat className="mr-0.5 h-3 w-3" />
+                    {isHindi ? `${repeatCount}x रिपीट` : `Repeated ${repeatCount}x`}
+                  </Badge>
                 )}
               </div>
             </div>
-          </div>
-        </div>
 
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="mt-4 space-y-4 border-t border-white/[0.05] pt-4">
-                {/* Full question text */}
-                {altText && altText !== displayText && (
-                  <p className="text-[11px] leading-relaxed text-slate-500 italic">{altText}</p>
+            <div className="mt-1 flex shrink-0 items-center">
+              <div
+                className={cn(
+                  'flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-slate-500 transition-all',
+                  isExpanded
+                    ? 'rotate-180 bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.5)]'
+                    : 'group-hover:text-slate-300',
+                  isFreeAccess &&
+                    !isExpanded &&
+                    'animate-pulse bg-amber-500/10 text-amber-400 ring-2 ring-amber-500/40'
                 )}
-
-                {/* Options if available (Skip if UPSC renderer already showed them) */}
-                {normalizedOptions.length > 0 && examId !== 'upsc' && (
-                  <div className="space-y-2">
-                    {normalizedOptions.map((opt, i) => {
-                      const isCorrect = correctIdx === i;
-                      return (
-                        <div
-                          key={i}
-                          className={cn(
-                            'rounded-lg border px-3 py-2 text-[11px]',
-                            isCorrect
-                              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-                              : 'border-white/[0.03] bg-white/[0.02] text-slate-400'
-                          )}
-                        >
-                          <span className="mr-2 font-black text-slate-500">{opt.id}</span>
-                          {isHindi ? opt.text : opt.textEn || opt.text}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* View full question link */}
-                {/* <div className="flex items-center justify-between">
-                  <Link
-                    href={`/syllabus/quiz/pyq/question/${question.id}`}
-                    className="inline-flex items-center gap-1.5 text-[10px] font-black tracking-widest text-emerald-500 uppercase hover:text-emerald-400"
-                  >
-                    {isHindi ? 'पूरा प्रश्न' : 'View Full'}
-                    <ArrowRight className="h-3 w-3" />
-                  </Link>
-                </div> */}
+              >
+                <ChevronDown className="h-5 w-5" />
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Expanded Content Area */}
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                className="overflow-hidden"
+              >
+                <div className="space-y-6 border-t border-white/[0.05] bg-slate-950/40 p-5 sm:p-7">
+                  {examId === 'upsc' ? (
+                    <UPSCQuestionRenderer question={question as any} isHindi={isHindi} />
+                  ) : (
+                    <>
+                      {/* 1. Table Content (if matching) */}
+                      {question.type === 'matching' &&
+                        question.matchPairs &&
+                        question.matchPairs.length > 0 && (
+                          <div className="rounded-2xl border border-white/5 bg-slate-900/50 p-4 shadow-inner">
+                            <RenderTableQuestion
+                              matchPairs={question.matchPairs}
+                              language={isHindi ? 'hi' : 'en'}
+                              darkMode={true}
+                            />
+                          </div>
+                        )}
+
+                      {/* 2. Translation Alternative Fallback */}
+                      {altText && altText !== displayText && (
+                        <div className="relative rounded-2xl border-l-[3px] border-amber-500/30 bg-amber-500/[0.03] p-4 text-[13px] leading-relaxed text-slate-400 italic">
+                          <div className="mb-1 text-[9px] font-black tracking-tighter text-amber-400/60 uppercase opacity-50">
+                            Translated Reference
+                          </div>
+                          <div dangerouslySetInnerHTML={{ __html: altText }} />
+                        </div>
+                      )}
+
+                      {/* 3. Redesigned Options Grid */}
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        {normalizedOptions.map((opt, optIdx) => {
+                          const isCorrect = correctIdx === optIdx;
+
+                          return (
+                            <div
+                              key={optIdx}
+                              className={cn(
+                                'group/opt relative flex items-center gap-4 rounded-2xl border p-4 transition-all duration-300',
+                                isCorrect
+                                  ? 'border-emerald-500/40 bg-emerald-500/[0.1] shadow-[0_0_20px_rgba(16,185,129,0.1)]'
+                                  : 'border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.05]'
+                              )}
+                            >
+                              {/* Alphabet Bubble */}
+                              <div
+                                className={cn(
+                                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black transition-all',
+                                  isCorrect
+                                    ? 'bg-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.4)]'
+                                    : 'bg-white/5 text-slate-500 group-hover/opt:bg-white/10 group-hover/opt:text-slate-300'
+                                )}
+                              >
+                                {opt.id || String.fromCharCode(65 + optIdx)}
+                              </div>
+
+                              <div
+                                className={cn(
+                                  'flex-1 text-[13.5px] leading-snug font-semibold',
+                                  isCorrect ? 'text-emerald-50 text-shadow-sm' : 'text-slate-300'
+                                )}
+                                dangerouslySetInnerHTML={{
+                                  __html: isHindi ? opt.text : opt.textEn || opt.text,
+                                }}
+                              />
+
+                              {isCorrect && (
+                                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20">
+                                  <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Premium Insights Section */}
+                  <div className="space-y-4 pt-4">
+                    {(question.explanation || question.explanationEn) && (
+                      <PremiumExplanation
+                        explanation={
+                          isHindi
+                            ? question.explanation || ''
+                            : question.explanationEn || question.explanation || ''
+                        }
+                        darkMode={true}
+                        compact={false}
+                        language={isHindi ? 'hi' : 'en'}
+                      />
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Card>
       </div>
     );
   }
@@ -411,7 +528,11 @@ interface QuestionListProps {
   variant?: 'compact' | 'full' | 'card';
   showAllExpanded?: boolean;
   examId?: string;
+  isPro?: boolean;
 }
+
+const FREE_SUBJECT = 'History';
+const FREE_LIMIT = 5;
 
 export function QuestionList({
   questions,
@@ -423,6 +544,7 @@ export function QuestionList({
   variant = 'compact',
   showAllExpanded = false,
   examId,
+  isPro = false,
 }: QuestionListProps) {
   const [showAll, setShowAll] = useState(false);
 
@@ -467,19 +589,25 @@ export function QuestionList({
                 variant === 'card' && 'grid gap-3 divide-none'
               )}
             >
-              {byYear[year].map((q, idx) => (
-                <QuestionItem
-                  key={q.id}
-                  question={q}
-                  index={idx}
-                  isHindi={isHindi}
-                  repeatCount={getRepeatCount?.(q.id) || 0}
-                  showYear={false}
-                  variant={variant}
-                  defaultExpanded={showAllExpanded}
-                  examId={examId}
-                />
-              ))}
+              {byYear[year].map((q, idx) => {
+                const isHistory = q.subject === FREE_SUBJECT;
+                const isFreeAccess = !isPro && (idx < FREE_LIMIT || isHistory);
+
+                return (
+                  <QuestionItem
+                    key={q.id}
+                    question={q}
+                    index={idx}
+                    isHindi={isHindi}
+                    repeatCount={getRepeatCount?.(q.id) || 0}
+                    showYear={false}
+                    variant={variant}
+                    defaultExpanded={showAllExpanded}
+                    examId={examId}
+                    isFreeAccess={isFreeAccess}
+                  />
+                );
+              })}
             </div>
           </div>
         ))}
@@ -498,19 +626,25 @@ export function QuestionList({
           variant === 'card' && 'grid gap-3 divide-none'
         )}
       >
-        {visibleQuestions.map((q, idx) => (
-          <QuestionItem
-            key={q.id}
-            question={q}
-            index={idx}
-            isHindi={isHindi}
-            repeatCount={getRepeatCount?.(q.id) || 0}
-            showYear={showYears}
-            variant={variant}
-            defaultExpanded={showAllExpanded}
-            examId={examId}
-          />
-        ))}
+        {visibleQuestions.map((q, idx) => {
+          const isHistory = q.subject === FREE_SUBJECT;
+          const isFreeAccess = !isPro && (idx < FREE_LIMIT || isHistory);
+
+          return (
+            <QuestionItem
+              key={q.id}
+              question={q}
+              index={idx}
+              isHindi={isHindi}
+              repeatCount={getRepeatCount?.(q.id) || 0}
+              showYear={showYears}
+              variant={variant}
+              defaultExpanded={showAllExpanded}
+              examId={examId}
+              isFreeAccess={isFreeAccess}
+            />
+          );
+        })}
       </div>
 
       {hasMore && !showAll && (

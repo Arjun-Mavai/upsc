@@ -18,9 +18,10 @@ interface MostRepeatedTopicsProps {
   topicStats: Record<string, TopicStat[]>;
   combinedStats: Record<string, { unitTitle: string }>;
   isHindi: boolean;
+  isPro?: boolean;
 }
 
-export function MostRepeatedTopics({ topicStats, combinedStats, isHindi }: MostRepeatedTopicsProps) {
+export function MostRepeatedTopics({ topicStats, combinedStats, isHindi, isPro = false }: MostRepeatedTopicsProps) {
   const [expandedUnit, setExpandedUnit] = useState<string | null>(null);
   const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
   const [showAllQuestions, setShowAllQuestions] = useState<Record<string, boolean>>({});
@@ -134,6 +135,8 @@ export function MostRepeatedTopics({ topicStats, combinedStats, isHindi }: MostR
                             textEn: q.textEn,
                             year: q.year,
                             qNo: q.qNo,
+                            explanation: q.explanation,
+                            explanationEn: q.explanationEn,
                           }));
 
                           return (
@@ -215,6 +218,7 @@ export function MostRepeatedTopics({ topicStats, combinedStats, isHindi }: MostR
                                         showYears={true}
                                         variant="compact"
                                         showAllExpanded={showAllQuestions[topicKey]}
+                                        isPro={isPro}
                                       />
                                     </div>
                                   </motion.div>

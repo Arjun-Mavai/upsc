@@ -21,6 +21,7 @@ interface OverallWeightageProps {
   simpleSubjectStats: Record<string, number>;
   subjectQuestionsData: OverallWeightageSubjectData[];
   isHindi: boolean;
+  isPro?: boolean;
 }
 
 const FREE_SUBJECT = 'History';
@@ -30,6 +31,7 @@ export function OverallWeightage({
   simpleSubjectStats,
   subjectQuestionsData,
   isHindi,
+  isPro: isProProp = false,
 }: OverallWeightageProps) {
   const router = useRouter();
   const [isMainExpanded, setIsMainExpanded] = useState(false);
@@ -37,7 +39,7 @@ export function OverallWeightage({
   const [lockModalOpen, setLockModalOpen] = useState(false);
   
   const { isSubscribed, user } = useSettingsStore();
-  const isPro = isSubscribed || user?.role === 'admin';
+  const isPro = isProProp || isSubscribed || user?.role === 'admin';
 
   const isUPSC = examId === 'upsc';
   const baseUrl = isUPSC ? '/upsc/intelligence' : '/syllabus/quiz/pyq/intelligence';
@@ -299,8 +301,18 @@ export function OverallWeightage({
                                     );
                                     const subjectQuestions = subjectData?.questions || [];
                                     const mappedQuestions: QuestionData[] = subjectQuestions.map(q => ({
-                                      id: q.id, text: q.text, textEn: q.textEn, year: q.year, qNo: q.qNo,
-                                      testTitle: q.testTitle, subject: q.subject
+                                      id: q.id, 
+                                      text: q.text, 
+                                      textEn: q.textEn, 
+                                      year: q.year, 
+                                      qNo: q.qNo,
+                                      testTitle: q.testTitle, 
+                                      subject: q.subject,
+                                      options: q.options,
+                                      correctAnswer: q.correctAnswer,
+                                      extendedData: q.extendedData,
+                                      explanation: q.explanation,
+                                      explanationEn: q.explanationEn,
                                     }));
 
                                     return mappedQuestions.length > 0 ? (
@@ -311,6 +323,7 @@ export function OverallWeightage({
                                         variant="card"
                                         showYears={true}
                                         examId={examId}
+                                        isPro={isPro}
                                       />
                                     ) : null;
                                   })()}

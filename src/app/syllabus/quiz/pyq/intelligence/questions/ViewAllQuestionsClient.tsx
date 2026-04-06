@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, ChevronDown, Filter, Eye, EyeOff, Lock, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Filter, Eye, EyeOff, Lock, ExternalLink, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -100,6 +100,13 @@ export default function ViewAllQuestionsClient({
     let qList = filterYear ? questions.filter((q) => q.year === filterYear) : questions;
     return qList;
   }, [questions, filterYear]);
+
+  // AUTO-EXPAND FIRST QUESTION FOR FREE USERS TO SHOW CONTENT DIRECTLY
+  useEffect(() => {
+    if (!isPro && filteredQuestions.length > 0 && expandedIds.size === 0) {
+        setExpandedIds(new Set([filteredQuestions[0].id]));
+    }
+  }, [isPro, filteredQuestions, expandedIds.size]);
 
   // Auto-expand all questions in PDF mode
   useEffect(() => {
@@ -301,56 +308,58 @@ export default function ViewAllQuestionsClient({
         {filteredQuestions.map((q, idx) => {
           const isExpanded = expandedIds.has(q.id);
           const isHistory = q.subject === FREE_SUBJECT || unitId === FREE_SUBJECT;
+          
+          // For free users on non-history subjects, show lock card at index 5 and stop
+          if (!isPro && !isHistory) {
+            if (idx === FREE_LIMIT) {
+              return (
+                <motion.div
+                  key="pro-lock-card"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="relative overflow-hidden rounded-[2.5rem] border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-950 p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+                >
+                  <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-amber-500/20 blur-[80px]" />
+                  <div className="absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-violet-500/20 blur-[80px]" />
+                  
+                  <div className="relative z-10">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.4)]">
+                      <Lock className="h-8 w-8 text-black" />
+                    </div>
+                    <h3 className="mb-2 text-2xl font-black tracking-tight text-white">
+                      {isHindi ? 'बाकी प्रश्न अनलॉक करें' : 'Unlock Remaining Questions'}
+                    </h3>
+                    <p className="mx-auto mb-6 max-w-md text-sm font-medium leading-relaxed text-slate-400">
+                      {isHindi 
+                        ? 'आप अभी फ्री प्रीव्यू देख रहे हैं। सभी वर्षों के प्रश्न, विस्तृत व्याख्या और AI-संचालित विश्लेषण अनलॉक करने के लिए प्रो में शामिल हों।' 
+                        : 'You are viewing a free preview. Join Pro to unlock all questions across years, detailed expert explanations, and AI-powered insights.'}
+                    </p>
+                    <Button 
+                      onClick={() => setLockModalOpen(true)}
+                      className="h-12 rounded-xl bg-amber-500 px-8 text-xs font-black tracking-widest text-black transition-all hover:bg-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] active:scale-95"
+                    >
+                      {isHindi ? 'प्रो में अपग्रेड करें' : 'UPGRADE TO PRO'}
+                    </Button>
+                  </div>
+                </motion.div>
+              );
+            }
+            if (idx > FREE_LIMIT) return null;
+          }
+
+          // HIGH LIGHT ONLY FOR FREE USERS AND FOR ACCESSIBLE QUESTIONS
           const isFreeAccess = !isPro && idx < FREE_LIMIT;
-          const isLocked = !isPro && !isHistory && idx >= FREE_LIMIT;
+          const isLocked = false; 
           
           const displayText = isHindi ? q.text : q.textEn || q.text;
           const altText = isHindi ? q.textEn : q.text;
-
-          // Special Lock Card for free users
-          if (idx === FREE_LIMIT && !isPro && !isHistory) {
-            return (
-              <motion.div
-                key="pro-lock-card"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="relative overflow-hidden rounded-[2.5rem] border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-950 p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
-              >
-                <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-amber-500/20 blur-[80px]" />
-                <div className="absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-violet-500/20 blur-[80px]" />
-                
-                <div className="relative z-10">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.4)]">
-                    <Lock className="h-8 w-8 text-black" />
-                  </div>
-                  <h3 className="mb-2 text-2xl font-black tracking-tight text-white">
-                    {isHindi ? 'बाकी प्रश्न अनलॉक करें' : 'Unlock Remaining Questions'}
-                  </h3>
-                  <p className="mx-auto mb-6 max-w-md text-sm font-medium leading-relaxed text-slate-400">
-                    {isHindi 
-                      ? 'आप अभी फ्री प्रीव्यू देख रहे हैं। सभी वर्षों के प्रश्न, विस्तृत व्याख्या और AI-संचालित विश्लेषण अनलॉक करने के लिए प्रो में शामिल हों।' 
-                      : 'You are viewing a free preview. Join Pro to unlock all questions across years, detailed expert explanations, and AI-powered insights.'}
-                  </p>
-                  <Button 
-                    onClick={() => setLockModalOpen(true)}
-                    className="h-12 rounded-xl bg-amber-500 px-8 text-xs font-black tracking-widest text-black transition-all hover:bg-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] active:scale-95"
-                  >
-                    {isHindi ? 'प्रो में अपग्रेड करें' : 'UPGRADE TO PRO'}
-                  </Button>
-                </div>
-              </motion.div>
-            );
-          }
-
-          // Don't render more than FREE_LIMIT + 1 (the lock card) for free users unless it's History
-          if (isLocked && idx > FREE_LIMIT) return null;
 
           return (
             <div
               key={q.id}
               className={cn(
                 "group relative transition-all duration-300",
-                isLocked && "grayscale-[0.8] opacity-70",
                 isFreeAccess && "scale-[1.01]"
               )}
               data-question-item
@@ -361,7 +370,7 @@ export default function ViewAllQuestionsClient({
                 className={cn(
                   'absolute -inset-px rounded-[2rem] opacity-0 blur-md transition-opacity duration-500 group-hover:opacity-100',
                   isExpanded ? 'opacity-40' : '',
-                  isFreeAccess ? 'opacity-30 bg-amber-500/20' : ''
+                  isFreeAccess ? 'opacity-40 bg-amber-500/20' : ''
                 )}
                 style={{
                   background: isFreeAccess 
@@ -374,8 +383,7 @@ export default function ViewAllQuestionsClient({
                 className={cn(
                   'relative z-10 overflow-hidden rounded-[2rem] border-white/[0.03] bg-slate-900/40 shadow-2xl backdrop-blur-sm transition-all duration-300',
                   isExpanded ? 'bg-[#0b081a]/80 ring-1 ring-violet-500/20' : 'hover:bg-slate-900/60',
-                  isLocked && "cursor-not-allowed",
-                  isFreeAccess && "border-amber-500/40 ring-1 ring-amber-500/20 shadow-[0_0_30px_rgba(245,158,11,0.05)]"
+                  isFreeAccess && "border-amber-500/60 ring-2 ring-amber-500/30 shadow-[0_0_40px_rgba(245,158,11,0.15)] bg-amber-500/[0.02]"
                 )}
               >
                 {/* Free Access Header Ribbon */}
@@ -383,7 +391,8 @@ export default function ViewAllQuestionsClient({
                   <div className="absolute top-0 right-10">
                     <div className="relative">
                       <div className="absolute inset-0 bg-amber-500 blur-md opacity-20" />
-                      <div className="relative rounded-b-xl bg-amber-500 px-3 py-1 text-[8px] font-black tracking-[0.2em] text-black uppercase shadow-lg">
+                      <div className="relative flex items-center gap-1.5 rounded-b-xl bg-amber-500 px-4 py-1.5 text-[9px] font-black tracking-[0.2em] text-black uppercase shadow-lg">
+                        <Sparkles className="h-3 w-3 fill-black" />
                         {isHindi ? 'फ्री एक्सेस' : 'FREE ACCESS'}
                       </div>
                     </div>
@@ -399,9 +408,12 @@ export default function ViewAllQuestionsClient({
                   <div className="relative flex h-10 w-10 shrink-0 items-center justify-center">
                     <div className={cn(
                       "absolute inset-0 rotate-45 rounded-xl transition-colors",
-                      isFreeAccess ? "bg-amber-500/20 group-hover:bg-amber-500/30" : "bg-amber-500/10 group-hover:bg-amber-500/20"
+                      isFreeAccess ? "bg-amber-500/30 group-hover:bg-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]" : "bg-amber-500/10 group-hover:bg-amber-500/20"
                     )} />
-                    <span className="relative text-sm font-black text-amber-500">{idx + 1}</span>
+                    <span className={cn(
+                        "relative text-sm font-black",
+                        isFreeAccess ? "text-amber-400" : "text-amber-500"
+                    )}>{idx + 1}</span>
                   </div>
 
                   <div className="min-w-0 flex-1 pt-1">
@@ -442,12 +454,6 @@ export default function ViewAllQuestionsClient({
                           SET-Q{q.qNo}
                         </span>
                       )}
-                      {isLocked && (
-                        <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-[9px] font-black text-amber-500">
-                          <Lock className="mr-1 h-3 w-3" />
-                          PRO
-                        </Badge>
-                      )}
                     </div>
                   </div>
 
@@ -458,11 +464,10 @@ export default function ViewAllQuestionsClient({
                         isExpanded
                           ? 'rotate-180 bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.5)]'
                           : 'group-hover:text-slate-300',
-                        isLocked && "opacity-50",
-                        isFreeAccess && !isExpanded && "animate-bounce ring-2 ring-amber-500/20"
+                        isFreeAccess && !isExpanded && "animate-pulse ring-2 ring-amber-500/40 bg-amber-500/10 text-amber-400"
                       )}
                     >
-                      {isLocked ? <Lock className="h-4 w-4" /> : <ChevronDown className="h-5 w-5" />}
+                      <ChevronDown className="h-5 w-5" />
                     </div>
                   </div>
                 </div>
@@ -494,7 +499,7 @@ export default function ViewAllQuestionsClient({
                               </div>
                             )}
 
-                            {/* 2. Translation Alternative Fallback (Only if not using structured layout) */}
+                            {/* 2. Translation Alternative Fallback */}
                             {!q.extendedData && altText && altText !== displayText && (
                               <div className="relative rounded-2xl border-l-[3px] border-amber-500/30 bg-amber-500/[0.03] p-4 text-[13px] leading-relaxed text-slate-400 italic">
                                 <div className="mb-1 text-[9px] font-black tracking-tighter text-amber-400/60 uppercase opacity-50">
@@ -520,7 +525,6 @@ export default function ViewAllQuestionsClient({
                                   }
                                 }
 
-                                // Convert A, B, C, D to index 0, 1, 2, 3
                                 const getCorrectIndex = (ans: any): number => {
                                   if (typeof ans === 'number') return ans;
                                   if (typeof ans === 'string') {

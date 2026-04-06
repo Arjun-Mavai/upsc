@@ -5,7 +5,7 @@ import { UnitDistributionStats, RepeatedQuestion, TopicStat, SubjectDistribution
 import { getCurrentExam } from '@/config/exams';
 import {
   PYQHeader,
-  PYQMenu,
+  // PYQMenu, // Temporarily hidden
   OverallWeightage,
   PaperAnalysis,
   // MostRepeatedTopics, // Temporarily hidden
@@ -19,16 +19,18 @@ interface PYQIntelligenceClientProps {
   topicStats: Record<string, TopicStat[]>;
   simpleSubjectStats: Record<string, number>; // Same as PYQ page
   subjectQuestionsData: OverallWeightageSubjectData[];
+  isPro?: boolean;
 }
 
 export default function PYQIntelligenceClient({
   examId,
-  subjectStats,
+  subjectStats: _subjectStats,
   stats,
   repeatedQuestions,
-  topicStats,
+  topicStats: _topicStats,
   simpleSubjectStats,
   subjectQuestionsData,
+  isPro = false,
 }: PYQIntelligenceClientProps) {
   const { language } = useSettingsStore();
   const isHindi = language === 'hi';
@@ -72,6 +74,7 @@ export default function PYQIntelligenceClient({
           simpleSubjectStats={simpleSubjectStats}
           subjectQuestionsData={subjectQuestionsData}
           isHindi={isHindi}
+          isPro={isPro}
         />
 
         {/* Most Repeated Topics - Temporarily Hidden */}
@@ -79,6 +82,7 @@ export default function PYQIntelligenceClient({
           topicStats={topicStats}
           combinedStats={combinedStats}
           isHindi={isHindi}
+          isPro={isPro}
         /> */}
 
         {/* Paper-wise Analysis (Year by Year) */}
@@ -87,6 +91,7 @@ export default function PYQIntelligenceClient({
           stats={stats}
           repeatedQuestions={repeatedQuestions}
           isHindi={isHindi}
+          isPro={isPro}
         />
       </div>
     </div>

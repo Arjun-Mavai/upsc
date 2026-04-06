@@ -81,6 +81,7 @@ async function IntelligenceDataFetcher({ examId }: { examId: string }) {
       topicStats={topicStats}
       simpleSubjectStats={simpleSubjectStats}
       subjectQuestionsData={subjectQuestionsData}
+      isPro={isPro}
     />
   );
 }

@@ -59,6 +59,7 @@ async function IntelligenceDataFetcher() {
       topicStats={topicStats}
       simpleSubjectStats={simpleSubjectStats}
       subjectQuestionsData={subjectQuestionsData}
+      isPro={isPro}
     />
   );
 }

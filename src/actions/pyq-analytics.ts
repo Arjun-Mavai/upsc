@@ -39,6 +39,8 @@ export interface OverallWeightageSubjectData {
     options?: any;
     correctAnswer?: string;
     extendedData?: any;
+    explanation?: string | null;
+    explanationEn?: string | null;
   }[];
 }
 
@@ -57,6 +59,8 @@ export interface UnitDistributionStats {
     options?: any;
     correctAnswer?: string;
     extendedData?: any;
+    explanation?: string | null;
+    explanationEn?: string | null;
   }[];
 }
 
@@ -68,7 +72,16 @@ export interface TopicStat {
   topicTitleEn?: string | null;
   count: number;
   years: number[];
-  questions: { id: string; text: string; textEn?: string | null; year: number; qNo: number; subject?: string }[];
+  questions: { 
+    id: string; 
+    text: string; 
+    textEn?: string | null; 
+    year: number; 
+    qNo: number; 
+    subject?: string;
+    explanation?: string | null;
+    explanationEn?: string | null;
+  }[];
 }
 
 // ── LOCKING CONSTANTS ──────────────────────────────────────────
@@ -131,6 +144,8 @@ export async function getOverallWeightageSubjectData(limit?: number, examId?: st
           options: questions.options,
           correctAnswer: questions.correctAnswer,
           extendedData: questions.extendedData,
+          explanation: questions.explanation,
+          explanationEn: questions.explanationEn,
         })
         .from(questions)
         .where(inArray(questions.testId, testIdsToQuery));
@@ -160,6 +175,8 @@ export async function getOverallWeightageSubjectData(limit?: number, examId?: st
               options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
               correctAnswer: q.correctAnswer,
               extendedData: typeof q.extendedData === 'string' ? JSON.parse(q.extendedData) : q.extendedData,
+              explanation: q.explanation,
+              explanationEn: q.explanationEn,
               subject: q.subject || undefined,
             };
           })
@@ -215,6 +232,8 @@ export async function getUnitDistributionStats(limit?: number, examId?: string, 
             options: questions.options,
             correctAnswer: questions.correctAnswer,
             extendedData: questions.extendedData,
+            explanation: questions.explanation,
+            explanationEn: questions.explanationEn,
           })
           .from(questions)
           .where(inArray(questions.testId, testIdsToQuery));
@@ -249,6 +268,8 @@ export async function getUnitDistributionStats(limit?: number, examId?: string, 
               options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
               correctAnswer: q.correctAnswer,
               extendedData: typeof q.extendedData === 'string' ? JSON.parse(q.extendedData) : q.extendedData,
+              explanation: q.explanation,
+              explanationEn: q.explanationEn,
             });
           }
         }
@@ -368,6 +389,8 @@ export async function getMostRepeatedTopics(examId?: string): Promise<Record<str
             topicSlug: pyqTopics.topicSlug,
             topicTitle: pyqTopics.topicTitle,
             topicTitleEn: pyqTopics.topicTitleEn,
+            explanation: questions.explanation,
+            explanationEn: questions.explanationEn,
           })
           .from(questions)
           .innerJoin(pyqQuestionTopics, eq(questions.id, pyqQuestionTopics.questionId))
@@ -386,7 +409,7 @@ export async function getMostRepeatedTopics(examId?: string): Promise<Record<str
           stat.count++;
           if (!stat.years.includes(year)) stat.years.push(year);
           if (!stat.questions.some((q) => q.id === row.questionId)) {
-            stat.questions.push({ id: row.questionId, text: row.questionText || '', textEn: row.questionTextEn, year, qNo: row.questionOrder, subject: row.questionSubject || undefined });
+            stat.questions.push({ id: row.questionId, text: row.questionText || '', textEn: row.questionTextEn, year, qNo: row.questionOrder, subject: row.questionSubject || undefined, explanation: row.explanation, explanationEn: row.explanationEn });
           }
         }
         const result: Record<string, TopicStat[]> = {};

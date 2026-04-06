@@ -18,16 +18,23 @@ interface PaperAnalysisProps {
   stats: UnitDistributionStats[];
   repeatedQuestions: RepeatedQuestion[];
   isHindi: boolean;
+  isPro?: boolean;
 }
 
 const FREE_YEAR = 2025;
 
-export function PaperAnalysis({ examId, stats, repeatedQuestions, isHindi }: PaperAnalysisProps) {
+export function PaperAnalysis({
+  examId,
+  stats,
+  repeatedQuestions,
+  isHindi,
+  isPro: isProProp = false,
+}: PaperAnalysisProps) {
   const [expandedYears, setExpandedYears] = useState<number[]>([]);
   const [lockModalOpen, setLockModalOpen] = useState(false);
 
   const { isSubscribed, user } = useSettingsStore();
-  const isPro = isSubscribed || user?.role === 'admin';
+  const isPro = isProProp || isSubscribed || user?.role === 'admin';
 
   const years = Array.from(new Set(stats.map((s) => s.year))).sort((a, b) => b - a);
 
@@ -186,6 +193,11 @@ export function PaperAnalysis({ examId, stats, repeatedQuestions, isHindi }: Pap
                               qNo: q.qNo,
                               subject: q.subject,
                               testTitle: `UPSC Prelims ${q.year}`,
+                              options: q.options,
+                              correctAnswer: q.correctAnswer,
+                              extendedData: q.extendedData,
+                              explanation: q.explanation,
+                              explanationEn: q.explanationEn,
                             }));
 
                             return (
