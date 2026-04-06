@@ -10,7 +10,7 @@ interface PYQCardProps {
   subtitle?: string;
   count: number;
   icon: LucideIcon;
-  color: 'blue' | 'pink' | 'emerald' | 'amber'; // Strict Syllabus Colors
+  color: 'blue' | 'pink' | 'emerald' | 'amber' | 'indigo'; // Added indigo
   onClick: () => void;
   isLocked?: boolean;
   delay?: number;
@@ -49,6 +49,14 @@ const VARIANTS = {
     border: 'border-amber-100',
     shadow: 'shadow-amber-200/40',
     gradient: 'from-amber-500 to-amber-600',
+  },
+  indigo: {
+    bg: 'bg-indigo-50',
+    text: 'text-indigo-600',
+    icon: 'text-indigo-400',
+    border: 'border-indigo-100',
+    shadow: 'shadow-indigo-200/40',
+    gradient: 'from-indigo-500 to-indigo-600',
   },
 };
 
@@ -89,7 +97,7 @@ export function PYQCard({
         <div className="flex items-center gap-2 rounded-full border border-white bg-white/80 px-3 py-1.5 shadow-sm backdrop-blur-sm">
           <FolderOpen className={cn('h-3.5 w-3.5', style.icon)} />
           <span className="text-[10px] font-black tracking-wider text-slate-800 uppercase">
-            {hi ? 'विषय' : 'Topics'}
+            {hi ? 'विषय' : 'Subjects'}
           </span>
         </div>
 

@@ -9,7 +9,7 @@ import { logger } from '@/lib/logger';
 // ⏳ EXTEND ACCESS API — Admin extends user's access duration
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
-// Use case: MPPSC paper delay hua → admin extends access for specific users
+// Use case: Exam delay → admin extends access for specific users
 // Takes userId + additionalMonths → extends accessExpiresAt
 //
 // If user already expired → extends from NOW (not from old expired date)

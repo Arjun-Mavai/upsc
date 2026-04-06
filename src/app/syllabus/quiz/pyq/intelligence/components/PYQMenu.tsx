@@ -11,45 +11,49 @@ import { ExpandableCard } from './shared/ExpandableCard';
 import { cn } from '@/lib/utils';
 
 interface PYQMenuProps {
+  examId?: string;
   isHindi: boolean;
   currentPage?: 'intelligence' | 'facts' | 'analysis' | 'repeated';
 }
 
-const menuItems = [
-  {
-    id: 'intelligence',
-    href: '/syllabus/quiz/pyq/intelligence',
-    icon: Sparkles,
-    title: 'Premium Intelligence',
-    titleHi: 'प्रीमियम इंटेलिजेंस',
-    subtitle: 'Extracting Every Secret of PYQs',
-    subtitleHi: 'PYQ के हर रहस्य का विश्लेषण',
-    color: 'emerald',
-  },
-  {
-    id: 'facts',
-    href: '/syllabus/quiz/pyq/facts',
-    icon: Lightbulb,
-    title: 'Facts Library',
-    titleHi: 'फैक्ट्स लाइब्रेरी',
-    subtitle: 'High-yield Exam Facts',
-    subtitleHi: 'परीक्षा फैक्ट्स',
-    color: 'emerald',
-  },
-  {
-    id: 'analysis',
-    href: '/syllabus/quiz/pyq/analysis',
-    icon: BarChart3,
-    title: 'Topic Analysis',
-    titleHi: 'विषय विश्लेषण',
-    subtitle: 'Deep-dive by Subject',
-    subtitleHi: 'विषयवार गहन विश्लेषण',
-    color: 'cyan',
-  },
-];
-
-export function PYQMenu({ isHindi, currentPage }: PYQMenuProps) {
+export function PYQMenu({ examId, isHindi, currentPage }: PYQMenuProps) {
   const router = useRouter();
+  
+  const isUPSC = examId === 'upsc';
+  const intelligenceHref = isUPSC ? '/upsc/intelligence' : '/syllabus/quiz/pyq/intelligence';
+  
+  const menuItems = [
+    {
+      id: 'intelligence',
+      href: intelligenceHref,
+      icon: Sparkles,
+      title: 'Premium Intelligence',
+      titleHi: 'प्रीमियम इंटेलिजेंस',
+      subtitle: 'Extracting Every Secret of PYQs',
+      subtitleHi: 'PYQ के हर रहस्य का विश्लेषण',
+      color: 'emerald',
+    },
+    {
+      id: 'facts',
+      href: '/syllabus/quiz/pyq/facts', // Keep same for now or update if needed
+      icon: Lightbulb,
+      title: 'Facts Library',
+      titleHi: 'फैक्ट्स लाइब्रेरी',
+      subtitle: 'High-yield Exam Facts',
+      subtitleHi: 'परीक्षा फैक्ट्स',
+      color: 'emerald',
+    },
+    {
+      id: 'analysis',
+      href: '/syllabus/quiz/pyq/analysis', // Keep same for now or update if needed
+      icon: BarChart3,
+      title: 'Topic Analysis',
+      titleHi: 'विषय विश्लेषण',
+      subtitle: 'Deep-dive by Subject',
+      subtitleHi: 'विषयवार गहन विश्लेषण',
+      color: 'cyan',
+    },
+  ];
   const header = (
     <div className="flex flex-col gap-1">
       <div className="mb-1 flex items-center gap-2 text-sm font-medium tracking-wider text-slate-400 uppercase">

@@ -23,40 +23,40 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
-// ── DATA FOR VISUALIZATIONS ───────────────────────────────────
+// ── UPSC PYQ DATA ───────────────────────────────────────────
 
 const PREVIEW_QUESTIONS = [
-  { id: 1, year: '2020', subject: 'GEOGRAPHY OF MP', set: 'SET-Q1', text: 'Panna district of Madhya Pradesh is famous for which mineral?' },
-  { id: 2, year: '2025', subject: 'ENVIRONMENT/FORESTRY', set: 'SET-Q96', text: 'During the year 2021, which state had the largest forest cover in India?' },
-  { id: 3, year: '2024', subject: 'ICT', set: 'SET-Q42', text: 'A ______ attack comes in the form of deceptive emails or text messages.' },
-  { id: 4, year: '2020', subject: 'INFORMATION TECHNOLOGY', set: 'SET-Q91', text: 'Which is not a type of secondary memory?' }
+  { id: 1, year: '2024', subject: 'POLITY', set: 'GS-1', text: 'Which of the following is/are the indicator/indicators used by UNDP for constructing Human Development Index?' },
+  { id: 2, year: '2023', subject: 'ECONOMY', set: 'GS-1', text: 'Consider the following statements about the PM-KISAN scheme.' },
+  { id: 3, year: '2022', subject: 'ENVIRONMENT', set: 'GS-1', text: 'Which of the following has/have been accorded "Geographical Indication" status?' },
+  { id: 4, year: '2021', subject: 'HISTORY', set: 'GS-1', text: 'With reference to the history of India, "ichavati", "## ##", and "avarodha" refer to?' }
 ];
 
 const WEIGHTAGE_BARS = [
-  { nameEn: 'MP GK', nameHi: 'मध्यप्रदेश सामान्य ज्ञान', pct: 36, color: 'from-amber-400 to-orange-500' },
-  { nameEn: 'History', nameHi: 'इतिहास', pct: 14, color: 'from-emerald-400 to-teal-500' },
-  { nameEn: 'Polity', nameHi: 'राजव्यवस्था', pct: 12, color: 'from-blue-400 to-indigo-500' },
-  { nameEn: 'Geography', nameHi: 'भूगोल', pct: 10, color: 'from-rose-400 to-pink-500' },
+  { nameEn: 'Polity & Governance', nameHi: 'राजव्यवस्था एवं शासन', pct: 22, color: 'from-indigo-400 to-blue-500' },
+  { nameEn: 'Economy', nameHi: 'अर्थव्यवस्था', pct: 20, color: 'from-emerald-400 to-teal-500' },
+  { nameEn: 'Environment & Ecology', nameHi: 'पर्यावरण एवं पारिस्थितिकी', pct: 18, color: 'from-green-400 to-emerald-500' },
+  { nameEn: 'History & Culture', nameHi: 'इतिहास एवं संस्कृति', pct: 15, color: 'from-amber-400 to-orange-500' },
 ];
 
 const SUBJECT_LIST_DETAILED = [
-  { name: 'MP GK', count: 188, pct: 31, icon: BookOpen, color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/20' },
-  { name: 'Polity', count: 95, pct: 16, icon: Scale, color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-  { name: 'History', count: 83, pct: 14, icon: History, color: 'text-pink-500', bg: 'bg-pink-500/10 border-pink-500/20' },
+  { name: 'Polity', count: 132, pct: 22, icon: Scale, color: 'text-indigo-500', bg: 'bg-indigo-500/10 border-indigo-500/20' },
+  { name: 'Economy', count: 120, pct: 20, icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+  { name: 'Environment', count: 108, pct: 18, icon: BookOpen, color: 'text-green-500', bg: 'bg-green-500/10 border-green-500/20' },
 ];
 
-const BETWA_EXPLANATION = [
-  { id: 'core', icon: CheckCircle2, labelEn: 'Core Logic', labelHi: 'तर्क एवं विश्लेषण', color: 'emerald', contentEn: 'Based on pollution levels like the Ganges, Betwa is called the Ganga of MP.', contentHi: 'प्रदूषण के आधार पर इसे म.प्र. की गंगा कहा जाता है।' },
-  { id: 'exam', icon: Lightbulb, labelEn: 'Exam Fact', labelHi: 'इतिहास', color: 'amber', contentEn: 'Origin: Kumra Gaon (Raisen). Total Length: 480 km.', contentHi: 'उद्गम: कुमरा गांव (रायसेन)। कुल लंबाई: 480 किमी।' },
-  { id: 'memory', icon: Brain, labelEn: 'Memory Tip', labelHi: 'मेमोरी टिप', color: 'blue', contentEn: '"Betwa = Beta (Son) of Raisen" -> Kumra Gaon.', contentHi: '"Betwa = Beta (Son) of Raisen" -> Kumra Gaon.' },
-  { id: 'scam', icon: AlertTriangle, labelEn: 'Scam Alert', labelHi: 'स्कैम अलर्ट', color: 'rose', contentEn: 'Don\'t confuse with Narmada. Narmada is the Lifeline of MP.', contentHi: 'नर्मदा से कंफ्यूज न हों। नर्मदा म.प्र. की जीवन रेखा (Lifeline) है।' }
+const EXPLANATION_BLOCKS = [
+  { id: 'core', icon: CheckCircle2, labelEn: 'Core Logic', labelHi: 'तर्क एवं विश्लेषण', color: 'emerald', contentEn: 'HDI uses 3 dimensions: Health (life expectancy), Education (schooling years), and Standard of living (GNI per capita).', contentHi: 'HDI 3 आयामों का उपयोग करता है: स्वास्थ्य (जीवन प्रत्याशा), शिक्षा (स्कूली वर्ष), और जीवन स्तर (GNI प्रति व्यक्ति)।' },
+  { id: 'exam', icon: Lightbulb, labelEn: 'Exam Fact', labelHi: 'परीक्षा तथ्य', color: 'amber', contentEn: 'India ranked 132 out of 191 countries in HDI 2023 report. Norway topped the list.', contentHi: 'HDI 2023 रिपोर्ट में भारत 191 देशों में 132वें स्थान पर रहा। नॉर्वे शीर्ष पर रहा।' },
+  { id: 'memory', icon: Brain, labelEn: 'Memory Tip', labelHi: 'मेमोरी टिप', color: 'blue', contentEn: '"HES" = Health, Education, Standard of living - the 3 pillars of HDI.', contentHi: '"HES" = स्वास्थ्य, शिक्षा, जीवन स्तर - HDI के 3 स्तंभ।' },
+  { id: 'scam', icon: AlertTriangle, labelEn: 'Scam Alert', labelHi: 'स्कैम अलर्ट', color: 'rose', contentEn: 'GDP is NOT a direct HDI component. GNI per capita is used, not GDP.', contentHi: 'GDP सीधे HDI का घटक नहीं है। GDP नहीं, GNI प्रति व्यक्ति का उपयोग किया जाता है।' }
 ];
 
 // Memoized Sub-components for "Light Speed" performance
 const QuestionItem = memo(({ q }: { q: typeof PREVIEW_QUESTIONS[0] }) => (
   <div className="relative rounded-xl sm:rounded-2xl bg-white/5 border border-white/5 p-3 sm:p-5 space-y-3 sm:space-y-4 group/q hover:bg-white/[0.08] transition-all overflow-hidden will-change-transform">
     <div className="flex items-start gap-3 sm:gap-4">
-      <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 border border-white/5 text-amber-500 text-[9px] sm:text-[10px] font-black">
+      <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 border border-white/5 text-indigo-500 text-[9px] sm:text-[10px] font-black">
         {q.id}
       </div>
       <p className="text-[12px] sm:text-sm font-bold leading-relaxed text-slate-100 opacity-90 pt-0.5 sm:pt-1">
@@ -64,7 +64,7 @@ const QuestionItem = memo(({ q }: { q: typeof PREVIEW_QUESTIONS[0] }) => (
       </p>
     </div>
     <div className="flex flex-wrap gap-1.5 sm:gap-2 pl-10 sm:pl-12">
-      <Badge className="bg-amber-500/10 text-amber-500 border-none px-2 py-0.5 text-[7px] sm:text-[8px] font-black">{q.year}</Badge>
+      <Badge className="bg-indigo-500/10 text-indigo-500 border-none px-2 py-0.5 text-[7px] sm:text-[8px] font-black">{q.year}</Badge>
       <Badge className="bg-emerald-500/10 text-emerald-500 border-none px-2 py-0.5 text-[7px] sm:text-[8px] font-black whitespace-nowrap">{q.subject}</Badge>
       <Badge className="bg-white/5 text-slate-500 border-none px-2 py-0.5 text-[7px] sm:text-[8px] font-black">{q.set}</Badge>
     </div>
@@ -153,13 +153,13 @@ export function PYQShowcaseSection() {
               >
                 {isHindi ? (
                   <div className="flex flex-col leading-[1.2] sm:leading-[1.25] pb-2 sm:pb-4">
-                    <span>हर प्रश्न में</span>
-                    <span className="bg-gradient-to-r from-pink-600 to-rose-500 bg-clip-text text-transparent italic px-1">छुपी हुई रणनीति</span>
+                    <span>UPSC के हर प्रश्न में</span>
+                    <span className="bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent italic px-1">छुपी हुई रणनीति</span>
                   </div>
                 ) : (
                   <div className="flex flex-col leading-[1.1] pb-2 sm:pb-4">
-                    <span>Strategic <span className="bg-gradient-to-r from-pink-600 to-rose-500 bg-clip-text text-transparent italic">Insights</span></span>
-                    <span>In Every Question</span>
+                    <span>UPSC <span className="bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent italic">Strategic</span></span>
+                    <span>Intelligence</span>
                   </div>
                 )}
               </m.h2>
@@ -172,8 +172,8 @@ export function PYQShowcaseSection() {
                 className="mx-auto max-w-xl text-base sm:text-lg font-medium leading-relaxed text-slate-600 lg:mx-0"
               >
                 {isHindi 
-                  ? 'पिछले 6 वर्षों का डिकोडेड डेटा। अब सिर्फ पढ़ें नहीं, प्रश्नों के पीछे की रणनीति समझे और एग्जाम को क्रैक करें।'
-                  : 'Decoded data for the last 6 years. Don\'t just read, decode the strategy behind every question and crack the exam.'}
+                  ? 'पिछले 6 वर्षों का UPSC PYQ डिकोडेड डेटा। अब सिर्फ पढ़ें नहीं, प्रश्नों के पीछे की रणनीति समझे और UPSC को क्रैक करें।'
+                  : 'Decoded UPSC PYQ data for the last 6 years. Don\'t just read, decode the strategy behind every question and crack UPSC.'}
               </m.p>
 
               {/* TAB SELECTORS */}
@@ -253,7 +253,7 @@ export function PYQShowcaseSection() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                           <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
-                          <span className="text-[8px] sm:text-[9px] font-black tracking-[0.25em] text-[#5E6278] uppercase">MPPSC PRELIMS · INSIGHT</span>
+                          <span className="text-[8px] sm:text-[9px] font-black tracking-[0.25em] text-[#5E6278] uppercase">UPSC PRELIMS · INSIGHT</span>
                       </div>
                       <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-emerald-500 text-black shadow-lg shadow-emerald-500/30">
                           <TrendingUp size={14} className="sm:w-4 sm:h-4" />
@@ -307,7 +307,7 @@ export function PYQShowcaseSection() {
                               <div key={sub.nameEn} className="space-y-2.5 sm:space-y-3">
                                 <div className="flex justify-between items-end">
                                   <span className="text-[11px] sm:text-xs font-black text-slate-200">{isHindi ? sub.nameHi : sub.nameEn}</span>
-                                  <span className="text-[9px] sm:text-[10px] font-black text-amber-500">{sub.pct}%</span>
+                                  <span className="text-[9px] sm:text-[10px] font-black text-indigo-500">{sub.pct}%</span>
                                 </div>
                                 <div className="h-2.5 sm:h-3 w-full rounded-full bg-white/5 overflow-hidden ring-1 ring-white/5">
                                   <m.div 
@@ -318,8 +318,8 @@ export function PYQShowcaseSection() {
                               </div>
                           ))}
                           <div className="pt-4 border-t border-white/5">
-                              <Badge className="bg-amber-500/10 text-amber-500 border-none px-3 py-1 font-black text-[8px] sm:text-[9px] uppercase tracking-widest">
-                                Total 600+ Questions Scanned
+                              <Badge className="bg-indigo-500/10 text-indigo-500 border-none px-3 py-1 font-black text-[8px] sm:text-[9px] uppercase tracking-widest">
+                                Total 600+ UPSC PYQ Analyzed
                               </Badge>
                           </div>
                         </m.div>
@@ -338,28 +338,28 @@ export function PYQShowcaseSection() {
                           <div className="rounded-[1.5rem] sm:rounded-[2rem] bg-white p-4 sm:p-7 text-slate-900 shadow-xl space-y-4 sm:space-y-6 min-h-[300px] sm:min-h-[360px]">
                               <div className="flex items-start justify-between">
                                 <div className="space-y-0.5">
-                                    <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">UNIT 1 TEST</p>
-                                    <h4 className="text-[14px] sm:text-base font-black tracking-tight">MP History Quiz</h4>
+                                    <p className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">UPSC PRELIMS</p>
+                                    <h4 className="text-[14px] sm:text-base font-black tracking-tight">General Studies Test</h4>
                                 </div>
-                                <Badge className="bg-amber-100 text-amber-700 border-none font-black text-[8px] sm:text-[9px] px-2 py-1 sm:px-3 sm:py-1.5 flex items-center gap-1 rounded-full">
-                                    <Zap size={10} className="fill-amber-700" /> Instant
+                                <Badge className="bg-indigo-100 text-indigo-700 border-none font-black text-[8px] sm:text-[9px] px-2 py-1 sm:px-3 sm:py-1.5 flex items-center gap-1 rounded-full">
+                                    <Zap size={10} className="fill-indigo-700" /> Instant
                                 </Badge>
                               </div>
 
                               <p className="text-[12px] sm:text-sm font-bold leading-relaxed text-slate-800 pt-1 sm:pt-2">
-                                Which text provides the earliest mention of the <span className="text-rose-600">Chedi Kingdom</span>?
+                                Which of the following is/are the indicator/indicators used by <span className="text-indigo-600">UNDP</span> for constructing Human Development Index?
                               </p>
 
                               <div className="space-y-2.5 sm:space-y-3">
                                 <div className="flex items-center justify-between rounded-lg sm:rounded-xl border border-rose-100 bg-rose-50/50 p-3 sm:p-4 text-slate-400">
-                                    <span className="text-[11px] sm:text-xs font-semibold">Mahabharata</span>
+                                    <span className="text-[11px] sm:text-xs font-semibold">Only Health and Education</span>
                                     <X size={14} className="text-rose-500 sm:w-4 sm:h-4" />
                                 </div>
                                 <m.div 
                                   initial={{ scale: 0.98 }} animate={{ scale: 1 }}
                                   className="flex items-center justify-between rounded-lg sm:rounded-xl border-2 border-emerald-500 bg-emerald-50 p-3 sm:p-4 text-slate-900 shadow-lg shadow-emerald-500/10"
                                 >
-                                    <span className="text-[12px] sm:text-sm font-black">Rigveda</span>
+                                    <span className="text-[12px] sm:text-sm font-black">Health, Education & Standard of Living</span>
                                     <CheckCircle2 size={16} className="text-emerald-600 sm:w-[18px] sm:h-[18px]" />
                                 </m.div>
                               </div>
@@ -367,7 +367,7 @@ export function PYQShowcaseSection() {
                               <div className="rounded-lg sm:rounded-xl bg-slate-50 border border-slate-100 p-3 sm:p-4 space-y-1.5 sm:space-y-2">
                                 <Badge className="bg-slate-800 text-white border-none text-[7px] sm:text-[8px] font-black px-1.5 py-0.5 rounded">EXPLANATION</Badge>
                                 <p className="text-[9px] sm:text-[10px] font-medium leading-relaxed text-slate-600">
-                                    The <strong>Rigveda</strong> contains the earliest reference to the Chedi kingdom (Danastuti hymn).
+                                    The <strong>HDI</strong> uses three dimensions: Health (life expectancy), Education (mean years of schooling), and Standard of Living (GNI per capita).
                                 </p>
                               </div>
                           </div>
@@ -381,7 +381,7 @@ export function PYQShowcaseSection() {
                             <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-[#5E6278]">Final Extraction 🧠</span>
                             <Badge variant="outline" className="border-pink-500/20 text-pink-500 text-[7px] sm:text-[8px] font-black px-2 py-0.5 sm:px-3 sm:py-1">PREMIUM</Badge>
                           </div>
-                          {BETWA_EXPLANATION.map((block) => (
+                          {EXPLANATION_BLOCKS.map((block) => (
                               <div key={block.id} className={cn("rounded-xl sm:rounded-2xl border-l-[3px] border p-3 sm:p-4 space-y-1 bg-[#1C1C28]/50 ring-1 ring-white/5", {
                                 'border-emerald-500/50 bg-emerald-500/5': block.color === 'emerald',
                                 'border-amber-500/50 bg-amber-500/5': block.color === 'amber',

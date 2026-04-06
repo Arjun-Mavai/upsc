@@ -20,7 +20,10 @@ export const getTopicTestStats = cachedData(
   async () => {
     try {
       // 1. Fetch all Syllabus Topics (Source of Truth)
-      const allTopics = await db.select().from(syllabusTopics);
+      const allTopics = await db
+        .select()
+        .from(syllabusTopics)
+        .where(eq(syllabusTopics.examType, 'upsc'));
 
       // 2. Fetch all Topic Tests
       const allTests = await db
@@ -32,7 +35,7 @@ export const getTopicTestStats = cachedData(
           updatedAt: tests.updatedAt,
         })
         .from(tests)
-        .where(eq(tests.type, 'TOPIC'));
+        .where(and(eq(tests.type, 'TOPIC'), eq(tests.examType, 'upsc')));
 
       // 3. Merge Data
       const stats: Record<string, TopicStat[]> = {};

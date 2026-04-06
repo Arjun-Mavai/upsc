@@ -23,7 +23,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
-import { RenderTableQuestion, mapCorrectAnswerToIndex } from '@/features/tests/utils/questionFormatter';
+import { RenderTableQuestion } from '@/features/tests/utils/questionFormatter';
+import { getCorrectAnswerIndex } from '@/lib/quiz-scoring';
 import type { TopicTrendProof } from '@/features/tests/actions/pyq-insights';
 import { useSettingsStore } from '@/store/useSettingsStore';
 
@@ -301,7 +302,7 @@ export default function TopicTrendProofClient({ proof }: { proof: TopicTrendProo
                         {/* Options Display - Redesigned to match Reference */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
                           {getParsedOptions(q.options).map((opt: any, idx: number) => {
-                            const correctIdx = mapCorrectAnswerToIndex(q.correctAnswer);
+                            const correctIdx = getCorrectAnswerIndex(q.correctAnswer, q.options);
                             const isCorrect = correctIdx !== -1 && correctIdx === idx;
                             
                             let optionText = opt;

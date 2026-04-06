@@ -36,6 +36,7 @@ import {
   deleteBlog,
   getBlogById,
   updateBlog,
+  updateBlogExamType,
 } from './actions';
 
 interface BlogItem {
@@ -43,6 +44,7 @@ interface BlogItem {
   slug: string;
   title: string;
   category: string;
+  examType: string;
   unitId: string | null;
   isPremium: boolean | null;
   isFreeAccess: boolean | null;
@@ -57,6 +59,7 @@ export default function BlogAccessClient({ blogs: initialBlogs }: { blogs: BlogI
   const [blogs, setBlogs] = useState(initialBlogs);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeUnit, setActiveUnit] = useState('all');
+  const [activeExamType, setActiveExamType] = useState('all');
   const [isPending, startTransition] = useTransition();
 
   // ── Unit tabs — blogs ko unit wise group karo ───────────────
@@ -68,12 +71,15 @@ export default function BlogAccessClient({ blogs: initialBlogs }: { blogs: BlogI
     return numA - numB;
   });
 
-  // ── Filter by unit + search ─────────────────────────────────
+  // ── Filter by unit + exam type + search ────────────────────
   let filteredBlogs = blogs;
   if (activeUnit !== 'all') {
     filteredBlogs = filteredBlogs.filter((b) =>
       activeUnit === 'no_unit' ? !b.unitId : b.unitId === activeUnit
     );
+  }
+  if (activeExamType !== 'all') {
+    filteredBlogs = filteredBlogs.filter((b) => b.examType === activeExamType);
   }
   if (searchQuery) {
     filteredBlogs = filteredBlogs.filter(
@@ -131,6 +137,28 @@ export default function BlogAccessClient({ blogs: initialBlogs }: { blogs: BlogI
       } else {
         setBlogs((prev) => prev.filter((b) => b.id !== blogId));
         toast.success('Blog deleted successfully');
+      }
+    });
+  };
+
+  // ── Exam Type handler ─────────────────────────────────────────
+  const handleExamTypeChange = async (blogId: string, examType: 'upsc' | 'mppsc' | 'all') => {
+    setBlogs((prev) => prev.map((b) => (b.id === blogId ? { ...b, examType } : b)));
+
+    startTransition(async () => {
+      const result = await updateBlogExamType(blogId, examType);
+      if (!result.success) {
+        // Revert on failure
+        setBlogs((prev) => prev.map((b) => {
+          if (b.id === blogId) {
+            const oldExamType = b.examType === 'upsc' ? 'mppsc' : b.examType === 'mppsc' ? 'all' : 'upsc';
+            return { ...b, examType: oldExamType };
+          }
+          return b;
+        }));
+        toast.error('Failed to update exam type');
+      } else {
+        toast.success(`Exam type updated to ${examType.toUpperCase()}`);
       }
     });
   };
@@ -337,15 +365,29 @@ export default function BlogAccessClient({ blogs: initialBlogs }: { blogs: BlogI
         })}
       </div>
 
-      {/* ── Search ─────────────────────────────────────────── */}
-      <div className="relative">
-        <Search className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
-        <Input
-          placeholder="Search by title, slug, category..."
-          className="h-9 bg-white pl-9 text-sm md:h-10"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+      {/* ── Search & Exam Type Filter ────────────────────────── */}
+      <div className="flex gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
+          <Input
+            placeholder="Search by title, slug, category..."
+            className="h-9 bg-white pl-9 text-sm md:h-10"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        
+        {/* Exam Type Filter */}
+        <select
+          className="h-9 md:h-10 rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          value={activeExamType}
+          onChange={(e) => setActiveExamType(e.target.value)}
+        >
+          <option value="all">All Exams</option>
+          <option value="upsc">UPSC Only</option>
+          <option value="mppsc">MPPSC Only</option>
+          <option value="all">Common</option>
+        </select>
       </div>
 
       {/* ── Bulk Actions ────────────────────────────────────── */}
@@ -522,6 +564,22 @@ export default function BlogAccessClient({ blogs: initialBlogs }: { blogs: BlogI
                           Hide
                         </span>
                       </label>
+
+                      <div className="h-4 w-px bg-slate-200" />
+
+                      {/* Exam Type Dropdown */}
+                      <div className="flex items-center gap-1.5">
+                        <select
+                          value={blog.examType}
+                          onChange={(e) => handleExamTypeChange(blog.id, e.target.value as 'upsc' | 'mppsc' | 'all')}
+                          className="h-7 rounded border border-slate-200 bg-white px-2 text-[10px] font-bold text-slate-700 focus:border-indigo-400 focus:outline-none md:h-8 md:text-xs"
+                          disabled={isPending}
+                        >
+                          <option value="upsc">UPSC</option>
+                          <option value="mppsc">MPPSC</option>
+                          <option value="all">Common</option>
+                        </select>
+                      </div>
 
                       <div className="h-4 w-px bg-slate-200" />
 

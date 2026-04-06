@@ -122,7 +122,7 @@ function SetPasswordContent() {
           </div>
           <h2 className="mb-2 text-xl font-bold text-slate-900">You&apos;re All Set! 🎉</h2>
           <p className="mb-4 text-sm text-slate-500">
-            Your password has been set and your premium plan is now active. Start your MPPSC
+            Your password has been set and your premium plan is now active. Start your UPSC
             preparation!
           </p>
           <p className="text-xs text-slate-400">Redirecting to login...</p>
@@ -140,7 +140,7 @@ function SetPasswordContent() {
           </div>
           <h1 className="text-xl font-bold text-slate-900">Set Your Password</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Create a secure password to access your MPPSC premium account.
+            Create a secure password to access your UPSC premium account.
           </p>
         </div>
 

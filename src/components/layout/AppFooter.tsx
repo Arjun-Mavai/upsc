@@ -5,24 +5,16 @@ import { usePathname } from 'next/navigation';
 import { Info, MessageSquare, Mail, Shield, FileText } from 'lucide-react';
 
 /**
- * AppFooter — Global Footer Component (Tapori Docs 🎬)
+ * AppFooter — Global Footer Component
  *
- * Bhai ye footer har page pe dikhta hai EXCEPT quiz play page!
- * Quiz play me user test de raha hai — waha footer dikhana = distraction
- *
- * Kaise kaam karta hai:
- * ─────────────────────
- * 1. usePathname() se current URL nikaalte hain
- * 2. Agar URL "/syllabus/quiz/play" se START hota hai → footer HIDE
- * 3. Baaki sab pages pe normal dikhega
- *
- * Ye Root Layout (src/app/layout.tsx) me render hota hai,
- * isliye nested layout se hide nahi kar sakte — yaha se hi path check karna padta hai
+ * This footer shows on all pages EXCEPT quiz play pages.
+ * During quizzes, showing the footer would be a distraction.
  */
+
 export function AppFooter() {
   const pathname = usePathname();
 
-  // 🚫 Quiz pages pe footer nahi dikhana — user test de raha hai ya prepare kar raha hai!
+  // 🚫 Hide footer on quiz pages — user is taking a test!
   if (pathname.startsWith('/syllabus/quiz')) return null;
   if (pathname.startsWith('/free-quiz')) return null;
 
@@ -31,9 +23,9 @@ export function AppFooter() {
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 px-6 md:flex-row md:gap-6">
         {/* Brand Section */}
         <div className="order-last w-full text-center md:order-first md:w-auto md:text-left">
-          <p className="text-lg font-bold text-slate-900">Mindful MPPSC</p>
+          <p className="text-lg font-bold text-slate-900">UPSC Intelligence</p>
           <p className="mt-1 text-sm text-slate-500">© 2026 All rights reserved.</p>
-          <p className="mt-2 text-[10px] font-medium text-slate-400">Made with ❤️ for MP</p>
+          <p className="mt-2 text-[10px] font-medium text-slate-400">Made with ❤️ for aspirants</p>
         </div>
 
         {/* Mobile Grid Layout (Icons + Text) */}

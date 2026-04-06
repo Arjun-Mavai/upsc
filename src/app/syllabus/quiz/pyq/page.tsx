@@ -6,6 +6,18 @@ import { getUserTier, hasAccessToContent } from '@/lib/access-control';
 import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
 import { Suspense } from 'react';
 import { QuizListSkeleton } from '@/components/QuizListSkeleton';
+import { getExamContext, generateExamMetadata } from '@/lib/exam-context';
+import type { Metadata } from 'next';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const exam = await getExamContext();
+  const base = await generateExamMetadata();
+  return {
+    ...base,
+    title: `Solved PYQs | ${exam.title}`,
+    description: `Access solved ${exam.id.toUpperCase()} Previous Year Questions with expert explanations and theme-based analysis.`,
+  };
+}
 
 export default async function PYQPage({ 
   searchParams 
@@ -37,16 +49,18 @@ function QuizListFallback() {
 
 async function PYQPageData({ mode }: { mode?: string }) {
   const userPromise = verifyAuth();
+  const exam = await getExamContext();
+
   const [user, tests, attemptLimits, attempts, subjectStats] = await Promise.all([
     userPromise,
-    getCachedPYQTests(),
+    getCachedPYQTests(exam.id),
     getCachedAttemptLimits(),
     (async () => {
       const resolvedUser = await userPromise;
       const userId = resolvedUser?.id;
-      return userId ? getUserAttemptsByType('PYQ', userId) : ({} as Record<string, number>);
+      return userId ? getUserAttemptsByType('PYQ', userId, exam.id) : ({} as Record<string, number>);
     })(),
-    getSubjectWisePYQStats(), // Back to original working function
+    getSubjectWisePYQStats(exam.id), // Back to original working function
   ]);
 
   const tier = getUserTier(user);
@@ -68,6 +82,7 @@ async function PYQPageData({ mode }: { mode?: string }) {
 
     return {
       ...test,
+      type: test.type,
       questions: test.totalQuestions ?? 0,
       totalQuestions: test.totalQuestions ?? 0,
       isLocked: !hasAccess && !(test.isFreeAccess ?? false),

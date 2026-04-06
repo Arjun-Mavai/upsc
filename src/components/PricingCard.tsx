@@ -15,6 +15,7 @@ import {
   BarChart3,
   FileText,
   History,
+  TrendingUp,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   CheckCircle2,
   Star,
   BadgeCheck,
+  TrendingUp,
 };
 
 interface PricingCardProps {
@@ -179,17 +181,6 @@ export function PricingCard({
               </div>
             )}
 
-            {/* {(isPro || isUpgrade) && !isUpgrade && (
-                             <div className="mt-2">
-                                <span className="relative inline-flex items-center">
-                                    <span className="absolute inset-[-2] rounded-full bg-gradient-to-r from-red-500 via-pink-500 to-green-500 p-[1.5px]" />
-                                    <span className="relative bg-white text-slate-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full">
-                                        {hi ? `सिर्फ ₹${p.proPrice - p.litePrice} ज़्यादा` : `just ₹${p.proPrice - p.litePrice} more than Lite`}
-                                    </span>
-                                </span>
-                            </div>
-                        )} */}
-
             <p className="mt-1.5 flex items-center gap-1 text-[11px] text-slate-400">
               <Clock className="h-3 w-3" />
               {hi ? `एक बार भुगतान • ${validityText}` : `One-time payment • ${validityText}`}
@@ -238,8 +229,8 @@ export function PricingCard({
                 <span>
                   {hi
                     ? isLite
-                      ? 'MPPSC 2026 प्रीलिम्स तक वैध'
-                      : 'MPPSC 2026 मेन्स तक वैध'
+                      ? 'UPSC 2026 प्रीलिम्स तक वैध'
+                      : 'UPSC 2026 प्रीलिम्स तक वैध'
                     : validityText}
                 </span>
               </li>

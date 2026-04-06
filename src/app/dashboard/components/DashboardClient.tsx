@@ -7,6 +7,7 @@ import { SyllabusProgressWidget } from '@/features/analytics/components/Syllabus
 import { SubjectMasteryWidget } from '@/features/analytics/components/SubjectMasteryWidget';
 import { DashboardActionCard } from './DashboardActionCard';
 import AnalyticsDashboardWrapper from '@/app/syllabus/analytics/AnalyticsDashboardWrapper';
+import { ExamConfig } from '@/config/exams';
 
 interface DashboardClientProps {
   user: {
@@ -16,9 +17,10 @@ interface DashboardClientProps {
   analyticsData: any;
   syllabusProgress: any;
   totalTopics: number;
+  exam: ExamConfig;
 }
 
-export function DashboardClient({ user, analyticsData, syllabusProgress, totalTopics }: DashboardClientProps) {
+export function DashboardClient({ user, analyticsData, syllabusProgress, totalTopics, exam }: DashboardClientProps) {
   const { language } = useSettingsStore();
   const isHindi = language === 'hi';
 
@@ -69,17 +71,19 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                 <SubjectMasteryWidget mastery={analyticsData?.mastery || []} />
               </div>
 
-              {/* Progress Pod */}
-              <div className="group relative">
-                <div className="mb-4 space-y-2">
-                  <h3 className="text-xs font-black tracking-[0.2em] text-slate-500 uppercase">
-                    {isHindi ? 'सिलेबस की प्रगति' : 'Syllabus Progress'}
-                  </h3>
-                  <div className="h-1 w-6 rounded-full bg-indigo-500/20" />
+              {/* Progress Pod — Only for UPSC */}
+              {exam.id === 'upsc' && (
+                <div className="group relative">
+                  <div className="mb-4 space-y-2">
+                    <h3 className="text-xs font-black tracking-[0.2em] text-slate-500 uppercase">
+                      {isHindi ? 'सिलेबस की प्रगति' : 'Syllabus Progress'}
+                    </h3>
+                    <div className="h-1 w-6 rounded-full bg-indigo-500/20" />
+                  </div>
+                  
+                  <SyllabusProgressWidget data={syllabusProgress} totalTopics={totalTopics} />
                 </div>
-                
-                <SyllabusProgressWidget data={syllabusProgress} totalTopics={totalTopics} />
-              </div>
+              )}
             </div>
           </div>
         </div>

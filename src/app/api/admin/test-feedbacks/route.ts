@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { testFeedback, tests, mppscUsers } from '@/db/schema';
 import { cookies } from 'next/headers';
-import { desc, eq, sql } from 'drizzle-orm';
+import { desc, eq, sql, and } from 'drizzle-orm';
 
 export async function GET(request: Request) {
   try {
@@ -51,14 +51,16 @@ export async function GET(request: Request) {
       })
       .from(testFeedback)
       .leftJoin(tests, eq(testFeedback.testId, tests.id))
+      .where(eq(testFeedback.examType, 'upsc')) // UPSC-only test feedback
       .orderBy(desc(testFeedback.createdAt))
       .limit(limit)
       .offset(offset);
 
-    // Get total count for pagination
+    // Get total count for pagination with UPSC filter
     const totalCount = await db
       .select({ count: sql<number>`count(*)` })
-      .from(testFeedback);
+      .from(testFeedback)
+      .where(eq(testFeedback.examType, 'upsc'));
 
     // Use testName as fallback when testTitle is null (for practice tests without real test IDs)
     const transformedData = data.map(item => ({

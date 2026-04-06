@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { mppscUsers } from '@/db/schema';
 import { cookies } from 'next/headers';
-import { sql } from 'drizzle-orm';
+import { sql, eq, and } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -42,7 +42,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    // ── Fetch All Users (password excluded for security) ────────
+    // ── Fetch All UPSC Users (password excluded for security) ────────
     const allUsers = await db
       .select({
         id: mppscUsers.id,
@@ -60,6 +60,7 @@ export async function GET() {
         previousUserId: mppscUsers.previousUserId,
       })
       .from(mppscUsers)
+      .where(eq(mppscUsers.examType, 'upsc')) // Show existing MPPSC users
       .orderBy(sql`created_at DESC`);
 
     // ── Calculate Stats ─────────────────────────────────────────

@@ -2,8 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft, ChevronDown, ChevronUp, Filter, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Filter, Eye, EyeOff, Lock, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,9 +10,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
+import { UPSCQuestionRenderer } from '@/features/tests/components/UPSCQuestionRenderer';
 import { RenderTableQuestion } from '@/features/tests/utils/questionFormatter';
 import { YearBadge } from '../components/shared/UnitBadge';
 import { formatUnitTitle, getUnitColor } from '../components/shared/constants';
+import { SUBJECT_VARIANTS, SUBJECTS } from '@/lib/pyq-ui-constants';
+import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 
 interface QuestionData {
   id: string;
@@ -24,13 +26,30 @@ interface QuestionData {
   type?: string;
   options?: any[];
   matchPairs?: any[];
-  correctAnswer?: number;
+  correctAnswer?: any;
   explanation?: string | null;
   explanationEn?: string | null;
   subject?: string | null;
+  extendedData?: {
+    layoutType?: 'statements' | 'table' | 'assertion_reason' | 'standard';
+    contextStr?: string;
+    contextStrEn?: string;
+    listItems?: { id: string; text: string; textEn?: string }[];
+    statementI?: string;
+    statementIEn?: string;
+    statementII?: string;
+    statementIIEn?: string;
+    questionPrompt?: string;
+    questionPromptEn?: string;
+    tableHeaders?: string[];
+    tableHeadersEn?: string[];
+    tableRows?: string[][];
+    tableRowsEn?: string[][];
+  } | null;
 }
 
 interface ViewAllQuestionsClientProps {
+  examId?: string;
   unitId: string;
   unitTitle: string;
   questions: QuestionData[];
@@ -38,9 +57,12 @@ interface ViewAllQuestionsClientProps {
   topicTitle?: string;
   year?: number;
   subject?: string;
+  isPro?: boolean;
 }
 
+
 export default function ViewAllQuestionsClient({
+  examId,
   unitId,
   unitTitle,
   questions,
@@ -48,14 +70,19 @@ export default function ViewAllQuestionsClient({
   topicTitle,
   year,
   subject,
+  isPro = false,
 }: ViewAllQuestionsClientProps) {
   const router = useRouter();
   const { language } = useSettingsStore();
   const isHindi = language === 'hi';
+  const [lockModalOpen, setLockModalOpen] = useState(false);
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [showAllExpanded, setShowAllExpanded] = useState(false);
   const [filterYear, setFilterYear] = useState<number | null>(null);
+
+  const FREE_SUBJECT = 'History';
+  const FREE_LIMIT = 5;
 
   // Check if we're in PDF mode (for Puppeteer)
   const searchParams = useSearchParams();
@@ -70,8 +97,8 @@ export default function ViewAllQuestionsClient({
 
   // Filter questions by year
   const filteredQuestions = useMemo(() => {
-    if (!filterYear) return questions;
-    return questions.filter((q) => q.year === filterYear);
+    let qList = filterYear ? questions.filter((q) => q.year === filterYear) : questions;
+    return qList;
   }, [questions, filterYear]);
 
   // Auto-expand all questions in PDF mode
@@ -82,7 +109,11 @@ export default function ViewAllQuestionsClient({
     }
   }, [isPdfMode, filteredQuestions]);
 
-  const toggleQuestion = useCallback((id: string) => {
+  const toggleQuestion = useCallback((id: string, isLocked: boolean) => {
+    if (isLocked) {
+      setLockModalOpen(true);
+      return;
+    }
     setExpandedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -95,32 +126,45 @@ export default function ViewAllQuestionsClient({
   }, []);
 
   const toggleAll = useCallback(() => {
+    if (!isPro && unitId !== FREE_SUBJECT) {
+        setLockModalOpen(true);
+        return;
+    }
     if (showAllExpanded) {
       setExpandedIds(new Set());
     } else {
       setExpandedIds(new Set(filteredQuestions.map((q) => q.id)));
     }
     setShowAllExpanded(!showAllExpanded);
-  }, [showAllExpanded, filteredQuestions]);
+  }, [showAllExpanded, filteredQuestions, isPro, unitId]);
 
   const colorClass = getUnitColor(unitId);
 
   // Title based on source
   const pageTitle = useMemo(() => {
+    const isUPSC = examId === 'upsc';
+    const prefix = isUPSC ? 'UPSC Civil Services' : 'UPSC Civil Services';
+    const yearRange = isUPSC ? '2015-2025' : '2020-2025';
+
     if (source === 'topic' && topicTitle) {
       return topicTitle;
     }
     if (source === 'paper' && year) {
-      return `MPPSC Prelims ${year} - ${formatUnitTitle(unitId)}`;
+      return `${prefix} ${year} - ${formatUnitTitle(unitId, isHindi)}`;
     }
     if (source === 'subject' && subject) {
-      return `${subject} Questions (2020-2025)`;
+      const subjectName = subject === 'All' ? (isHindi ? 'सभी विषय' : 'All Subjects') : formatUnitTitle(subject, isHindi);
+      return `${subjectName} Questions (${yearRange})`;
     }
-    return `${formatUnitTitle(unitId)} - ${unitTitle}`;
-  }, [source, topicTitle, year, unitId, unitTitle, subject]);
+    return `${formatUnitTitle(unitId, isHindi)} - ${unitTitle}`;
+  }, [source, topicTitle, year, unitId, unitTitle, subject, examId, isHindi]);
 
   return (
     <div className="min-h-screen bg-[#080510] pb-24 text-slate-200 selection:bg-violet-500/30">
+      <SyllabusLockModal 
+        open={lockModalOpen}
+        onOpenChange={setLockModalOpen}
+      />
       {/* Dynamic Background */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] animate-pulse rounded-full bg-violet-600/10 blur-[120px]" />
@@ -256,13 +300,59 @@ export default function ViewAllQuestionsClient({
       >
         {filteredQuestions.map((q, idx) => {
           const isExpanded = expandedIds.has(q.id);
+          const isHistory = q.subject === FREE_SUBJECT || unitId === FREE_SUBJECT;
+          const isFreeAccess = !isPro && idx < FREE_LIMIT;
+          const isLocked = !isPro && !isHistory && idx >= FREE_LIMIT;
+          
           const displayText = isHindi ? q.text : q.textEn || q.text;
           const altText = isHindi ? q.textEn : q.text;
+
+          // Special Lock Card for free users
+          if (idx === FREE_LIMIT && !isPro && !isHistory) {
+            return (
+              <motion.div
+                key="pro-lock-card"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="relative overflow-hidden rounded-[2.5rem] border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-950 p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+              >
+                <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-amber-500/20 blur-[80px]" />
+                <div className="absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-violet-500/20 blur-[80px]" />
+                
+                <div className="relative z-10">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.4)]">
+                    <Lock className="h-8 w-8 text-black" />
+                  </div>
+                  <h3 className="mb-2 text-2xl font-black tracking-tight text-white">
+                    {isHindi ? 'बाकी प्रश्न अनलॉक करें' : 'Unlock Remaining Questions'}
+                  </h3>
+                  <p className="mx-auto mb-6 max-w-md text-sm font-medium leading-relaxed text-slate-400">
+                    {isHindi 
+                      ? 'आप अभी फ्री प्रीव्यू देख रहे हैं। सभी वर्षों के प्रश्न, विस्तृत व्याख्या और AI-संचालित विश्लेषण अनलॉक करने के लिए प्रो में शामिल हों।' 
+                      : 'You are viewing a free preview. Join Pro to unlock all questions across years, detailed expert explanations, and AI-powered insights.'}
+                  </p>
+                  <Button 
+                    onClick={() => setLockModalOpen(true)}
+                    className="h-12 rounded-xl bg-amber-500 px-8 text-xs font-black tracking-widest text-black transition-all hover:bg-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] active:scale-95"
+                  >
+                    {isHindi ? 'प्रो में अपग्रेड करें' : 'UPGRADE TO PRO'}
+                  </Button>
+                </div>
+              </motion.div>
+            );
+          }
+
+          // Don't render more than FREE_LIMIT + 1 (the lock card) for free users unless it's History
+          if (isLocked && idx > FREE_LIMIT) return null;
 
           return (
             <div
               key={q.id}
-              className="group relative transition-all duration-300"
+              className={cn(
+                "group relative transition-all duration-300",
+                isLocked && "grayscale-[0.8] opacity-70",
+                isFreeAccess && "scale-[1.01]"
+              )}
               data-question-item
               data-question-id={q.id}
             >
@@ -270,27 +360,47 @@ export default function ViewAllQuestionsClient({
               <div
                 className={cn(
                   'absolute -inset-px rounded-[2rem] opacity-0 blur-md transition-opacity duration-500 group-hover:opacity-100',
-                  isExpanded ? 'opacity-40' : ''
+                  isExpanded ? 'opacity-40' : '',
+                  isFreeAccess ? 'opacity-30 bg-amber-500/20' : ''
                 )}
                 style={{
-                  background: `linear-gradient(to right, ${isExpanded ? '#8b5cf6' : '#1e293b'}, transparent)`,
+                  background: isFreeAccess 
+                    ? `linear-gradient(to right, #f59e0b, transparent)`
+                    : `linear-gradient(to right, ${isExpanded ? '#8b5cf6' : '#1e293b'}, transparent)`,
                 }}
               />
 
               <Card
                 className={cn(
                   'relative z-10 overflow-hidden rounded-[2rem] border-white/[0.03] bg-slate-900/40 shadow-2xl backdrop-blur-sm transition-all duration-300',
-                  isExpanded ? 'bg-[#0b081a]/80 ring-1 ring-violet-500/20' : 'hover:bg-slate-900/60'
+                  isExpanded ? 'bg-[#0b081a]/80 ring-1 ring-violet-500/20' : 'hover:bg-slate-900/60',
+                  isLocked && "cursor-not-allowed",
+                  isFreeAccess && "border-amber-500/40 ring-1 ring-amber-500/20 shadow-[0_0_30px_rgba(245,158,11,0.05)]"
                 )}
               >
+                {/* Free Access Header Ribbon */}
+                {isFreeAccess && (
+                  <div className="absolute top-0 right-10">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-amber-500 blur-md opacity-20" />
+                      <div className="relative rounded-b-xl bg-amber-500 px-3 py-1 text-[8px] font-black tracking-[0.2em] text-black uppercase shadow-lg">
+                        {isHindi ? 'फ्री एक्सेस' : 'FREE ACCESS'}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Question Header Area */}
                 <div
                   className="flex cursor-pointer items-start gap-5 p-5 sm:p-7"
-                  onClick={() => toggleQuestion(q.id)}
+                  onClick={() => toggleQuestion(q.id, isLocked)}
                 >
                   {/* Styled Numbering */}
                   <div className="relative flex h-10 w-10 shrink-0 items-center justify-center">
-                    <div className="absolute inset-0 rotate-45 rounded-xl bg-amber-500/10 transition-colors group-hover:bg-amber-500/20" />
+                    <div className={cn(
+                      "absolute inset-0 rotate-45 rounded-xl transition-colors",
+                      isFreeAccess ? "bg-amber-500/20 group-hover:bg-amber-500/30" : "bg-amber-500/10 group-hover:bg-amber-500/20"
+                    )} />
                     <span className="relative text-sm font-black text-amber-500">{idx + 1}</span>
                   </div>
 
@@ -314,7 +424,16 @@ export default function ViewAllQuestionsClient({
                         className="border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[10px] font-black text-amber-500 uppercase"
                       />
                       {q.subject && (
-                        <Badge className="border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-black tracking-widest text-emerald-400 uppercase">
+                        <Badge 
+                          className={cn(
+                            "px-3 py-1 text-[10px] font-black tracking-widest border uppercase transition-all",
+                            (() => {
+                              const subMeta = SUBJECTS.find(s => s.name === q.subject || s.nameHi === q.subject);
+                              const variant = SUBJECT_VARIANTS[subMeta?.color || 'slate'];
+                              return cn(variant.bg, variant.text, variant.border);
+                            })()
+                          )}
+                        >
                           {q.subject}
                         </Badge>
                       )}
@@ -322,6 +441,12 @@ export default function ViewAllQuestionsClient({
                         <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">
                           SET-Q{q.qNo}
                         </span>
+                      )}
+                      {isLocked && (
+                        <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-[9px] font-black text-amber-500">
+                          <Lock className="mr-1 h-3 w-3" />
+                          PRO
+                        </Badge>
                       )}
                     </div>
                   </div>
@@ -332,10 +457,12 @@ export default function ViewAllQuestionsClient({
                         'flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-slate-500 transition-all',
                         isExpanded
                           ? 'rotate-180 bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.5)]'
-                          : 'group-hover:text-slate-300'
+                          : 'group-hover:text-slate-300',
+                        isLocked && "opacity-50",
+                        isFreeAccess && !isExpanded && "animate-bounce ring-2 ring-amber-500/20"
                       )}
                     >
-                      <ChevronDown className="h-5 w-5" />
+                      {isLocked ? <Lock className="h-4 w-4" /> : <ChevronDown className="h-5 w-5" />}
                     </div>
                   </div>
                 </div>
@@ -351,80 +478,119 @@ export default function ViewAllQuestionsClient({
                       className="overflow-hidden"
                     >
                       <div className="space-y-6 border-t border-white/[0.05] bg-slate-950/40 p-5 sm:p-7">
-                        {/* Table Content (if matching) */}
-                        {q.type === 'matching' && q.matchPairs && q.matchPairs.length > 0 && (
-                          <div className="rounded-2xl border border-white/5 bg-slate-900/50 p-4">
-                            <RenderTableQuestion
-                              matchPairs={q.matchPairs}
-                              language={isHindi ? 'hi' : 'en'}
-                              darkMode={true}
-                            />
-                          </div>
-                        )}
+                        
+                        {examId === 'upsc' ? (
+                          <UPSCQuestionRenderer question={q} isHindi={isHindi} />
+                        ) : (
+                          <>
+                            {/* 1. Table Content (if matching) */}
+                            {q.type === 'matching' && q.matchPairs && q.matchPairs.length > 0 && (
+                              <div className="rounded-2xl border border-white/5 bg-slate-900/50 p-4 shadow-inner">
+                                <RenderTableQuestion
+                                  matchPairs={q.matchPairs}
+                                  language={isHindi ? 'hi' : 'en'}
+                                  darkMode={true}
+                                />
+                              </div>
+                            )}
 
-                        {/* Translation Alternative */}
-                        {altText && altText !== displayText && (
-                          <div className="relative rounded-2xl border-l-[3px] border-amber-500/30 bg-amber-500/[0.03] p-4 text-[13px] leading-relaxed text-slate-400 italic">
-                            <div className="mb-1 text-[9px] font-black tracking-tighter text-amber-400/60 uppercase opacity-50">
-                              Translated Reference
-                            </div>
-                            <div dangerouslySetInnerHTML={{ __html: altText }} />
-                          </div>
-                        )}
-
-                        {/* Redesigned Options Grid */}
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          {q.options &&
-                            q.options.slice(0, 4).map((opt, optIdx) => {
-                              const parsedOpt =
-                                typeof opt === 'object' && opt !== null ? opt : { text: opt };
-                              const isCorrect = Number(q.correctAnswer) === optIdx;
-                              const optText = isHindi
-                                ? parsedOpt.text || parsedOpt
-                                : parsedOpt.text_en ||
-                                  parsedOpt.textEn ||
-                                  parsedOpt.text ||
-                                  parsedOpt;
-
-                              return (
-                                <div
-                                  key={optIdx}
-                                  className={cn(
-                                    'group/opt relative flex items-center gap-4 rounded-2xl border p-4 transition-all duration-300',
-                                    isCorrect
-                                      ? 'border-emerald-500/30 bg-emerald-500/[0.08] shadow-[0_0_20px_rgba(16,185,129,0.05)]'
-                                      : 'border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.05]'
-                                  )}
-                                >
-                                  {/* Alphabet Bubble */}
-                                  <div
-                                    className={cn(
-                                      'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black transition-all',
-                                      isCorrect
-                                        ? 'bg-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.4)]'
-                                        : 'bg-white/5 text-slate-500 group-hover/opt:bg-white/10 group-hover/opt:text-slate-300'
-                                    )}
-                                  >
-                                    {String.fromCharCode(65 + optIdx)}
-                                  </div>
-
-                                  <div
-                                    className={cn(
-                                      'flex-1 text-sm leading-tight font-medium',
-                                      isCorrect ? 'text-emerald-100' : 'text-slate-300'
-                                    )}
-                                    dangerouslySetInnerHTML={{ __html: optText }}
-                                  />
-
-                                  {isCorrect && (
-                                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20">
-                                      <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-                                    </div>
-                                  )}
+                            {/* 2. Translation Alternative Fallback (Only if not using structured layout) */}
+                            {!q.extendedData && altText && altText !== displayText && (
+                              <div className="relative rounded-2xl border-l-[3px] border-amber-500/30 bg-amber-500/[0.03] p-4 text-[13px] leading-relaxed text-slate-400 italic">
+                                <div className="mb-1 text-[9px] font-black tracking-tighter text-amber-400/60 uppercase opacity-50">
+                                  Translated Reference
                                 </div>
-                              );
-                            })}
-                        </div>
+                                <div dangerouslySetInnerHTML={{ __html: altText }} />
+                              </div>
+                            )}
+
+                            {/* 3. Redesigned Options Grid */}
+                            <div className="grid gap-4 sm:grid-cols-2">
+                              {(() => {
+                                const rawOptions = q.options;
+                                let optionsArray: any[] = [];
+                                
+                                if (Array.isArray(rawOptions)) {
+                                  optionsArray = rawOptions;
+                                } else if (typeof rawOptions === 'string') {
+                                  try {
+                                    optionsArray = JSON.parse(rawOptions);
+                                  } catch (e) {
+                                    optionsArray = [];
+                                  }
+                                }
+
+                                // Convert A, B, C, D to index 0, 1, 2, 3
+                                const getCorrectIndex = (ans: any): number => {
+                                  if (typeof ans === 'number') return ans;
+                                  if (typeof ans === 'string') {
+                                    const upper = ans.trim().toUpperCase();
+                                    if (upper === 'A') return 0;
+                                    if (upper === 'B') return 1;
+                                    if (upper === 'C') return 2;
+                                    if (upper === 'D') return 3;
+                                    const num = parseInt(ans);
+                                    if (!isNaN(num)) return num;
+                                  }
+                                  return -1;
+                                };
+
+                                const correctIndex = getCorrectIndex(q.correctAnswer);
+
+                                return optionsArray.slice(0, 4).map((opt, optIdx) => {
+                                  const parsedOpt =
+                                    typeof opt === 'object' && opt !== null ? opt : { text: opt };
+                                  const isCorrect = correctIndex === optIdx;
+                                  
+                                  const optText = isHindi
+                                    ? parsedOpt.text || (typeof opt === 'string' ? opt : '')
+                                    : parsedOpt.text_en ||
+                                      parsedOpt.textEn ||
+                                      parsedOpt.text ||
+                                      (typeof opt === 'string' ? opt : '');
+
+                                  return (
+                                    <div
+                                      key={optIdx}
+                                      className={cn(
+                                        'group/opt relative flex items-center gap-4 rounded-2xl border p-4 transition-all duration-300',
+                                        isCorrect
+                                          ? 'border-emerald-500/40 bg-emerald-500/[0.1] shadow-[0_0_20px_rgba(16,185,129,0.1)]'
+                                          : 'border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.05]'
+                                      )}
+                                    >
+                                      {/* Alphabet Bubble */}
+                                      <div
+                                        className={cn(
+                                          'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black transition-all',
+                                          isCorrect
+                                            ? 'bg-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.4)]'
+                                            : 'bg-white/5 text-slate-500 group-hover/opt:bg-white/10 group-hover/opt:text-slate-300'
+                                        )}
+                                      >
+                                        {String.fromCharCode(65 + optIdx)}
+                                      </div>
+
+                                      <div
+                                        className={cn(
+                                          'flex-1 text-[13.5px] leading-snug font-semibold',
+                                          isCorrect ? 'text-emerald-50 text-shadow-sm' : 'text-slate-300'
+                                        )}
+                                        dangerouslySetInnerHTML={{ __html: optText }}
+                                      />
+
+                                      {isCorrect && (
+                                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20">
+                                          <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                });
+                              })()}
+                            </div>
+                          </>
+                        )}
 
                         {/* Premium Insights Section */}
                         <div className="space-y-4 pt-4">
@@ -440,17 +606,6 @@ export default function ViewAllQuestionsClient({
                               language={isHindi ? 'hi' : 'en'}
                             />
                           )}
-
-                          {/* <div className="flex items-center justify-between border-t border-white/5 pt-4">
-                             <YearBadge year={q.year ?? 2020} variant="amber" className="px-3 bg-amber-500/10 text-amber-500 border-amber-500/20" />
-                             <Link
-                                href={`/syllabus/quiz/pyq/question/${q.id}`}
-                                className="group inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-amber-500 transition-colors hover:text-amber-400"
-                              >
-                                Detailed Analysis
-                                <ArrowLeft className="h-3 w-3 rotate-180 transition-transform group-hover:translate-x-1" />
-                              </Link>
-                          </div> */}
                         </div>
                       </div>
                     </motion.div>

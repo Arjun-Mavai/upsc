@@ -51,6 +51,7 @@ export async function getAllTestsForAdmin() {
       createdAt: tests.createdAt,
     })
     .from(tests)
+    .where(eq(tests.examType, 'upsc')) // UPSC-only tests for admin
     .orderBy(desc(tests.createdAt));
 
   // TOPIC tests ke liye syllabusTopics se proper name fetch karo
@@ -125,7 +126,7 @@ export async function toggleTestAccess(
  * Example: "Sab FLT tests ko Lite access de do"
  */
 export async function bulkUpdateTestAccess(
-  testType: 'FLT' | 'UNIT' | 'CSAT' | 'PYQ' | 'TOPIC' | 'MISC',
+  testType: 'FLT' | 'UNIT' | 'CSAT' | 'PYQ' | 'TOPIC' | 'MISC' | 'UPSC_PYQ' | 'UPSC_FLT',
   field: 'isFreeAccess' | 'isLiteAccess' | 'isProAccess',
   value: boolean
 ) {
@@ -244,7 +245,7 @@ export async function getAttemptLimits() {
  * null = unlimited
  */
 export async function updateAttemptLimit(
-  testType: 'FLT' | 'UNIT' | 'CSAT' | 'PYQ' | 'TOPIC' | 'MISC',
+  testType: 'FLT' | 'UNIT' | 'CSAT' | 'PYQ' | 'TOPIC' | 'MISC' | 'UPSC_PYQ' | 'UPSC_FLT',
   maxAttempts: number | null
 ) {
   await requireAdmin();
@@ -267,7 +268,7 @@ export async function updateAttemptLimit(
  * null = unlimited
  */
 export async function bulkUpdateMaxRetries(
-  testType: 'FLT' | 'UNIT' | 'CSAT' | 'PYQ' | 'TOPIC' | 'MISC',
+  testType: 'FLT' | 'UNIT' | 'CSAT' | 'PYQ' | 'TOPIC' | 'MISC' | 'UPSC_PYQ' | 'UPSC_FLT',
   maxRetries: number | null
 ) {
   await requireAdmin();

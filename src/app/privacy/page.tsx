@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { contactEmail } from '../contact/page';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Mindful MPPSC',
+  title: 'Privacy Policy | UPSC Intelligence',
   description:
-    'Privacy Policy for Mindful MPPSC — learn how we collect, use, and protect your data on our MPPSC exam preparation platform.',
+    'Privacy Policy for UPSC Intelligence — learn how we collect, use, and protect your data on our UPSC exam preparation platform.',
 };
 
 export default function PrivacyPolicyPage() {
@@ -20,13 +20,13 @@ export default function PrivacyPolicyPage() {
         </Link>
 
         <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">Privacy Policy</h1>
-        <p className="mt-2 text-sm text-slate-500">Last updated: June 2025</p>
+        <p className="mt-2 text-sm text-slate-500">Last updated: April 2026</p>
 
         <div className="mt-10 space-y-10 leading-relaxed text-slate-700">
           <section>
             <h2 className="text-xl font-semibold text-slate-900">1. Data Collection Scope</h2>
             <p className="mt-3">
-              To provide a bespoke educational experience, Mindful MPPSC collects essential
+              To provide a bespoke educational experience, UPSC Intelligence collects essential
               information including registration details (name, email), academic progress data (quiz
               scores, study time), and technical metadata to ensure platform stability and
               performance.
@@ -56,7 +56,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-xl font-semibold text-slate-900">4. Third-Party Disclosures</h2>
             <p className="mt-3">
-              Mindful MPPSC does not sell or trade your personal information. Data sharing is
+              UPSC Intelligence does not sell or trade your personal information. Data sharing is
               strictly limited to essential service providers (e.g., payment processors, hosting
               partners) who are contractually bound to maintain your privacy. Legal disclosures are
               made only when mandated by valid judicial or governmental orders.
@@ -75,7 +75,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-slate-900">9. Contact Us</h2>
+            <h2 className="text-xl font-semibold text-slate-900">6. Contact Us</h2>
             <p className="mt-3">
               If you have questions about this Privacy Policy, reach out via our{' '}
               <Link href="/contact" className="text-slate-900 underline hover:text-slate-600">
@@ -83,7 +83,7 @@ export default function PrivacyPolicyPage() {
               </Link>{' '}
               or email us at{' '}
               <a
-                href="mailto:mppsc@zenscroll.app"
+                href={`mailto:${contactEmail}`}
                 className="text-slate-900 underline hover:text-slate-600"
               >
                 {contactEmail}

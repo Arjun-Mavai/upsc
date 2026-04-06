@@ -206,13 +206,13 @@ export async function GET(request: Request) {
     explanation: cleanExplanation(row.explanation),
   }));
 
-  const suggestedPrompt = `You are an elite MPPSC PYQ pattern analyst.
+  const suggestedPrompt = `You are an elite UPSC PYQ pattern analyst.
 Analyze ONLY the provided chunk: years ${scopedFromYear}-${scopedToYear}, chunk ${safeChunkIndex}/${totalChunks}.
 
 Output STRICT JSON ARRAY ONLY (no markdown, no prose) with this shape:
 [
   {
-    "subject": "MP GK | History | Geography | Polity | Economy | Science | ICT | Current Affairs | Misc",
+    "subject": "History | Geography | Polity | Economy | Science | Environment | Current Affairs | Ethics | Misc",
     "topic": "Specific micro-topic name",
     "topic_en": "English topic title",
     "description": "2-3 line focused summary for students",
@@ -252,7 +252,7 @@ Output STRICT JSON ARRAY ONLY (no markdown, no prose) with this shape:
 
 Rules:
 - Group by REAL PYQ patterns only.
-- Use ONLY scoped exams: "MPPSC State Service Prelims YYYY (Paper 1 - General Studies)" or "MPPSC राज्य सेवा प्रारंभिक परीक्षा YYYY (पेपर 1 - सामान्य अध्ययन)" for 2020-2025.
+- Use ONLY scoped exams: "UPSC Civil Services Prelims YYYY (Paper 1 - General Studies)" for 2020-2025.
 - Always attempt Current Affairs classification where questions are about awards, schemes, reports, indices, sports, summits, defence, appointments, national/international events.
 - Prefer compact learning chunks students can revise in 2-3 minutes.
 - Use the question IDs exactly as provided.

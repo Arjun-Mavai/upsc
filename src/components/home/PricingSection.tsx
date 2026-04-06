@@ -8,10 +8,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import {
   type PricingData,
   PRICING_DEFAULTS,
-  LITE_FEATURES,
   PRO_FEATURES,
-  calcDiscount,
-  calcMonthly,
 } from '@/config/pricing';
 import { PricingCard } from '@/components/PricingCard';
 import { useQuery } from '@tanstack/react-query';
@@ -24,19 +21,14 @@ export function PricingSection() {
 
   // 🔒 Server Action + React Query (shared cache with /pricing page!)
   const { data: pricingData } = useQuery({
-    queryKey: ['pricing'],
-    queryFn: getPricingData,
+    queryKey: ['pricing', 'upsc'],
+    queryFn: () => getPricingData('upsc'),
     staleTime: 5 * 60 * 1000,
   });
 
   if (globalUser?.isSubscribed) return null;
 
   const p = pricingData?.pricing ?? PRICING_DEFAULTS;
-
-  const liteDiscount = calcDiscount(p.litePrice, p.liteOriginalPrice);
-  const proDiscount = calcDiscount(p.proPrice, p.proOriginalPrice);
-  const liteMonthly = calcMonthly(p.litePrice, p.liteMonths);
-  const proMonthly = calcMonthly(p.proPrice, p.proMonths);
 
   return (
     <section id="pricing" className="relative bg-slate-50 py-12 sm:py-20">
@@ -47,10 +39,10 @@ export function PricingSection() {
           {hi ? 'अपना प्लान चुनें' : 'Choose Your Plan'}
         </h2>
         <p className="mb-4 text-center text-sm font-medium text-slate-500">
-          {hi ? 'परीक्षा तक पूरी तैयारी' : 'Complete preparation until the exam'}
+          {hi ? 'UPSC 2026 के लिए पूरी तैयारी' : 'Complete preparation for UPSC 2026'}
         </p>
 
-        {/* FOMO badge - "first 100 students" with joined count */}
+        {/* FOMO badge */}
         <div className="mb-8 flex justify-center">
           <div className="relative inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2">
             <Flame className="h-3.5 w-3.5 text-red-500" />
@@ -64,8 +56,8 @@ export function PricingSection() {
           </div>
         </div>
 
-        {/* Pricing Cards — same as /pricing page */}
-        <div className="mx-auto grid max-w-md grid-cols-1 gap-5">
+        {/* Pricing Cards */}
+        <div className="mx-auto max-w-md">
           <PricingCard
             planType="pro"
             pricing={p}

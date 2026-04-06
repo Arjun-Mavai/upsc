@@ -128,9 +128,8 @@ export async function POST(req: Request) {
     const p = rows[0] || PRICING_DEFAULTS;
 
     const PLAN_AMOUNTS: Record<string, number> = {
-      lite: (p.litePrice ?? PRICING_DEFAULTS.litePrice) * 100,
       pro: (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100,
-      upgrade: (p.upgradePrice ?? PRICING_DEFAULTS.upgradePrice) * 100,
+      upgrade: ((p as any).upgradePrice ?? 99) * 100, // Upgrade to pro
     };
 
     const amount = PLAN_AMOUNTS[planType];

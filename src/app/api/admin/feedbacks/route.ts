@@ -27,8 +27,12 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Fetch Feedbacks
-    const data = await db.select().from(feedbacks).orderBy(desc(feedbacks.createdAt));
+    // Fetch UPSC Feedbacks only
+    const data = await db
+      .select()
+      .from(feedbacks)
+      .where(eq(feedbacks.examType, 'upsc'))
+      .orderBy(desc(feedbacks.createdAt));
 
     return NextResponse.json({ feedbacks: data });
   } catch (error) {

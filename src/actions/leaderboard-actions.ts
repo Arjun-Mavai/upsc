@@ -4,8 +4,9 @@ import { db } from '@/db';
 import { testLeaderboard } from '@/db/schema';
 import { eq, desc, asc, sql, and } from 'drizzle-orm';
 import { FAKE_USERS, FIRST_NAMES, LAST_NAMES } from '@/data/fakeUsers';
-import { questions } from '@/db/schema';
-import { SCORING_CONFIG } from '@/lib/quiz-scoring';
+import { questions, tests } from '@/db/schema';
+import { SCORING_CONFIG, getExamScoring } from '@/lib/quiz-scoring';
+import { getExamContext } from '@/lib/exam-context';
 
 type LeaderboardEntry = typeof testLeaderboard.$inferSelect;
 
@@ -146,13 +147,17 @@ async function generateFakeLeaderboard(testId: string) {
   const random = seededRandom(seed);
 
   // Get accurate total marks based on question count
+  const test = await db.query.tests.findFirst({ where: eq(tests.id, testId) });
+  const exam = await getExamContext();
+  const scoring = getExamScoring(exam, test?.type);
+
   const qCount = await db
     .select({ count: sql<number>`count(*)` })
     .from(questions)
     .where(eq(questions.testId, testId));
 
   const totalQuestions = qCount[0]?.count || 0;
-  const totalMarks = totalQuestions > 0 ? totalQuestions * SCORING_CONFIG.MARKS_PER_QUESTION : 60;
+  const totalMarks = totalQuestions > 0 ? totalQuestions * scoring.marksPerQuestion : 60;
 
   // 🎲 Randomize count with more variation (25-70, never more than 70)
   // Bhai ne bola: kisi test me 30, 40, 50 aise random aaye

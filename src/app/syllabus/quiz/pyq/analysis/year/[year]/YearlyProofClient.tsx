@@ -16,7 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
-import { RenderTableQuestion, mapCorrectAnswerToIndex } from '@/features/tests/utils/questionFormatter';
+import { RenderTableQuestion } from '@/features/tests/utils/questionFormatter';
+import { getCorrectAnswerIndex } from '@/lib/quiz-scoring';
 import type { YearlySubjectQuestions } from '@/features/tests/actions/pyq-insights';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { cn } from '@/lib/utils';
@@ -200,7 +201,7 @@ export default function YearlyProofClient({ data }: { data: YearlySubjectQuestio
                         {/* Options Display - 2 Column Grid from Reference */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
                           {getParsedOptions(q.options).map((opt: any, idx: number) => {
-                            const correctIdx = mapCorrectAnswerToIndex(q.correctAnswer);
+                            const correctIdx = getCorrectAnswerIndex(q.correctAnswer, q.options);
                             const isCorrect = correctIdx !== -1 && correctIdx === idx;
                             
                             let optionText = opt;

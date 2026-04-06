@@ -13,12 +13,12 @@
 
 import { db } from '@/db';
 import { tests, questions } from '@/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, or, inArray } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { logger } from '@/lib/logger';
 
 /**
- * getCachedFreeQuizzes — unstable_cache se cached MISC tests
+ * getCachedFreeQuizzes — unstable_cache se cached MISC/UPSC_FREE_QUIZ tests
  * 60s revalidate + 'tests' tag — admin se test add/edit hone pe bust hota h
  * Same pattern as getCachedFLTTests, getCachedPYQTests
  */
@@ -37,7 +37,14 @@ export const getCachedFreeQuizzes = unstable_cache(
         createdAt: tests.createdAt,
       })
       .from(tests)
-      .where(and(eq(tests.type, 'MISC'), eq(tests.isFreeAccess, true), eq(tests.isHidden, false)))
+      .where(
+        and(
+          inArray(tests.type, ['MISC', 'UPSC_FREE_QUIZ']), 
+          eq(tests.isFreeAccess, true), 
+          eq(tests.isHidden, false),
+          eq(tests.examType, 'upsc') // UPSC-only tests
+        )
+      )
       .orderBy(desc(tests.createdAt));
   },
   ['free-tests-list'],
@@ -53,7 +60,15 @@ const fetchFreeQuizData = async (testId: string) => {
   const test = await db
     .select()
     .from(tests)
-    .where(and(eq(tests.id, testId), eq(tests.type, 'MISC'), eq(tests.isFreeAccess, true), eq(tests.isHidden, false)))
+    .where(
+      and(
+        eq(tests.id, testId), 
+        inArray(tests.type, ['MISC', 'UPSC_FREE_QUIZ']), 
+        eq(tests.isFreeAccess, true), 
+        eq(tests.isHidden, false),
+        eq(tests.examType, 'upsc') // UPSC-only tests
+      )
+    )
     .get();
 
   if (!test) return null;
@@ -61,7 +76,7 @@ const fetchFreeQuizData = async (testId: string) => {
   const testQuestions = await db
     .select()
     .from(questions)
-    .where(eq(questions.testId, testId))
+    .where(and(eq(questions.testId, testId), eq(questions.examType, 'upsc'))) // UPSC-only questions
     .orderBy(questions.order);
 
   return { ...test, questions: testQuestions };

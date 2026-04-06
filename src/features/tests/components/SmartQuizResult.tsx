@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { calculateMPPSCResult, SmartResultResponse } from '@/features/tests/actions/test-result';
+import { calculateUPSCResult, SmartResultResponse } from '@/features/tests/actions/test-result';
 import { useSettingsStore } from '@/store/useSettingsStore';
 
 interface SmartQuizResultProps {
@@ -39,7 +39,7 @@ export function SmartQuizResult({
     async function fetchResult() {
       if (!testId || initialResult) return;
       try {
-        const res = await calculateMPPSCResult(testId);
+        const res = await calculateUPSCResult(testId);
         if ('error' in res) {
           console.error(res.error);
         } else {
@@ -100,7 +100,7 @@ export function SmartQuizResult({
           <h1 className="line-clamp-1 text-lg font-bold text-slate-900">
             {title || 'Test Result'}
           </h1>
-          <p className="text-xs text-slate-500">MPPSC Prelims Analysis</p>
+          <p className="text-xs text-slate-500">UPSC Prelims Analysis</p>
         </div>
         <Button variant="ghost" size="sm" onClick={onExit}>
           {isHi ? 'बाहर जाएं' : 'Exit'}

@@ -19,6 +19,7 @@ import { QuizExitDialog } from './quiz/QuizExitDialog';
 import { GuestEntryDialog } from './quiz/GuestEntryDialog';
 import { QuizExplanation } from './quiz/QuizExplanation';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
+import { getCorrectAnswerIndex } from '@/lib/quiz-scoring';
 import { PYQFactsLoader } from '@/components/ui/PYQFactsLoader';
 
 interface QuizInterfaceProps {
@@ -271,7 +272,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
     Object.entries(answers).forEach(([qId, ansIdx]) => {
       const q = questions.find((q) => q.id === qId);
       if (q) {
-        if (q.correctAnswer === ansIdx) earnedScore += q.marks || QUIZ_CONSTANTS.MARKS_PER_QUESTION;
+        if (getCorrectAnswerIndex(q.correctAnswer, q.options) === ansIdx) earnedScore += q.marks || QUIZ_CONSTANTS.MARKS_PER_QUESTION;
         else
           earnedScore -=
             q.negativeMarks !== undefined ? q.negativeMarks : QUIZ_CONSTANTS.NEGATIVE_MARKING;
@@ -313,7 +314,6 @@ export function QuizInterface(props: QuizInterfaceProps) {
         title={title}
         testId={testId}
         userId={userId}
-        userName={userName}
         showFeedbackModal={false}  // Don't show feedback for logged-in users
       />
     );

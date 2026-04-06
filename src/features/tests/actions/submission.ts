@@ -5,18 +5,20 @@ import { tests, userAttempts, questions, attemptAnswers, syllabusTopics } from '
 import { eq, asc, desc, and, inArray, sql } from 'drizzle-orm';
 import { unstable_cache, revalidateTag } from 'next/cache';
 import { verifyAuth } from '@/lib/auth';
-import { SCORING_CONFIG } from '@/lib/quiz-scoring';
+import { SCORING_CONFIG, mapCorrectAnswerToIndex, getExamScoring } from '@/lib/quiz-scoring';
 import { logger } from '@/lib/logger';
 import { insertUserToLeaderboard } from '@/actions/leaderboard-actions';
+import { getExamContext } from '@/lib/exam-context';
 
 // --- Generic Cached Fetchers ---
 
 export const getCachedPYQTests = unstable_cache(
-  async () => {
+  async (examId?: string) => {
+    const testType = examId === 'upsc' ? 'UPSC_PYQ' : 'PYQ';
     const pyqTests = await db
       .select()
       .from(tests)
-      .where(and(eq(tests.type, 'PYQ'), eq(tests.isHidden, false)))
+      .where(and(eq(tests.type, testType), eq(tests.isHidden, false)))
       .orderBy(asc(tests.displayOrder), desc(tests.createdAt));
 
     return pyqTests.map((test) => ({
@@ -29,11 +31,12 @@ export const getCachedPYQTests = unstable_cache(
 );
 
 export const getCachedFLTTests = unstable_cache(
-  async () => {
+  async (examId?: string) => {
+    const testType = examId === 'upsc' ? 'UPSC_FLT' : 'FLT';
     return await db
       .select()
       .from(tests)
-      .where(and(eq(tests.type, 'FLT'), eq(tests.isHidden, false)))
+      .where(and(eq(tests.type, testType), eq(tests.isHidden, false)))
       .orderBy(asc(tests.displayOrder));
   },
   ['flt-tests-list'],
@@ -91,9 +94,13 @@ export async function getUserAttempts(testIds: string[], userId?: string) {
  * Faster way to get all attempts for a specific type (FLT, PYQ, etc)
  */
 export async function getUserAttemptsByType(
-  type: 'FLT' | 'UNIT' | 'CSAT' | 'PYQ' | 'TOPIC',
-  userId: string
+  type: string,
+  userId: string,
+  examId?: string
 ) {
+  const isUPSC = examId === 'upsc';
+  const targetType = isUPSC ? `UPSC_${type}` : type;
+
   const attempts = await db
     .select({
       testId: userAttempts.testId,
@@ -101,7 +108,7 @@ export async function getUserAttemptsByType(
     })
     .from(userAttempts)
     .innerJoin(tests, eq(userAttempts.testId, tests.id))
-    .where(and(eq(userAttempts.userId, userId), eq(tests.type, type)))
+    .where(and(eq(userAttempts.userId, userId), eq(tests.type, targetType as any)))
     .limit(1000)
     .groupBy(userAttempts.testId);
 
@@ -253,46 +260,54 @@ export async function submitTestAttempt(
       return { error: 'Test already submitted recently. Please wait.' };
     }
 
-    // 1. Fetch Correct Answers from DB (Secure)
-    const testQuestions = await db
-      .select({
-        id: questions.id,
-        correctAnswer: questions.correctAnswer,
-        marks: questions.marks,
-        negativeMarks: questions.negativeMarks,
-      })
-      .from(questions)
-      .where(eq(questions.testId, testId));
+    // 1. Fetch Test and Correct Answers from DB (Secure)
+    const test = await db.query.tests.findFirst({ where: eq(tests.id, testId) });
+    if (!test) return { error: 'Test not found' };
 
-    if (testQuestions.length === 0) return { error: 'Test not found' };
+    const exam = await getExamContext();
+    const scoring = getExamScoring(exam, test.type);
+// 1. Fetch Correct Answers from DB (Secure)
+const testQuestions = await db
+  .select({
+    id: questions.id,
+    correctAnswer: questions.correctAnswer,
+    options: questions.options,
+    marks: questions.marks,
+    negativeMarks: questions.negativeMarks,
+  })
+  .from(questions)
+  .where(eq(questions.testId, testId));
 
-    // 2. Calculate Score
-    let totalScore = 0;
-    let correctCount = 0;
-    let incorrectCount = 0;
+if (testQuestions.length === 0) return { error: 'Test not found' };
 
-    const answersList: {
-      questionId: string;
-      userAnswer: string;
-      isCorrect: boolean;
-      timeTaken: number;
-    }[] = [];
+// 2. Calculate Score
+let totalScore = 0;
+let correctCount = 0;
+let incorrectCount = 0;
 
-    testQuestions.forEach((q) => {
-      const userAnswer = answers[q.id];
-      if (userAnswer !== undefined) {
-        const isCorrect = String(userAnswer) === String(q.correctAnswer);
+const answersList: {
+  questionId: string;
+  userAnswer: string;
+  isCorrect: boolean;
+  timeTaken: number;
+}[] = [];
 
-        if (isCorrect) {
+testQuestions.forEach((q) => {
+  const userAnswer = answers[q.id];
+  if (userAnswer !== undefined) {
+    // Use mapCorrectAnswerToIndex which converts A/B/C/D or 0/1/2/3 to index
+    const isCorrect = Number(userAnswer) === mapCorrectAnswerToIndex(q.correctAnswer);
+
+    if (isCorrect) {
           // Strict Scoring as per User Request ("Global Standard")
-          // Use per-question marks if available, fallback to global config
-          const marks = q.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION;
+          // Use per-question marks if available, fallback to exam-specific scoring
+          const marks = q.marks ?? scoring.marksPerQuestion;
           totalScore += marks;
           correctCount++;
         } else {
           // Strict Negative Marking
-          // Use per-question negative marks if available
-          const deduction = q.negativeMarks ?? SCORING_CONFIG.NEGATIVE_MARKING;
+          // Use per-question negative marks if available, fallback to exam-specific scoring
+          const deduction = q.negativeMarks ?? scoring.negativeMarking;
           totalScore -= deduction;
           incorrectCount++;
         }
@@ -308,7 +323,6 @@ export async function submitTestAttempt(
 
     // 🛡️ Server-Side Timer Validation (Prevent Time Manipulation)
     // Bhai, client se jo time aaya hai wo sahi hai ya nahi check karo!
-    const test = await db.query.tests.findFirst({ where: eq(tests.id, testId) });
     const maxDuration = (test?.durationMinutes || 60) * 60; // Convert to seconds
     const validDuration = Math.min(Math.max(durationSeconds, 0), maxDuration);
 
@@ -372,7 +386,7 @@ export async function submitTestAttempt(
 
     if (session && session.name) {
       const totalTestMarks = testQuestions.reduce(
-        (sum, q) => sum + (q.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION),
+        (sum, q) => sum + (q.marks ?? scoring.marksPerQuestion),
         0
       );
 

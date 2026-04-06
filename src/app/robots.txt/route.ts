@@ -1,16 +1,14 @@
 export async function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mppsc.zenscroll.app';
+  const baseUrl = 'https://upsc.zenscroll.app';
 
-  // 🤖 CUSTOM ROBOTS.TXT
+  // 🤖 ROBOTS.TXT — UPSC Intelligence
 
   const content = [
     'User-agent: *',
     'Allow: /',
     'Disallow: /api/',
     'Disallow: /admin/',
-    'Disallow: /app/',
     'Disallow: /dashboard/',
-    'Disallow: /syllabus/analytics/',
     'Disallow: /syllabus/quiz/play',
     'Disallow: /_next/static/css/',
     'Disallow: /_next/static/media/',
@@ -19,25 +17,20 @@ export async function GET() {
     '',
     'User-agent: Googlebot',
     'Allow: /',
-    'Allow: /syllabus/',
-    'Allow: /blogs/',
     'Allow: /syllabus/quiz/pyq',
-    'Allow: /tests/',
+    'Allow: /syllabus/quiz/pyq/intelligence',
+    'Allow: /blogs/',
     'Disallow: /api/',
     'Disallow: /admin/',
-    'Disallow: /app/',
     'Disallow: /dashboard/',
-    'Disallow: /syllabus/analytics/',
     'Disallow: /syllabus/quiz/play',
     '',
     'User-agent: Bingbot',
     'Allow: /',
-    'Allow: /syllabus/',
+    'Allow: /syllabus/quiz/pyq',
     'Allow: /blogs/',
-    'Allow: /tests/',
     'Disallow: /api/',
     'Disallow: /admin/',
-    'Disallow: /app/',
     'Disallow: /dashboard/',
     'Disallow: /syllabus/quiz/play',
     '',

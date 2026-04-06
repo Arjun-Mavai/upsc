@@ -9,25 +9,29 @@ import { CACHE, cachedData } from '@/lib/cache';
  * Zero impact on performance due to server-side caching
  */
 export const getBlogCounts = cachedData(
-  async () => {
+  async (examType: string = 'upsc') => {
     try {
-      const unitCounts = await db
-        .select({
-          unitId: contentBlogs.unitId,
-          count: count(),
-        })
-        .from(contentBlogs)
-        .where(and(eq(contentBlogs.isPublished, true), eq(contentBlogs.isHidden, false)))
-        .groupBy(contentBlogs.unitId);
+      // Base condition for UPSC domain filtering
+      const baseConditions = [
+        eq(contentBlogs.isPublished, true), 
+        eq(contentBlogs.isHidden, false)
+      ];
+      
+      // Add exam type filtering
+      if (examType !== 'all') {
+        baseConditions.push(
+          sql`(${contentBlogs.examType} = ${examType} OR ${contentBlogs.examType} = 'all')`
+        );
+      }
 
-      // Get counts grouped by category (subjects)
+      // Get counts grouped by category (subjects) - UPSC doesn't use unit-wise filtering
       const categoryCounts = await db
         .select({
           category: contentBlogs.category,
           count: count(),
         })
         .from(contentBlogs)
-        .where(and(eq(contentBlogs.isPublished, true), eq(contentBlogs.isHidden, false)))
+        .where(and(...baseConditions))
         .groupBy(contentBlogs.category);
 
       // Get count for Free articles
@@ -35,21 +39,11 @@ export const getBlogCounts = cachedData(
         .select({ count: count() })
         .from(contentBlogs)
         .where(
-          and(
-            eq(contentBlogs.isPublished, true),
-            eq(contentBlogs.isHidden, false),
-            eq(contentBlogs.isFreeAccess, true)
-          )
+          and(...baseConditions, eq(contentBlogs.isFreeAccess, true))
         );
 
       const countsMap: Record<string, number> = {};
       const categoryCountsMap: Record<string, number> = {};
-
-      unitCounts.forEach((row) => {
-        if (row.unitId) {
-          countsMap[row.unitId] = row.count;
-        }
-      });
 
       categoryCounts.forEach((row) => {
         if (row.category) {
@@ -103,19 +97,19 @@ export async function getBlogs({
   page = 1,
   limit = 10,
   search = '',
-  unitId = 'All',
   category = 'All',
   isPremium = undefined, // undefined = all, true = premium, false = free
   isFreeAccess = undefined,
+  examType = 'upsc', // UPSC-only repo
   isAdmin = false,
 }: {
   page?: number;
   limit?: number;
   search?: string;
-  unitId?: string;
   category?: string;
   isPremium?: boolean;
   isFreeAccess?: boolean;
+  examType?: string;
   isAdmin?: boolean;
 } = {}) {
   try {
@@ -130,12 +124,7 @@ export async function getBlogs({
       whereConditions.push(eq(contentBlogs.isHidden, false));
     }
 
-    // Filter by Unit
-    if (unitId && unitId !== 'All') {
-      whereConditions.push(eq(contentBlogs.unitId, unitId));
-    }
-
-    // Filter by Category (Subject)
+    // Filter by Category (Subject) - UPSC doesn't use unit-wise filtering
     if (category && category !== 'All') {
       whereConditions.push(eq(contentBlogs.category, category));
     }
@@ -155,6 +144,13 @@ export async function getBlogs({
     // Filter by Free Access (if specified)
     if (isFreeAccess !== undefined) {
       whereConditions.push(eq(contentBlogs.isFreeAccess, isFreeAccess));
+    }
+
+    // Filter by Exam Type (UPSC/MPPSC segregation)
+    if (examType && examType !== 'all') {
+      whereConditions.push(
+        sql`(${contentBlogs.examType} = ${examType} OR ${contentBlogs.examType} = 'all')`
+      );
     }
 
     const whereClause = and(...whereConditions);

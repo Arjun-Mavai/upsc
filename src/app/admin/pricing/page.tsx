@@ -1,9 +1,7 @@
 'use client';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 💰 ADMIN PRICING — Update prices from dashboard, no deploy needed
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Mobile-first card layout. Changes reflect immediately on /pricing.
+// 💰 ADMIN PRICING — UPSC Pro Plan Only
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import { useState, useEffect } from 'react';
@@ -78,7 +76,7 @@ export default function AdminPricingPage() {
             Pricing Manager
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Prices change karo — turant /pricing par reflect hoga, deploy nahi karna
+            Update UPSC Pro plan pricing — reflects immediately on /pricing
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={fetchPricing} disabled={loading}>
@@ -87,8 +85,8 @@ export default function AdminPricingPage() {
       </div>
 
       {/* ── Pro Plan Card ──────────────────────────────────── */}
-      <div className="space-y-3 rounded-xl border-2 border-slate-800 bg-white p-4 shadow-sm md:p-6">
-        <h2 className="flex items-center gap-2 font-bold text-slate-800">👑 Pro Plan</h2>
+      <div className="space-y-3 rounded-xl border-2 border-indigo-600 bg-white p-4 shadow-sm md:p-6">
+        <h2 className="flex items-center gap-2 font-bold text-slate-800">👑 UPSC Pro Plan</h2>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <label className={labelClass}>Current Price (₹)</label>
@@ -129,7 +127,7 @@ export default function AdminPricingPage() {
             />
           </div>
         </div>
-        <div className="rounded-lg bg-slate-50 p-3 text-sm">
+        <div className="rounded-lg bg-indigo-50 p-3 text-sm">
           <span className="text-slate-400 line-through">₹{data.proOriginalPrice}</span>
           <span className="ml-2 text-xl font-black text-slate-900">₹{data.proPrice}</span>
           <span className="ml-2 text-xs font-bold text-emerald-600">
@@ -141,9 +139,61 @@ export default function AdminPricingPage() {
         </div>
       </div>
 
-      {/* ── Upgrade Pricing Card ───────────────────────────── */}
+      {/* ── Lite Plan Card ──────────────────────────────────── */}
+      <div className="space-y-3 rounded-xl border-2 border-amber-500 bg-white p-4 shadow-sm md:p-6">
+        <h2 className="flex items-center gap-2 font-bold text-slate-800">⚡ UPSC Lite Plan</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className={labelClass}>Current Price (₹)</label>
+            <input
+              type="number"
+              value={data.litePrice}
+              onChange={(e) => updateField('litePrice', Number(e.target.value))}
+              className={inputClass}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className={labelClass}>Original / Strike (₹)</label>
+            <input
+              type="number"
+              value={data.liteOriginalPrice}
+              onChange={(e) => updateField('liteOriginalPrice', Number(e.target.value))}
+              className={inputClass}
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className={labelClass}>Validity Text</label>
+            <input
+              type="text"
+              value={data.liteValidityText}
+              onChange={(e) => updateField('liteValidityText', e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className={labelClass}>Duration (months)</label>
+            <input
+              type="number"
+              value={data.liteMonths}
+              onChange={(e) => updateField('liteMonths', Number(e.target.value))}
+              className={inputClass}
+            />
+          </div>
+        </div>
+        <div className="rounded-lg bg-amber-50 p-3 text-sm">
+          <span className="text-slate-400 line-through">₹{data.liteOriginalPrice}</span>
+          <span className="ml-2 text-xl font-black text-slate-900">₹{data.litePrice}</span>
+          <span className="ml-2 text-xs font-bold text-emerald-600">
+            {Math.round((1 - data.litePrice / data.liteOriginalPrice) * 100)}% OFF
+          </span>
+        </div>
+      </div>
+
+      {/* ── Upgrade Pricing ──────────────────────────────────── */}
       <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
-        <h2 className="font-bold text-slate-800">🔄 Upgrade (Lite → Pro)</h2>
+        <h2 className="font-bold text-slate-800">🔄 Lite → Pro Upgrade</h2>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <label className={labelClass}>Upgrade Price (₹)</label>
@@ -155,7 +205,7 @@ export default function AdminPricingPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className={labelClass}>Original (₹)</label>
+            <label className={labelClass}>Original Price (₹)</label>
             <input
               type="number"
               value={data.upgradeOriginalPrice}
@@ -178,44 +228,35 @@ export default function AdminPricingPage() {
             className={inputClass}
           />
           <p className="text-[11px] text-slate-400">
-            Ye number pricing page par dikhega — &quot;23 students already joined&quot;
+            Shows on pricing page as "X+ joined" badge
           </p>
         </div>
-        <div className="space-y-1">
-          <label className={labelClass}>Urgency Text (English)</label>
-          <input
-            type="text"
-            value={data.urgencyText}
-            onChange={(e) => updateField('urgencyText', e.target.value)}
-            className={inputClass}
-          />
-        </div>
-        <div className="space-y-1">
-          <label className={labelClass}>Urgency Text (Hindi)</label>
-          <input
-            type="text"
-            value={data.urgencyTextHi}
-            onChange={(e) => updateField('urgencyTextHi', e.target.value)}
-            className={inputClass}
-          />
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="space-y-1">
+            <label className={labelClass}>Urgency Text (English)</label>
+            <input
+              type="text"
+              value={data.urgencyText}
+              onChange={(e) => updateField('urgencyText', e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className={labelClass}>Urgency Text (Hindi)</label>
+            <input
+              type="text"
+              value={data.urgencyTextHi}
+              onChange={(e) => updateField('urgencyTextHi', e.target.value)}
+              className={inputClass}
+            />
+          </div>
         </div>
       </div>
 
       {/* ── Save Button ────────────────────────────────────── */}
-      <Button
-        onClick={handleSave}
-        disabled={saving}
-        className="h-12 w-full bg-slate-900 font-bold text-white hover:bg-slate-800"
-      >
-        {saving ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
-          </>
-        ) : (
-          <>
-            <Save className="mr-2 h-4 w-4" /> Save Pricing
-          </>
-        )}
+      <Button onClick={handleSave} disabled={saving} className="w-full h-12 text-base font-bold">
+        {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+        {saving ? 'Saving...' : 'Save Changes'}
       </Button>
     </div>
   );

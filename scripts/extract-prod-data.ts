@@ -81,7 +81,7 @@ async function extractProdData() {
     
     // Process data
     const csvRows = ['year,question_id,question_text,options,correct_answer,subject'];
-    let yearCounts: Record<string, number> = {};
+    const yearCounts: Record<string, number> = {};
     let successCount = 0;
     
     for (const row of result.rows as any[]) {

@@ -34,7 +34,7 @@ async function AttemptContent({ attemptId }: { attemptId: string }) {
       id: ans.questionId || ans.id, // Fallback to id if questionId missing
       question: ans.questionText,
       questionEn: ans.questionTextEn || undefined,
-      correctAnswer: Number(ans.correctAnswer),
+      correctAnswer: ans.correctAnswer,
       options: parsedOptions,
       explanation: ans.explanation || undefined,
       explanationEn: ans.explanationEn || undefined,
@@ -91,7 +91,6 @@ async function AttemptContent({ attemptId }: { attemptId: string }) {
         title={meta.testTitle ?? undefined}
         testId={meta.testId ?? undefined}
         userId={meta.userId ?? undefined}
-        userName={undefined}  // No userName available in analytics history
         disableRetry={true}
         showFeedbackModal={false}
       />

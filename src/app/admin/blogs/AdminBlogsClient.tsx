@@ -40,7 +40,7 @@ export default function AdminBlogsClient({
   // Fetch data when Page or Search changes
   const fetchData = (page: number, search: string) => {
     startTransition(async () => {
-      const result = await getBlogs({ page, limit: 10, search, unitId: 'All', isAdmin: true });
+      const result = await getBlogs({ page, limit: 10, search, isAdmin: true });
       setBlogs(result.blogs);
       setPagination(result.pagination);
     });

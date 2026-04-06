@@ -2,9 +2,9 @@ import { getBlogs, getBlogCounts } from '@/services/blog-service';
 import BlogsClient from './BlogsClient';
 
 export const metadata = {
-  title: 'MPPSC Study Blogs & Articles | MPPSC Knowledge',
+  title: 'UPSC Study Blogs & Articles | UPSC Knowledge',
   description:
-    'Read high-quality articles, strategies, and notes for MPPSC preparation. Covering History, Geography, Polity, and MP Special topics.',
+    'Read high-quality articles, strategies, and notes for UPSC preparation. Covering History, Geography, Polity, and Indian Affairs topics.',
 };
 
 // Force Static Generation
@@ -20,8 +20,8 @@ async function BlogsContent() {
   // Fetch initial data (Page 1) and counts in parallel.
   // User is explicitly NOT fetched here to allow SSG.
   const [counts, blogsResult] = await Promise.all([
-    getBlogCounts(),
-    getBlogs({ page: 1, limit: 10, unitId: 'All', isFreeAccess: true }),
+    getBlogCounts('upsc'),
+    getBlogs({ page: 1, limit: 10, isFreeAccess: true, examType: 'upsc' }),
   ]);
 
   const { blogs, pagination } = blogsResult;

@@ -8,7 +8,6 @@ import { motion } from 'framer-motion';
 interface PremiumExplanationProps {
   explanation: string;
   explanationEn?: string | null;
-  explanationHi?: string | null;
   language?: 'hi' | 'en';
   /** When true, Core Logic renders without a border-box — plain text, more space on small screens */
   compact?: boolean;
@@ -21,7 +20,6 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
   explanation,
   explanationEn,
-  explanationHi,
   language,
   compact = false,
   darkMode = false,
@@ -34,11 +32,24 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
       ? 'यह प्रश्न सीधे अवधारणात्मक (Conceptual) है। यदि यह गलत हुआ है, तो कृपया संबंधित विषय के मूल तथ्यों (Basics) को दोहराएं।'
       : 'This question addresses core concepts. If answered incorrectly, please review the fundamental facts of this topic.';
 
-  const textToParseRaw =
-    (finalLanguage === 'en' ? (explanationEn || explanation) : (explanationHi || explanation)) ||
-    DEFAULT_MSG;
+  const textToParse =
+    (finalLanguage === 'en' && explanationEn ? explanationEn : explanation) || DEFAULT_MSG;
 
-  // JSON DETECTION & RENDERING
+  // 1. Motion Variants (At Top to avoid use-before-declaration)
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 },
+    },
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 10 },
+    show: { opacity: 1, y: 0 },
+  };
+
+  // 2. JSON DETECTION & RENDERING
   const renderJSONExplanation = (jsonStr: string) => {
     try {
       const trimmed = jsonStr.trim();
@@ -47,32 +58,32 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
 
       const analysisItems = [
         {
-          key: 'core_logic',
-          label: finalLanguage === 'hi' ? 'तर्क एवं विश्लेषण' : 'Core Logic',
+          key: 'verdict',
+          label: finalLanguage === 'hi' ? 'फैसला (Verdict)' : 'Verdict',
           icon: <CheckCircle2 size={16} className="text-emerald-500" />,
-          color: 'emerald' as const,
-          content: data.verdict || data.core_logic || data.logic,
+          color: 'emerald',
+          content: data.verdict,
         },
         {
-          key: 'exam_fact',
-          label: finalLanguage === 'hi' ? 'एग्जाम फैक्ट' : 'Exam Fact',
+          key: 'core_concept',
+          label: finalLanguage === 'hi' ? 'मुख्य अवधारणा (Core Concept)' : 'Core Pillar',
           icon: <Lightbulb size={16} className="text-amber-500" />,
-          color: 'amber' as const,
-          content: data.exam_fact || data.fact || data.core_concept,
+          color: 'amber',
+          content: data.core_concept,
         },
         {
-          key: 'memory_tip',
-          label: finalLanguage === 'hi' ? 'मेमोरी टिप' : 'Memory Tip',
+          key: 'elimination_wisdom',
+          label: finalLanguage === 'hi' ? 'एलिमिनेशन लॉजिक (Elimination)' : 'Logic Path',
           icon: <Brain size={16} className="text-indigo-500" />,
-          color: 'indigo' as const,
-          content: data.memory_tip || data.tip || data.memory_trick || data.elimination_wisdom,
+          color: 'indigo',
+          content: data.elimination_wisdom,
         },
         {
-          key: 'scam_alert',
-          label: finalLanguage === 'hi' ? 'स्कैम अलर्ट' : 'Scam Alert',
+          key: 'trap_alerts',
+          label: finalLanguage === 'hi' ? 'ट्रैप अलर्ट (Trap Alert)' : 'Trap Watch',
           icon: <AlertTriangle size={16} className="text-rose-500" />,
-          color: 'rose' as const,
-          content: data.scam_alert || data.scam || data.trap_alert || data.trap_alerts,
+          color: 'rose',
+          content: data.trap_alerts,
         },
       ].filter((item) => item.content);
 
@@ -99,10 +110,7 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
                 <div
                   className={cn(
                     'flex h-8 w-8 items-center justify-center rounded-xl',
-                    ai.color === 'emerald' && 'bg-emerald-500/10',
-                    ai.color === 'amber' && 'bg-amber-500/10',
-                    ai.color === 'indigo' && 'bg-indigo-500/10',
-                    ai.color === 'rose' && 'bg-rose-500/10'
+                    `bg-${ai.color}-500/10`
                   )}
                 >
                   {ai.icon}
@@ -110,10 +118,7 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
                 <h4
                   className={cn(
                     'text-[10px] font-black tracking-[0.2em] uppercase',
-                    ai.color === 'emerald' && 'text-emerald-500',
-                    ai.color === 'amber' && 'text-amber-500',
-                    ai.color === 'indigo' && 'text-indigo-500',
-                    ai.color === 'rose' && 'text-rose-500'
+                    `text-${ai.color}-500`
                   )}
                 >
                   {ai.label}
@@ -136,17 +141,21 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
     }
   };
 
-  const jsonExplanation = renderJSONExplanation(textToParseRaw);
-  if (jsonExplanation) return jsonExplanation;
+  const jsonExplanation = renderJSONExplanation(textToParse);
+  if (jsonExplanation)
+    return (
+      <motion.div variants={container} initial="hidden" animate="show" className="pt-2">
+        {jsonExplanation}
+      </motion.div>
+    );
 
-  const textToParse = textToParseRaw;
-
+  // 3. TEXT-BASED EXTRACTION (FALLBACK)
   const extractSection = (text: string, marker: string, nextMarkers: string[]) => {
     if (!text) return null;
     const startIndex = text.indexOf(marker);
     if (startIndex === -1) return null;
 
-    let content = text.slice(startIndex + marker.length);
+    const content = text.slice(startIndex + marker.length);
     let minIndex = content.length;
     nextMarkers.forEach((nm) => {
       const idx = content.indexOf(nm);
@@ -159,306 +168,184 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
   };
 
   const MARKERS = {
-    LOGIC: '**Correct Logic',
-    FACT: '**Exam Fact',
-    TIP: '**Memory Tip',
-    SCAM: '**Scam Alert',
-  };
-  const HINDI_MARKERS = {
-    LOGIC: '**सही तर्क',
-    FACT: '**एग्जाम फैक्ट',
-    TIP: '**मेमोरी टिप',
-    SCAM: '**स्कैम अलर्ट',
+    FACT: '**💡 Exam Fact',
+    TIP: '**🧠 Memory Tip',
+    SCAM: '**🚫 Scam Alert',
   };
 
-  // Also check for emoji versions
-  const EMOJI_MARKERS = {
-    LOGIC: '✅',
-    FACT: '💡',
-    TIP: '🧠',
-    SCAM: '🚫',
-  };
+  const examFact = extractSection(textToParse, MARKERS.FACT, [MARKERS.TIP, MARKERS.SCAM]);
+  const memoryTip = extractSection(textToParse, MARKERS.TIP, [MARKERS.FACT, MARKERS.SCAM]);
+  const scamAlert = extractSection(textToParse, MARKERS.SCAM, [MARKERS.FACT, MARKERS.TIP]);
 
-  // Find Core Logic section (can start with ✅ or **Correct Logic or **तर्क)
-  const extractLogic = (text: string) => {
-    const markers = [EMOJI_MARKERS.LOGIC, MARKERS.LOGIC, '**तर्क', HINDI_MARKERS.LOGIC];
-    const otherMarkers = [
-      MARKERS.FACT,
-      MARKERS.TIP,
-      MARKERS.SCAM,
-      HINDI_MARKERS.FACT,
-      HINDI_MARKERS.TIP,
-      HINDI_MARKERS.SCAM,
-      EMOJI_MARKERS.FACT,
-      EMOJI_MARKERS.TIP,
-      EMOJI_MARKERS.SCAM,
-    ];
-    
-    for (const marker of markers) {
-      const idx = text.indexOf(marker);
-      if (idx !== -1) {
-        let content = text.slice(idx);
-        // Find the next marker
-        let minIndex = content.length;
-        otherMarkers.forEach((nm) => {
-          const nextIdx = content.indexOf(nm, 1); // Skip current marker
-          if (nextIdx !== -1 && nextIdx < minIndex) {
-            minIndex = nextIdx;
-          }
-        });
-        return content.slice(0, minIndex).trim();
-      }
+  let coreLogic = textToParse;
+  const allMarkers = [MARKERS.FACT, MARKERS.TIP, MARKERS.SCAM];
+  let firstMarkerIndex = coreLogic.length;
+
+  allMarkers.forEach((m) => {
+    const idx = coreLogic.indexOf(m);
+    if (idx !== -1 && idx < firstMarkerIndex) {
+      firstMarkerIndex = idx;
     }
-    
-    // Fallback: take everything before first fact/tip/scam marker
-    let minIndex = text.length;
-    otherMarkers.forEach((m) => {
-      const idx = text.indexOf(m);
-      if (idx !== -1 && idx < minIndex) {
-        minIndex = idx;
-      }
-    });
-    return text.slice(0, minIndex).trim();
-  };
+  });
 
-  // Extract sections with both text and emoji markers
-  const extractWithMarker = (text: string, textMarker: string, emojiMarker: string, otherMarkers: string[]) => {
-    const markers = [textMarker, emojiMarker];
-    for (const marker of markers) {
-      const section = extractSection(text, marker, otherMarkers);
-      if (section) return section;
-    }
-    return null;
-  };
-
-  const coreLogic = extractLogic(textToParse);
-  const examFact = extractWithMarker(
-    textToParse,
-    finalLanguage === 'hi' ? HINDI_MARKERS.FACT : MARKERS.FACT,
-    EMOJI_MARKERS.FACT,
-    [
-      MARKERS.TIP,
-      MARKERS.SCAM,
-      MARKERS.LOGIC,
-      HINDI_MARKERS.TIP,
-      HINDI_MARKERS.SCAM,
-      HINDI_MARKERS.LOGIC,
-      EMOJI_MARKERS.TIP,
-      EMOJI_MARKERS.SCAM,
-      EMOJI_MARKERS.LOGIC,
-    ]
-  );
-  const memoryTip = extractWithMarker(
-    textToParse,
-    finalLanguage === 'hi' ? HINDI_MARKERS.TIP : MARKERS.TIP,
-    EMOJI_MARKERS.TIP,
-    [
-      MARKERS.FACT,
-      MARKERS.SCAM,
-      MARKERS.LOGIC,
-      HINDI_MARKERS.FACT,
-      HINDI_MARKERS.SCAM,
-      HINDI_MARKERS.LOGIC,
-      EMOJI_MARKERS.FACT,
-      EMOJI_MARKERS.SCAM,
-      EMOJI_MARKERS.LOGIC,
-    ]
-  );
-  const scamAlert = extractWithMarker(
-    textToParse,
-    finalLanguage === 'hi' ? HINDI_MARKERS.SCAM : MARKERS.SCAM,
-    EMOJI_MARKERS.SCAM,
-    [
-      MARKERS.FACT,
-      MARKERS.TIP,
-      MARKERS.LOGIC,
-      HINDI_MARKERS.FACT,
-      HINDI_MARKERS.TIP,
-      HINDI_MARKERS.LOGIC,
-      EMOJI_MARKERS.FACT,
-      EMOJI_MARKERS.TIP,
-      EMOJI_MARKERS.LOGIC,
-    ]
-  );
+  coreLogic = coreLogic.slice(0, firstMarkerIndex).trim();
 
   const cleanContent = (s: string | null) => {
     if (!s) return null;
-    let cleaned = s;
-    
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // AGGRESSIVE CLEANING - Remove ALL marker patterns at start
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    
-    // English markers to strip (case insensitive)
-    const enMarkers = [
-      'Correct Logic',
-      'Core Logic', 
-      'Exam Fact',
-      'Memory Tip',
-      'Scam Alert',
-    ];
-    
-    // Hindi markers to strip
-    const hiMarkers = [
-      'सही तर्क',
-      'तर्क',
-      'तर्क एवं विश्लेषण',
-      'एग्जाम फैक्ट',
-      'Exam Fact',
-      'मेमोरी टिप',
-      'Memory Tip',
-      'स्कैम अलर्ट',
-      'Scam Alert',
-    ];
-    
-    // Remove emojis at start
-    cleaned = cleaned.replace(/^[✅💡🧠🚫⭐🔥📌⚡️🎯]+\s*/g, '');
-    
-    // Remove ** markers with text (English)
-    for (const marker of enMarkers) {
-      const regex = new RegExp(`^\\*{0,2}\\s*${marker}\\s*\\*{0,2}\\s*:?\\s*`, 'gi');
-      cleaned = cleaned.replace(regex, '');
-    }
-    
-    // Remove ** markers with text (Hindi)
-    for (const marker of hiMarkers) {
-      const regex = new RegExp(`^\\*{0,2}\\s*${marker}\\s*\\*{0,2}\\s*:?\\s*`, 'gi');
-      cleaned = cleaned.replace(regex, '');
-    }
-    
-    // Remove any remaining leading ** or *
-    cleaned = cleaned.replace(/^\*+\s*/g, '');
-    
-    // Remove markdown headers (###, ##, #)
-    cleaned = cleaned.replace(/^#{1,6}\s+/gm, '');
-    cleaned = cleaned.replace(/\s*#{3,}\s*/g, ' ');
-    
-    // Remove tags like (High Value), (Mnemonic), etc.
-    cleaned = cleaned.replace(/\s*\((High Value|Mnemonic|Elimination)\)\s*:?\s*/gi, '');
-    
-    // Clean leading colons, stars, spaces
-    cleaned = cleaned.replace(/^[\s:*]+/g, '');
-    
-    // Convert bullets
-    cleaned = cleaned.replace(/^\s*[-]\s+/gm, '• ');
-    
-    // Clean multiple newlines
-    cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
-    
-    return cleaned.trim();
+    return s
+      .replace(/^(\s*(\(High Value\)|\(Mnemonic\)|\(Elimination\))?\s*)?(\*\*|:)?\s*:?\s*/, '')
+      .replace(/#{1,6}\s*/g, '')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/---+/g, '')
+      .replace(/^\s*[-*]\s+/gm, '• ')
+      .trim();
   };
 
   const sections = {
-    logic: cleanContent(coreLogic),
+    logic: coreLogic,
     fact: cleanContent(examFact),
     tip: cleanContent(memoryTip),
     scam: cleanContent(scamAlert),
   };
-
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 },
-    },
-  };
-
-  const item = {
-    hidden: { opacity: 0, y: 10 },
-    show: { opacity: 1, y: 0 },
-  };
-
-  // Build analysisItems array - map our 4 sections to styled boxes
-  const analysisItems = [
-    {
-      key: 'core_logic',
-      label: finalLanguage === 'hi' ? 'तर्क एवं विश्लेषण' : 'Core Logic',
-      icon: <CheckCircle2 size={16} className="text-emerald-500" />,
-      color: 'emerald' as const,
-      content: sections.logic,
-    },
-    {
-      key: 'exam_fact',
-      label: finalLanguage === 'hi' ? 'एग्जाम फैक्ट' : 'Exam Fact',
-      icon: <Lightbulb size={16} className="text-amber-500" />,
-      color: 'amber' as const,
-      content: sections.fact,
-    },
-    {
-      key: 'memory_tip',
-      label: finalLanguage === 'hi' ? 'मेमोरी टिप' : 'Memory Tip',
-      icon: <Brain size={16} className="text-indigo-500" />,
-      color: 'indigo' as const,
-      content: sections.tip,
-    },
-    {
-      key: 'scam_alert',
-      label: finalLanguage === 'hi' ? 'स्कैम अलर्ट' : 'Scam Alert',
-      icon: <AlertTriangle size={16} className="text-rose-500" />,
-      color: 'rose' as const,
-      content: sections.scam,
-    },
-  ].filter((item) => item.content);
-
-  if (analysisItems.length === 0) return null;
 
   return (
     <motion.div
       variants={container}
       initial="hidden"
       animate="show"
-      className="space-y-4"
+      className="space-y-3.5 text-left font-sans"
     >
-      {analysisItems.map((ai) => (
-        <motion.div key={ai.key} variants={item}>
-          <div
-            className={cn(
-              'group relative overflow-hidden rounded-2xl border p-4 transition-all duration-300',
-              ai.color === 'emerald' &&
-                'border-emerald-500/20 bg-emerald-500/[0.03] hover:bg-emerald-500/[0.05]',
-              ai.color === 'amber' &&
-                'border-amber-500/20 bg-amber-500/[0.03] hover:bg-amber-500/[0.05]',
-              ai.color === 'indigo' &&
-                'border-indigo-500/20 bg-indigo-500/[0.03] hover:bg-indigo-500/[0.05]',
-              ai.color === 'rose' &&
-                'border-rose-500/20 bg-rose-500/[0.03] hover:bg-rose-500/[0.05]'
-            )}
-          >
-            <div className="mb-2 flex items-center gap-2.5">
-              <div
-                className={cn(
-                  'flex h-8 w-8 items-center justify-center rounded-xl',
-                  ai.color === 'emerald' && 'bg-emerald-500/10',
-                  ai.color === 'amber' && 'bg-amber-500/10',
-                  ai.color === 'indigo' && 'bg-indigo-500/10',
-                  ai.color === 'rose' && 'bg-rose-500/10'
-                )}
-              >
-                {ai.icon}
-              </div>
-              <h4
-                className={cn(
-                  'text-[10px] font-black tracking-[0.2em] uppercase',
-                  ai.color === 'emerald' && 'text-emerald-500',
-                  ai.color === 'amber' && 'text-amber-500',
-                  ai.color === 'indigo' && 'text-indigo-500',
-                  ai.color === 'rose' && 'text-rose-500'
-                )}
-              >
-                {ai.label}
-              </h4>
-            </div>
-            <p
+      {/* 1. Core Logic */}
+      {sections.logic && (
+        <motion.div variants={item}>
+          {compact ? (
+            /* Compact mode: no border-box — full-width plain text with generous line height */
+            <div
               className={cn(
-                'text-[14px] leading-relaxed font-semibold tracking-tight sm:text-[15.5px]',
-                darkMode ? 'text-slate-200' : 'text-slate-800'
+                'space-y-4 text-[15px] leading-[1.8] font-medium tracking-tight sm:text-[16px]',
+                darkMode ? 'text-slate-300' : 'text-slate-800'
               )}
             >
-              {ai.content}
-            </p>
-          </div>
+              {sections.logic
+                ?.split('\n')
+                .filter((l) => l.trim())
+                .map((line, i) => (
+                  <p key={i} className="relative pl-0">
+                    {line.trim().startsWith('•') || line.trim().startsWith('-') ? (
+                      <span className="flex gap-3">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500/50" />
+                        <span>{cleanContent(line)}</span>
+                      </span>
+                    ) : (
+                      cleanContent(line)
+                    )}
+                  </p>
+                ))}
+            </div>
+          ) : (
+            /* Premium Default: Gradient border and subtle highlight */
+            <div className="group relative overflow-hidden rounded-2xl border border-white/[0.03] bg-white/[0.02] p-5 sm:p-6">
+              {/* Left Accent Gradient */}
+              <div className="absolute top-0 bottom-0 left-0 w-[3px] bg-gradient-to-b from-emerald-500 via-teal-400 to-transparent opacity-80" />
+
+              <h4 className="mb-4 flex items-center gap-2 text-[11px] font-black tracking-[0.2em] text-emerald-500 uppercase">
+                <Brain size={14} className="shrink-0" />{' '}
+                {finalLanguage === 'hi' ? 'तर्क एवं विश्लेषण' : 'Logic & Analysis'}
+              </h4>
+
+              <div
+                className={cn(
+                  'space-y-4 text-[15px] leading-[1.8] font-medium tracking-tight sm:text-[16.5px]',
+                  darkMode ? 'text-slate-200' : 'text-slate-900'
+                )}
+              >
+                {sections.logic
+                  ?.split('\n')
+                  .filter((l) => l.trim())
+                  .map((line, i) => (
+                    <p key={i} className="relative">
+                      {line.trim().startsWith('•') || line.trim().startsWith('-') ? (
+                        <span className="flex gap-4 rounded-xl bg-white/[0.03] p-3 px-4 transition-colors hover:bg-white/[0.05]">
+                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+                          <span>{cleanContent(line)}</span>
+                        </span>
+                      ) : (
+                        <span className="block px-1">{cleanContent(line)}</span>
+                      )}
+                    </p>
+                  ))}
+              </div>
+            </div>
+          )}
         </motion.div>
-      ))}
+      )}
+
+      {/* 2. Exam Fact */}
+      {sections.fact && (
+        <motion.div variants={item} className="border-l-2 border-slate-700 pl-3">
+          <h4
+            className={cn(
+              'mb-1 flex items-center gap-1.5 text-[10px] font-black tracking-widest uppercase',
+              darkMode ? 'text-slate-400' : 'text-slate-600'
+            )}
+          >
+            <Lightbulb size={12} className="shrink-0" />{' '}
+            {finalLanguage === 'hi' ? 'एग्जाम फैक्ट' : 'Exam Fact'}
+          </h4>
+          <p
+            className={cn(
+              'text-[14px] leading-relaxed font-bold tracking-tight sm:text-[15px]',
+              darkMode
+                ? 'text-slate-300 [text-shadow:none]'
+                : 'text-slate-800 [text-shadow:1px_1px_2px_rgba(0,0,0,0.05)]'
+            )}
+          >
+            {sections.fact}
+          </p>
+        </motion.div>
+      )}
+
+      {/* 3. Memory Tip */}
+      {sections.tip && (
+        <motion.div variants={item} className="border-l-2 border-amber-500 pl-3">
+          <h4 className="mb-1 flex items-center gap-1.5 text-[10px] font-black tracking-widest text-amber-600 uppercase">
+            <Brain size={12} className="shrink-0" />{' '}
+            {finalLanguage === 'hi' ? 'मेमोरी टिप' : 'Memory Tip'}
+          </h4>
+          <p
+            className={cn(
+              'rounded-xl border px-3 py-2 text-[14px] leading-relaxed font-bold tracking-tight italic sm:text-[15px]',
+              darkMode
+                ? 'border-amber-500/20 bg-amber-500/10 text-amber-200/90 [text-shadow:none]'
+                : 'border-amber-100/50 bg-amber-50/40 text-slate-700 [text-shadow:1px_1px_2px_rgba(0,0,0,0.05)]'
+            )}
+          >
+            {sections.tip}
+          </p>
+        </motion.div>
+      )}
+
+      {/* 4. Scam Alert */}
+      {sections.scam && (
+        <motion.div variants={item} className="border-l-2 border-red-500 pl-3">
+          <h4 className="mb-1 flex items-center gap-1.5 text-[10px] font-black tracking-widest text-red-600 uppercase">
+            <AlertTriangle size={12} className="shrink-0" />{' '}
+            {finalLanguage === 'hi' ? 'स्कैम अलर्ट' : 'Scam Alert'}
+          </h4>
+          <p
+            className={cn(
+              'text-[14px] leading-relaxed font-bold tracking-tight sm:text-[15px]',
+              darkMode
+                ? 'text-slate-300 [text-shadow:none]'
+                : 'text-slate-800 [text-shadow:1px_1px_2px_rgba(0,0,0,0.05)]'
+            )}
+          >
+            {sections.scam}
+          </p>
+        </motion.div>
+      )}
     </motion.div>
   );
 };

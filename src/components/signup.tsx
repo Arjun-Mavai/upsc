@@ -34,7 +34,7 @@ export default function SignupPage() {
     setError('');
 
     try {
-      const res = await fetch('/api/auth/mppsc-signup', {
+      const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

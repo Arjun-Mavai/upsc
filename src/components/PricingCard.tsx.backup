@@ -1,0 +1,167 @@
+'use client';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import {
+  type PricingData,
+  type PlanFeatureWithIcon,
+  calcDiscount,
+  calcMonthly,
+} from '@/config/pricing';
+import { cn } from '@/lib/utils';
+import {
+  Target,
+  BookOpen,
+  Sparkles,
+  FileText,
+  Clock,
+  Zap,
+  BarChart3,
+  Crown,
+  ArrowRight,
+  History,
+  CheckCircle2,
+  Star,
+  BadgeCheck,
+  TrendingUp,
+} from 'lucide-react';
+import Link from 'next/link';
+
+const ICON_MAP: Record<string, any> = {
+  Target,
+  BookOpen,
+  Sparkles,
+  FileText,
+  Clock,
+  Zap,
+  BarChart3,
+  History,
+  TrendingUp,
+  CheckCircle2,
+  Star,
+  BadgeCheck,
+};
+
+interface PricingCardProps {
+  planType: 'pro';
+  pricing: PricingData;
+  features: PlanFeatureWithIcon[];
+  language: 'en' | 'hi';
+  onBuy: () => void;
+  isPopular?: boolean;
+  href?: string;
+}
+
+export function PricingCard({
+  planType,
+  pricing,
+  features,
+  language,
+  onBuy,
+  isPopular,
+  href,
+}: PricingCardProps) {
+  const hi = language === 'hi';
+  const p = pricing;
+
+  // Calculate dynamic values for Pro plan
+  const price = p.proPrice;
+  const originalPrice = p.proOriginalPrice;
+  const discount = calcDiscount(price, originalPrice);
+  const months = p.proMonths;
+  const monthly = calcMonthly(price, months);
+  const validityText = p.proValidityText;
+
+  // Card Styling - Pro plan styling
+  const cardClasses = cn(
+    'relative flex flex-col h-full transition-all duration-300',
+    'border-2 border-indigo-500 shadow-[0_20px_50px_rgba(99,102,241,0.15)] overflow-hidden scale-[1.02] z-10'
+  );
+
+  const titleIcon = <Crown className="h-5 w-5 text-indigo-600" />;
+
+  const planTitle = hi ? 'UPSC Pro' : 'UPSC Pro';
+  const planSubtitle = hi ? 'संपूर्ण PYQ Intelligence' : 'Complete PYQ Intelligence';
+
+  const ActionButton = (
+    <Button
+      onClick={onBuy}
+      className={cn(
+        'w-full h-12 text-base font-bold shadow-lg transition-all duration-300',
+        'bg-indigo-600 hover:bg-indigo-700 text-white hover:shadow-xl hover:-translate-y-0.5'
+      )}
+    >
+      {hi ? 'अभी शुरू करें' : 'Get Started'}
+      <ArrowRight className="ml-2 h-4 w-4" />
+    </Button>
+  );
+
+  return (
+    <Card className={cardClasses}>
+      {/* Popular Badge */}
+      {isPopular && (
+        <div className="absolute -top-0.5 left-1/2 -translate-x-1/2 z-20">
+          <Badge className="rounded-b-lg rounded-t-none border-none bg-indigo-600 px-4 py-1 text-xs font-bold text-white shadow-lg">
+            {hi ? '⭐ सबसे लोकप्रिय' : '⭐ Most Popular'}
+          </Badge>
+        </div>
+      )}
+
+      <CardHeader className="space-y-3 pb-4 pt-8">
+        {/* Plan Title */}
+        <div className="flex items-center gap-2">
+          {titleIcon}
+          <h3 className="text-xl font-bold text-slate-900">{planTitle}</h3>
+        </div>
+        <p className="text-sm text-slate-500">{planSubtitle}</p>
+
+        {/* Pricing */}
+        <div className="flex items-baseline gap-2">
+          <span className="text-4xl font-black text-slate-900">₹{price}</span>
+          <span className="text-lg text-slate-400 line-through">₹{originalPrice}</span>
+          <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 font-bold">
+            {discount}% OFF
+          </Badge>
+        </div>
+
+        {/* Monthly breakdown */}
+        <div className="flex items-center gap-2 text-sm text-slate-500">
+          <Clock className="h-4 w-4" />
+          <span>
+            {hi ? `₹${monthly}/माह · ${months} महीने` : `₹${monthly}/mo · ${months} months`}
+          </span>
+        </div>
+
+        {/* Validity */}
+        <div className="rounded-lg bg-indigo-50 px-3 py-2 text-center">
+          <p className="text-xs font-semibold text-indigo-700">
+            {hi ? `वैधता: UPSC 2026 तक` : validityText}
+          </p>
+        </div>
+      </CardHeader>
+
+      <CardContent className="flex flex-1 flex-col space-y-4">
+        {/* Features List */}
+        <div className="flex-1 space-y-3">
+          {features.map((feature, i) => {
+            const IconComponent = ICON_MAP[feature.icon || ''] || CheckCircle2;
+            return (
+              <div key={i} className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-100">
+                  <IconComponent className="h-3 w-3 text-indigo-600" />
+                </div>
+                <span className="text-sm font-medium text-slate-700">
+                  {hi ? feature.hi : feature.en}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* CTA Button */}
+        {href ? <Link href={href}>{ActionButton}</Link> : ActionButton}
+      </CardContent>
+    </Card>
+  );
+}

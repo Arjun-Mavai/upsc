@@ -80,6 +80,8 @@ const TYPE_CONFIG = {
   PYQ: { label: 'Previous Year', color: 'bg-emerald-100 text-emerald-700', emoji: '📜' },
   TOPIC: { label: 'Topic Test', color: 'bg-rose-100 text-rose-700', emoji: '🎯' },
   MISC: { label: 'Free Quiz', color: 'bg-teal-100 text-teal-700', emoji: '🆓' },
+  UPSC_PYQ: { label: 'UPSC PYQ', color: 'bg-orange-100 text-orange-700', emoji: '🏛️' },
+  UPSC_FLT: { label: 'UPSC FLT', color: 'bg-sky-100 text-sky-700', emoji: '🎓' },
 } as const;
 
 type TestType = keyof typeof TYPE_CONFIG;
@@ -135,9 +137,12 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
     if (unitFilter) {
       if (activeFilter === 'TOPIC') {
         result = result.filter((t) => t.unitId === unitFilter);
-      } else if (activeFilter === 'PYQ') {
+      } else if (activeFilter === 'PYQ' || activeFilter === 'UPSC_PYQ') {
         // Filter by subject slug part
-        result = result.filter((t) => t.slug.includes(`pyq-${unitFilter}-`));
+        // Supports: pyq-{subject}-... OR upsc-pyq-{subject}-...
+        result = result.filter((t) =>
+          t.slug.includes(`pyq-${unitFilter}-`) || t.slug.includes(`upsc-pyq-${unitFilter}-`)
+        );
       }
     }
     return result;
@@ -555,7 +560,7 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
         )}
 
         {/* ── Subject Sub-Filter (PYQ filter active hone par) ──── */}
-        {activeFilter === 'PYQ' && (
+        {(activeFilter === 'PYQ' || activeFilter === 'UPSC_PYQ') && (
           <div className="animation-fade-in flex flex-wrap gap-1.5">
             <Button
               variant={unitFilter === null ? 'default' : 'outline'}
@@ -571,14 +576,20 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
             {Array.from(
               new Set(
                 tests
-                  .filter((t) => t.type === 'PYQ' && t.slug.startsWith('pyq-'))
+                  .filter(
+                    (t) =>
+                      (t.type === 'PYQ' || t.type === 'UPSC_PYQ') &&
+                      (t.slug.startsWith('pyq-') || t.slug.startsWith('upsc-pyq-'))
+                  )
                   .map((t) => {
                     // pyq-history-part-1 -> history
+                    // upsc-pyq-polity-part-1 -> polity
                     const parts = t.slug.split('-');
-                    // usually [pyq, subject, part, n] or [pyq, difficult, subject, part, n]
-                    // Let's assume standard pyq-{subject}-part-{n} format from sync action
-                    if (parts.length >= 4 && parts[0] === 'pyq') {
+                    if (parts[0] === 'pyq' && parts.length >= 4) {
                       return parts[1]; // subject
+                    }
+                    if (parts[0] === 'upsc' && parts[1] === 'pyq' && parts.length >= 4) {
+                      return parts[2]; // subject
                     }
                     return null;
                   })
@@ -591,7 +602,9 @@ export default function TestAccessClient({ initialTests, initialAttemptLimits }:
                 const label = subject.charAt(0).toUpperCase() + subject.slice(1);
                 // Count
                 const count = tests.filter(
-                  (t) => t.type === 'PYQ' && t.slug.includes(`pyq-${subject}-`)
+                  (t) =>
+                    (t.type === 'PYQ' || t.type === 'UPSC_PYQ') &&
+                    (t.slug.includes(`pyq-${subject}-`) || t.slug.includes(`upsc-pyq-${subject}-`))
                 ).length;
 
                 return (

@@ -47,6 +47,7 @@ export function normalizeSubject(rawSubject: string | null): string {
 
   if (
     lower.includes('history') ||
+    lower.includes('इतिहास') ||
     lower.includes('freedom') ||
     lower.includes('ancient') ||
     lower.includes('medieval') ||
@@ -60,6 +61,7 @@ export function normalizeSubject(rawSubject: string | null): string {
 
   if (
     lower.includes('geography') ||
+    lower.includes('भूगोल') ||
     lower.includes('climate') ||
     lower.includes('monsoon') ||
     lower.includes('resource') ||
@@ -80,6 +82,7 @@ export function normalizeSubject(rawSubject: string | null): string {
 
   if (
     lower.includes('polity') ||
+    lower.includes('राजव्यवस्था') ||
     lower.includes('constitution') ||
     lower.includes('commission') ||
     lower.includes('act') ||
@@ -93,6 +96,7 @@ export function normalizeSubject(rawSubject: string | null): string {
 
   if (
     lower.includes('economy') ||
+    lower.includes('अर्थव्यवस्था') ||
     lower.includes('economic') ||
     lower.includes('budget') ||
     lower.includes('financial') ||
@@ -106,6 +110,7 @@ export function normalizeSubject(rawSubject: string | null): string {
 
   if (
     lower.includes('science') ||
+    lower.includes('विज्ञान') ||
     lower.includes('bio') ||
     lower.includes('physics') ||
     lower.includes('chem') ||

@@ -39,14 +39,14 @@ export function HeroSection() {
           ) : (
             <>
               <Zap className="h-3.5 w-3.5 fill-amber-600 text-amber-600 md:h-4.5 md:w-4.5" />
-              {language === 'hi' ? 'महारत हासिल करें' : 'Master the MPPSC Exam Pattern'}
+              {language === 'hi' ? 'महारत हासिल करें' : 'Master the UPSC Exam Pattern'}
             </>
           )}
         </div>
 
         <div className="space-y-4 md:space-y-8">
           <div className="font-display flex flex-col justify-center text-4xl leading-[1.1] font-black tracking-tight text-slate-900 drop-shadow-sm sm:text-5xl md:text-9xl md:leading-[1.1]">
-            <span className="mb-1 md:mb-4 text-slate-800">{language === 'hi' ? 'आपकी MPPSC' : 'Your MPPSC'}</span>
+            <span className="mb-1 md:mb-4 text-slate-800">{language === 'hi' ? 'आपकी UPSC' : 'Your UPSC'}</span>
             <span className="animate-gradient-x bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 bg-[length:200%_auto] bg-clip-text pb-2 text-transparent md:pb-4">
               {language === 'hi' ? 'टेस्ट सीरीज़।' : 'Test Series.'}
             </span>
@@ -54,8 +54,8 @@ export function HeroSection() {
 
           <p className="mx-auto max-w-4xl px-2 text-lg leading-relaxed font-bold text-slate-700 md:text-3xl">
             {language === 'hi'
-              ? 'MPPSC के नए पैटर्न पर विजय पाएं! 200+ टेस्ट्स + Mnemonics + PYQs। आज ही अपनी तैयारी को लेवल-अप करें।'
-              : 'New Pattern Ready? We Are. Unlock 200+ Topic Tests, PYQs, and Mnemonics instantly. Level up your prep today.'}
+              ? 'UPSC के नए पैटर्न पर विजय पाएं! PYQs + विशेषज्ञ व्याख्या + विषय विश्लेषण। आज ही अपनी तैयारी को लेवल-अप करें।'
+              : 'Master 6 Years of Organized PYQs (2020-2025) with Expert Wisdom, Verdict & Logic Path. Level up your prep today.'}
           </p>
         </div>
 

@@ -110,10 +110,10 @@ const formatTestTitle = (title: string, isHindi: boolean) => {
     titleLower.includes('prelims') ||
     titleLower.includes('pre')
   ) {
-    return isHindi ? `MPPSC Pre ${year}` : `MPPSC Pre ${year}`;
+    return isHindi ? `UPSC Pre ${year}` : `UPSC Pre ${year}`;
   }
   if (titleLower.includes('मुख्य') || titleLower.includes('mains')) {
-    return isHindi ? `MPPSC Mains ${year}` : `MPPSC Mains ${year}`;
+    return isHindi ? `UPSC Mains ${year}` : `UPSC Mains ${year}`;
   }
   return title; // fallback
 };

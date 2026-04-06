@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, ChevronUp, Eye, ExternalLink } from 'lucide-react';
+import { ChevronDown, ChevronUp, Eye, ExternalLink, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,14 +12,21 @@ import { OverallWeightageSubjectData } from '@/actions/pyq-analytics';
 import { SUBJECTS, SUBJECT_VARIANTS } from '@/lib/pyq-ui-constants';
 import { TransitionLink } from '@/components/ui/transition-link';
 import { QuestionList, QuestionData } from './QuestionItem';
+import { getCurrentExam } from '@/config/exams';
+import { useSettingsStore } from '@/store/useSettingsStore';
+import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 
 interface OverallWeightageProps {
+  examId?: string;
   simpleSubjectStats: Record<string, number>;
   subjectQuestionsData: OverallWeightageSubjectData[];
   isHindi: boolean;
 }
 
+const FREE_SUBJECT = 'History';
+
 export function OverallWeightage({
+  examId,
   simpleSubjectStats,
   subjectQuestionsData,
   isHindi,
@@ -27,6 +34,13 @@ export function OverallWeightage({
   const router = useRouter();
   const [isMainExpanded, setIsMainExpanded] = useState(false);
   const [expandedSubjects, setExpandedSubjects] = useState<string[]>([]);
+  const [lockModalOpen, setLockModalOpen] = useState(false);
+  
+  const { isSubscribed, user } = useSettingsStore();
+  const isPro = isSubscribed || user?.role === 'admin';
+
+  const isUPSC = examId === 'upsc';
+  const baseUrl = isUPSC ? '/upsc/intelligence' : '/syllabus/quiz/pyq/intelligence';
 
   // Get total questions from simple stats (same as PYQ page)
   const totalQuestions = useMemo(
@@ -35,10 +49,40 @@ export function OverallWeightage({
   );
 
   // 🔧 PERF FIX: Memoize expensive array operations (map/filter/sort)
-  // This prevents recalculation on every expandedSubjects or isMainExpanded change
-  const subjectsWithCounts = useMemo(
-    () =>
-      SUBJECTS.map((sub) => ({
+  const subjectsWithCounts = useMemo(() => {
+    const exam = getCurrentExam(examId);
+    
+    if (isUPSC) {
+      // For UPSC: Drive list directly from data (raw subjects from DB)
+      return Object.entries(simpleSubjectStats).map(([subName, count]) => {
+        // Find existing subject metadata if available (for icons/colors)
+        const existingMeta = SUBJECTS.find(s => s.name === subName || s.nameHi === subName);
+        
+        return {
+          name: subName,
+          nameHi: existingMeta?.nameHi || subName,
+          icon: existingMeta?.icon || SUBJECTS[0].icon, // Default to first icon if mismatch
+          color: existingMeta?.color || 'slate',
+          count,
+          percentage: totalQuestions > 0 ? Math.round((count / totalQuestions) * 100) : 0,
+        };
+      }).sort((a, b) => b.count - a.count);
+    }
+
+    // For non-UPSC mode or when exam context isn't fully established
+    const examSubjects = exam.subjects;
+    
+    // Deduplicate SUBJECTS by name to prevent multiple entries (e.g. History & History)
+    const seenNames = new Set<string>();
+    const uniqueSubjects = SUBJECTS.filter((sub) => {
+      if (seenNames.has(sub.name)) return false;
+      seenNames.add(sub.name);
+      return true;
+    });
+
+    return uniqueSubjects
+      .filter((sub) => examSubjects.includes(sub.name))
+      .map((sub) => ({
         ...sub,
         count: simpleSubjectStats[sub.name] || 0,
         percentage:
@@ -46,27 +90,36 @@ export function OverallWeightage({
             ? Math.round(((simpleSubjectStats[sub.name] || 0) / totalQuestions) * 100)
             : 0,
       }))
-        .filter((sub) => sub.count > 0)
-        .sort((a, b) => b.count - a.count),
-    [simpleSubjectStats, totalQuestions]
-  );
+      .filter((sub) => sub.count > 0 || examSubjects.includes(sub.name))
+      .sort((a, b) => b.count - a.count);
+  }, [simpleSubjectStats, totalQuestions, examId, isUPSC]);
 
   const toggleMainSection = () => {
     setIsMainExpanded(!isMainExpanded);
   };
 
   const toggleSubject = (subjectName: string) => {
+    const isUnlocked = isPro || subjectName === FREE_SUBJECT;
+    if (!isUnlocked) {
+      setLockModalOpen(true);
+      return;
+    }
     setExpandedSubjects((prev) =>
       prev.includes(subjectName) ? prev.filter((s) => s !== subjectName) : [...prev, subjectName]
     );
   };
 
   useEffect(() => {
-    router.prefetch('/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject');
-  }, [router]);
+    router.prefetch(`${baseUrl}/questions?subject=All&source=subject`);
+  }, [router, baseUrl]);
 
   return (
     <div className="space-y-6">
+      <SyllabusLockModal 
+        open={lockModalOpen}
+        onOpenChange={setLockModalOpen}
+      />
+
       <div className="flex items-center gap-3 px-1">
         <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
         <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl">
@@ -74,12 +127,11 @@ export function OverallWeightage({
         </h2>
       </div>
 
-      {/* Main Overall Weightage Section - Same style as Paper Analysis */}
+      {/* Main Overall Weightage Section */}
       <div className="relative">
         <div className="absolute -inset-1 rounded-[2rem] bg-gradient-to-r from-emerald-600/20 to-teal-500/10 opacity-20 blur-xl" />
 
         <Card className="relative z-10 overflow-hidden rounded-[2rem] border-white/[0.03] bg-[#080510]/80 shadow-2xl backdrop-blur-xl">
-          {/* Main Header - Same style as Paper Analysis year header */}
           <div
             className="flex cursor-pointer items-center justify-between border-b border-white/[0.05] bg-transparent px-6 py-6"
             onClick={toggleMainSection}
@@ -87,7 +139,7 @@ export function OverallWeightage({
             <div className="flex flex-col gap-1">
               <div className="mb-1 flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase">
                 <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                {isHindi ? 'MPPSC प्रिलिम्स' : 'MPPSC Prelims'}
+                {examId === 'upsc' ? (isHindi ? 'UPSC सिविल सेवा' : 'UPSC Civil Services') : (isHindi ? 'UPSC सिविल सेवा' : 'UPSC Civil Services')}
               </div>
               <h3 className="flex items-center gap-3 text-2xl font-black tracking-tight text-amber-500 sm:text-3xl">
                 {isHindi ? 'कुल वेटेज' : 'Overall Weightage'}
@@ -125,7 +177,6 @@ export function OverallWeightage({
             </div>
           </div>
 
-          {/* Main Expanded Content */}
           <AnimatePresence>
             {isMainExpanded && (
               <motion.div
@@ -137,11 +188,11 @@ export function OverallWeightage({
               >
                 <CardContent className="p-4 sm:p-6">
                   <div className="space-y-4">
-                    {/* All Subject Cards Inside */}
                     {subjectsWithCounts.map((sub) => {
                       const variant = SUBJECT_VARIANTS[sub.color];
                       const Icon = sub.icon;
                       const isSubjectExpanded = expandedSubjects.includes(sub.name);
+                      const isUnlocked = isPro || sub.name === FREE_SUBJECT;
 
                       return (
                         <div
@@ -150,10 +201,10 @@ export function OverallWeightage({
                             'rounded-[1.5rem] border transition-all duration-300',
                             isSubjectExpanded
                               ? 'border-white/10 bg-white/[0.05]'
-                              : 'border-white/[0.03] bg-white/[0.02] hover:bg-white/[0.04]'
+                              : 'border-white/[0.03] bg-white/[0.02] hover:bg-white/[0.04]',
+                            !isUnlocked && 'opacity-75 grayscale-[0.5]'
                           )}
                         >
-                          {/* Subject Header */}
                           <div
                             className="flex cursor-pointer items-center gap-4 p-4 sm:p-5"
                             onClick={() => toggleSubject(sub.name)}
@@ -164,9 +215,11 @@ export function OverallWeightage({
                                 variant.bg.replace('indigo', 'violet')
                               )}
                             >
-                              <Icon
-                                className={cn('h-5 w-5', variant.text.replace('indigo', 'violet'))}
-                              />
+                              {isUnlocked ? (
+                                <Icon className={cn('h-5 w-5', variant.text.replace('indigo', 'violet'))} />
+                              ) : (
+                                <Lock className="h-4 w-4 text-slate-400" />
+                              )}
                             </div>
 
                             <div className="min-w-0 flex-1">
@@ -185,15 +238,32 @@ export function OverallWeightage({
                             </div>
 
                             <div className="flex items-center gap-2">
-                              <TransitionLink
-                                href={`/syllabus/quiz/pyq/intelligence/questions?subject=${encodeURIComponent(sub.name)}&source=subject`}
-                                onClick={(e) => e.stopPropagation()}
-                                transitionTypes={['slide']}
-                                className="inline-flex h-8 items-center gap-1.5 rounded-xl bg-emerald-500/10 px-4 text-[10px] font-black tracking-widest text-emerald-500 uppercase transition-all hover:bg-emerald-500/20 active:scale-95"
-                              >
-                                {isHindi ? 'देखें' : 'View'}
-                                <ExternalLink className="h-3 w-3" />
-                              </TransitionLink>
+                              {isUnlocked && (
+                                <TransitionLink
+                                  href={`${baseUrl}/questions?subject=${encodeURIComponent(sub.name)}&source=subject`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                  transitionTypes={['slide']}
+                                  className="inline-flex h-8 items-center gap-1.5 rounded-xl bg-emerald-500/10 px-4 text-[10px] font-black tracking-widest text-emerald-500 uppercase transition-all hover:bg-emerald-500/20 active:scale-95"
+                                >
+                                  {isHindi ? 'देखें' : 'View'}
+                                  <ExternalLink className="h-3 w-3" />
+                                </TransitionLink>
+                              )}
+
+                              {!isUnlocked && (
+                                <div 
+                                  className="flex h-8 items-center gap-1.5 rounded-xl bg-white/5 px-4 text-[10px] font-black tracking-widest text-slate-500 uppercase cursor-pointer hover:bg-white/10"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleSubject(sub.name);
+                                  }}
+                                >
+                                  <Lock className="h-3 w-3" />
+                                  {isHindi ? 'बंद' : 'Locked'}
+                                </div>
+                              )}
 
                               <div
                                 className={cn(
@@ -213,7 +283,6 @@ export function OverallWeightage({
                             </div>
                           </div>
 
-                          {/* Subject Expanded content */}
                           <AnimatePresence>
                             {isSubjectExpanded && (
                               <motion.div
@@ -224,22 +293,14 @@ export function OverallWeightage({
                               >
                                 <div className="space-y-3 border-t border-white/[0.05] p-0">
                                   {(() => {
-                                    // Find questions for this subject
                                     const subjectData = subjectQuestionsData.find(
                                       (data) =>
                                         data.subject === sub.name || data.subject === sub.nameHi
                                     );
                                     const subjectQuestions = subjectData?.questions || [];
-                                    
-                                    // Map to QuestionData format
                                     const mappedQuestions: QuestionData[] = subjectQuestions.map(q => ({
-                                      id: q.id,
-                                      text: q.text,
-                                      textEn: q.textEn,
-                                      year: q.year,
-                                      qNo: q.qNo,
-                                      testTitle: q.testTitle,
-                                      subject: q.subject
+                                      id: q.id, text: q.text, textEn: q.textEn, year: q.year, qNo: q.qNo,
+                                      testTitle: q.testTitle, subject: q.subject
                                     }));
 
                                     return mappedQuestions.length > 0 ? (
@@ -249,14 +310,9 @@ export function OverallWeightage({
                                         maxVisible={5}
                                         variant="card"
                                         showYears={true}
+                                        examId={examId}
                                       />
-                                    ) : (
-                                      <div className="rounded-xl border border-dashed border-white/5 bg-white/[0.02] py-8 text-center mx-4 my-4">
-                                        <p className="text-[10px] font-black tracking-[0.2em] text-slate-600 uppercase">
-                                          {isHindi ? 'कोई प्रश्न उपलब्ध नहीं' : 'No segments found'}
-                                        </p>
-                                      </div>
-                                    );
+                                    ) : null;
                                   })()}
                                 </div>
                               </motion.div>
@@ -273,10 +329,9 @@ export function OverallWeightage({
         </Card>
       </div>
 
-      {/* Overall View All Button */}
       <div className="flex justify-center pt-8">
         <TransitionLink
-          href="/syllabus/quiz/pyq/intelligence/questions?subject=All&source=subject"
+          href={`${baseUrl}/questions?subject=All&source=subject`}
           transitionTypes={['slide']}
         >
           <Button
@@ -286,7 +341,7 @@ export function OverallWeightage({
           >
             <Eye className="mr-3 h-4 w-4" />
             {isHindi ? 'सभी विषय प्रश्न देखें' : 'View All Subject Questions'}
-            <ExternalLink className="ml-3 h-4 w-4 opacity-50" />
+            {isPro ? <ExternalLink className="ml-3 h-4 w-4 opacity-50" /> : <Lock className="ml-3 h-4 w-4 opacity-50" />}
           </Button>
         </TransitionLink>
       </div>

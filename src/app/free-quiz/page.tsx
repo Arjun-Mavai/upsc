@@ -7,9 +7,9 @@ import FreeQuizClient from './FreeQuizClient';
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export const metadata = {
-  title: 'Free Daily Quiz — MPPSC 2026 Practice',
+  title: 'Free Daily Quiz — UPSC 2026 Practice',
   description:
-    'MPPSC 2026 ke liye free daily quizzes. Hindi & English me practice karo — History, Geography, Polity, Science aur sabhi units.',
+    'UPSC 2026 ke liye free daily quizzes. Hindi & English me practice karo — History, Geography, Polity, Science aur sabhi units.',
 };
 
 export default async function FreeQuizPage() {

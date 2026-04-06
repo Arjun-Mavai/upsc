@@ -30,6 +30,7 @@ export async function getAllBlogsForAdmin() {
       slug: contentBlogs.slug,
       title: contentBlogs.title,
       category: contentBlogs.category,
+      examType: contentBlogs.examType,
       unitId: contentBlogs.unitId,
       isPremium: contentBlogs.isPremium,
       isFreeAccess: contentBlogs.isFreeAccess,
@@ -348,5 +349,29 @@ export async function deleteBlog(blogId: string) {
   } catch (error: any) {
     logger.error('Delete Blog Error:', error);
     return { success: false, error: error.message };
+  }
+}
+
+/**
+ * updateBlogExamType — Blog ka exam type update karo
+ */
+export async function updateBlogExamType(blogId: string, examType: 'upsc' | 'mppsc' | 'all') {
+  await requireAdmin();
+
+  try {
+    await db
+      .update(contentBlogs)
+      .set({ examType, updatedAt: new Date() })
+      .where(eq(contentBlogs.id, blogId));
+
+    // Cache bust
+    revalidateTag(CACHE.BLOGS.TAGS.ALL, { expire: 0 });
+    revalidatePath('/blogs');
+
+    logger.info(`Blog exam type updated: ${blogId} → ${examType}`);
+    return { success: true };
+  } catch (error: any) {
+    logger.error('Update Blog Exam Type Error:', error);
+    return { success: false, error: error.message || 'Exam type update fail' };
   }
 }

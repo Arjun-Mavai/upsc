@@ -66,6 +66,7 @@ export async function submitTestFeedback(params: SubmitFeedbackParams) {
       comments: data.comment,
       userName: effectiveName,
       userEmail: effectiveEmail,
+      examType: 'upsc' as const, // UPSC-only repo
     };
 
     await db.insert(testFeedback).values(newFeedback);

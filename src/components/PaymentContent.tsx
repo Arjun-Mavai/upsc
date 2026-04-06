@@ -127,7 +127,7 @@ Thank you,
   };
 
   const openTelegramBot = () => {
-    window.open('https://t.me/MPPSC_Support_Bot', '_blank');
+    window.open('https://t.me/UPSC_Support_Bot', '_blank');
   };
 
   return (
@@ -175,7 +175,7 @@ Thank you,
           <p className="mx-auto max-w-lg text-lg text-slate-600">
             {amount === '299' || amount === '199'
               ? 'Get yearly access to 10 units, Quizzes, Mock Tests, and Smart Analytics.'
-              : 'Get yearly access to all 10 units of the MPPSC Syllabus with detailed notes.'}
+              : 'Get yearly access to all 10 units of the UPSC Syllabus with detailed notes.'}
           </p>
         </div>
 

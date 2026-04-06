@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     }
 
     let updatedCount = 0;
-    let errors = [];
+    const errors = [];
 
     // logger.debug("topics", topics)
     // 3. Bulk Update

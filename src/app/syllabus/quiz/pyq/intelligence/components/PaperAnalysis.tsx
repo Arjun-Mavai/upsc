@@ -1,26 +1,42 @@
 'use client';
 
 import { useState } from 'react';
-import { TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
+import { TrendingUp, ChevronDown, ChevronUp, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UnitCard } from './UnitCard';
 import { UnitDistributionStats, RepeatedQuestion } from '@/actions/pyq-analytics';
 import { QuestionData } from './QuestionItem';
+import { getCurrentExam } from '@/config/exams';
+import { UnitCard } from './UnitCard';
+import { useSettingsStore } from '@/store/useSettingsStore';
+import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
+import { cn } from '@/lib/utils';
 
 interface PaperAnalysisProps {
+  examId?: string;
   stats: UnitDistributionStats[];
   repeatedQuestions: RepeatedQuestion[];
   isHindi: boolean;
 }
 
-export function PaperAnalysis({ stats, repeatedQuestions, isHindi }: PaperAnalysisProps) {
+const FREE_YEAR = 2025;
+
+export function PaperAnalysis({ examId, stats, repeatedQuestions, isHindi }: PaperAnalysisProps) {
   const [expandedYears, setExpandedYears] = useState<number[]>([]);
+  const [lockModalOpen, setLockModalOpen] = useState(false);
+
+  const { isSubscribed, user } = useSettingsStore();
+  const isPro = isSubscribed || user?.role === 'admin';
 
   const years = Array.from(new Set(stats.map((s) => s.year))).sort((a, b) => b - a);
 
   const toggleYear = (year: number) => {
+    const isUnlocked = isPro || year === FREE_YEAR;
+    if (!isUnlocked) {
+      setLockModalOpen(true);
+      return;
+    }
     setExpandedYears((prev) =>
       prev.includes(year) ? prev.filter((y) => y !== year) : [...prev, year]
     );
@@ -34,6 +50,11 @@ export function PaperAnalysis({ stats, repeatedQuestions, isHindi }: PaperAnalys
 
   return (
     <div className="space-y-6">
+      <SyllabusLockModal
+        open={lockModalOpen}
+        onOpenChange={setLockModalOpen}
+      />
+
       <div className="flex items-center gap-3 px-1">
         <TrendingUp className="h-6 w-6 text-emerald-400" />
         <h2 className="text-xl font-bold text-white sm:text-2xl">
@@ -45,19 +66,38 @@ export function PaperAnalysis({ stats, repeatedQuestions, isHindi }: PaperAnalys
         {years.map((year) => {
           const yearStats = stats.filter((s) => s.year === year);
           const totalQuestions = yearStats.reduce((acc, curr) => acc + curr.count, 0);
-          const sortedUnits = [...yearStats].sort((a, b) => {
-            const numA = parseInt(a.unitId.replace('unit_', ''));
-            const numB = parseInt(b.unitId.replace('unit_', ''));
-            if (isNaN(numA)) return 1;
-            if (isNaN(numB)) return -1;
-            return numA - numB;
-          });
+          const exam = getCurrentExam(examId);
+          const isUnlocked = isPro || year === FREE_YEAR;
+
+          const sortedSections = [...yearStats];
+          if (exam.layoutMode === 'UNIT_WISE') {
+            sortedSections.sort((a, b) => {
+              const numA = parseInt(a.unitId.replace('unit_', ''));
+              const numB = parseInt(b.unitId.replace('unit_', ''));
+              if (isNaN(numA)) return 1;
+              if (isNaN(numB)) return -1;
+              return numA - numB;
+            });
+          } else {
+            // Sort by subject list order in config
+            sortedSections.sort((a, b) => {
+              const orderA = exam.subjects.indexOf(a.unitId);
+              const orderB = exam.subjects.indexOf(b.unitId);
+              return (orderA === -1 ? 99 : orderA) - (orderB === -1 ? 99 : orderB);
+            });
+          }
+
           const isExpanded = expandedYears.includes(year);
 
           return (
             <div key={year} className="relative">
               <div className="absolute -inset-1 rounded-[2rem] bg-gradient-to-r from-emerald-500/20 to-teal-500/20 opacity-20 blur-xl" />
-              <Card className="relative z-10 overflow-hidden rounded-[2rem] border-slate-800 bg-slate-900 shadow-2xl">
+              <Card
+                className={cn(
+                  'relative z-10 overflow-hidden rounded-[2rem] border-slate-800 bg-slate-900 shadow-2xl transition-all',
+                  !isUnlocked && 'opacity-75 grayscale-[0.5]'
+                )}
+              >
                 {/* Year Header */}
                 <div
                   className="flex cursor-pointer items-center justify-between border-b border-white/5 bg-transparent px-6 py-6"
@@ -66,7 +106,24 @@ export function PaperAnalysis({ stats, repeatedQuestions, isHindi }: PaperAnalys
                   <div className="flex flex-col gap-1">
                     <div className="mb-1 flex items-center gap-2 text-sm font-medium tracking-wider text-slate-400 uppercase">
                       <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      {isHindi ? 'MPPSC प्रिलिम्स' : 'MPPSC Prelims'}
+                      {isUnlocked ? (
+                        examId === 'upsc' ? (
+                          isHindi ? (
+                            'UPSC सिविल सेवा'
+                          ) : (
+                            'UPSC Civil Services'
+                          )
+                        ) : isHindi ? (
+                          'UPSC सिविल सेवा'
+                        ) : (
+                          'UPSC Civil Services'
+                        )
+                      ) : (
+                        <div className="flex items-center gap-1.5 text-amber-500/80">
+                          <Lock className="h-3 w-3" />
+                          {isHindi ? 'प्रीमियम अनलॉक करें' : 'Unlock Premium'}
+                        </div>
+                      )}
                     </div>
                     <h3 className="flex items-center gap-3 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
                       {year}
@@ -84,14 +141,26 @@ export function PaperAnalysis({ stats, repeatedQuestions, isHindi }: PaperAnalys
                       variant="secondary"
                       className="h-8 border border-slate-700 bg-slate-800 px-3 font-mono text-sm text-slate-300 sm:inline-flex"
                     >
-                      {/* {sortedUnits.length} Units */}
-                      10 {isHindi ? 'यूनिट्स' : 'Units'}
+                      {exam.layoutMode === 'UNIT_WISE'
+                        ? isHindi
+                          ? '10 यूनिट्स'
+                          : '10 Units'
+                        : `${sortedSections.length} ${isHindi ? 'विषय' : 'Subjects'}`}
                     </Badge>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 bg-slate-800 shadow-inner">
-                      {isExpanded ? (
-                        <ChevronUp className="h-5 w-5 text-emerald-400" />
+                    <div
+                      className={cn(
+                        'flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 bg-slate-800 shadow-inner',
+                        !isUnlocked && 'border-transparent bg-white/5'
+                      )}
+                    >
+                      {isUnlocked ? (
+                        isExpanded ? (
+                          <ChevronUp className="h-5 w-5 text-emerald-400" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-slate-400" />
+                        )
                       ) : (
-                        <ChevronDown className="h-5 w-5 text-slate-400" />
+                        <Lock className="h-4 w-4 text-slate-500" />
                       )}
                     </div>
                   </div>
@@ -99,7 +168,7 @@ export function PaperAnalysis({ stats, repeatedQuestions, isHindi }: PaperAnalys
 
                 {/* Year Content */}
                 <AnimatePresence>
-                  {isExpanded && (
+                  {isExpanded && isUnlocked && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
@@ -108,21 +177,21 @@ export function PaperAnalysis({ stats, repeatedQuestions, isHindi }: PaperAnalys
                     >
                       <CardContent className="p-4 sm:p-6">
                         <div className="space-y-4">
-                          {sortedUnits.map((unitStat) => {
-                            // Map questions to QuestionData format (including qNo)
+                          {sortedSections.map((unitStat) => {
                             const questions: QuestionData[] = unitStat.questions.map((q) => ({
                               id: q.id,
                               text: q.text,
                               textEn: q.textEn,
                               year: q.year,
                               qNo: q.qNo,
-                              subject: q.subject, // Map subject from DB
-                              testTitle: `MPPSC Prelims ${q.year}`,
+                              subject: q.subject,
+                              testTitle: `UPSC Prelims ${q.year}`,
                             }));
 
                             return (
                               <UnitCard
                                 key={`${year}-${unitStat.unitId}`}
+                                examId={examId}
                                 unitId={unitStat.unitId}
                                 unitTitle={unitStat.unitTitle}
                                 questionCount={unitStat.count}

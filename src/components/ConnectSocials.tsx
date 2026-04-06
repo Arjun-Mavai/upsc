@@ -62,7 +62,7 @@ export function ConnectSocials({
         <motion.a
           whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
-          href="https://t.me/MPPSC2026_Mission"
+          href="https://t.me/UPSCIntelligence"
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
@@ -108,7 +108,7 @@ export function ConnectSocials({
         <motion.a
           whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
-          href="https://youtube.com/@MPPSCZEN/shorts"
+          href="https://youtube.com/@UPSCZEN/shorts"
           target="_blank"
           rel="noopener noreferrer"
           className={cn(

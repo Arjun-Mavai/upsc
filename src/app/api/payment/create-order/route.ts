@@ -10,7 +10,8 @@ import { PRICING_DEFAULTS } from '@/config/pricing';
 import { checkRateLimit } from '@/lib/rate-limit';
 
 const createOrderSchema = z.object({
-  planType: z.enum(['lite', 'pro', 'upgrade']),
+  planType: z.enum(['pro', 'upgrade']), // UPSC only has Pro plan
+  examId: z.string().optional(),
 });
 
 /**
@@ -34,33 +35,44 @@ export async function POST(req: Request) {
     // 🚦 Rate Limit Check: 10 requests / 15 mins
     // Bhai, ye zaroori h taaki koi script lagakar hazaro fake orders na banaye.
     const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1';
+    const host = req.headers.get('host') ?? '';
     const { paymentLimiter } = await import('@/lib/rate-limit');
     const { success } = await checkRateLimit(paymentLimiter, ip);
     if (!success) {
       return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
     }
 
+    const { getExamFromHost } = await import('@/lib/exam-context');
     const body = await req.json();
     const parsed = createOrderSchema.parse(body);
     planType = parsed.planType;
+    const examId = parsed.examId || getExamFromHost(host);
 
     if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
       throw new Error('Razorpay keys not configured');
     }
 
     // 💰 Amount Calculation: The Single Source of Truth
-    // DB se price fetch karo. Agar DB down h, to default constant use karo (Fallback Strategy).
+    // Fetch pricing for specific exam, fallback to 'default'
     const rows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.id, examId))
       .limit(1);
-    const p = rows[0] || PRICING_DEFAULTS;
+    
+    let p = rows[0];
+    if (!p) {
+      const defaultRows = await db
+        .select()
+        .from(pricingConfig)
+        .where(eq(pricingConfig.id, 'default'))
+        .limit(1);
+      p = defaultRows[0] || PRICING_DEFAULTS;
+    }
 
     const PLAN_AMOUNTS: Record<string, number> = {
-      lite: (p.litePrice ?? PRICING_DEFAULTS.litePrice) * 100, // Amount in Paise (INR * 100)
-      pro: (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100,
-      upgrade: (p.upgradePrice ?? PRICING_DEFAULTS.upgradePrice) * 100,
+      pro: (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100, // Amount in Paise (INR * 100)
+      upgrade: ((p as any).upgradePrice ?? 99) * 100, // Upgrade to pro
     };
 
     const amount = PLAN_AMOUNTS[planType];
@@ -82,9 +94,12 @@ export async function POST(req: Request) {
     const order = await instance.orders.create({
       amount,
       currency: 'INR',
-      notes: { planType, userId: session?.id ?? '' }, // Metadata for future reference
+      notes: { 
+        planType, 
+        userId: session?.id ?? '',
+        examId: examId 
+      },
     });
-
     return NextResponse.json({ ...(order as any), planType });
   } catch (error: any) {
     logger.error('Razorpay order creation error:', error, {

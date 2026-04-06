@@ -112,26 +112,23 @@ export async function POST(req: Request) {
     // 💡 Note: razorpay_key_id public hota h (safe to expose), secret server par safe h.
     const paidAmount = order.amount as number;
 
-    // 🏷️ Plan Verification (Allows Upgrade Price OR Full Pro Price)
+    // 🏷️ Plan Verification - UPSC has only Pro plan
     const pricingRows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.id, 'upsc'))
       .limit(1);
     const p = pricingRows[0] || PRICING_DEFAULTS;
 
-    // We expect user to pay at least upgrade price
-    const upgradeAmountPaise = (p.upgradePrice ?? PRICING_DEFAULTS.upgradePrice) * 100;
+    // We expect user to pay pro price
     const proAmountPaise = (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100;
+    const upgradeAmountPaise = ((p as any).upgradePrice ?? 99) * 100;
 
     const isValidAmount = paidAmount >= upgradeAmountPaise || paidAmount >= proAmountPaise;
 
-    // If they paid standard Lite price (unlikely in this route, but safety check), don't upgrade to Pro
-    const liteAmountPaise = (p.litePrice ?? PRICING_DEFAULTS.litePrice) * 100;
-
-    let planTier = user.planTier || 'lite';
-    if (isValidAmount && paidAmount > liteAmountPaise) {
-      planTier = 'pro';
+    let planTier: 'pro' = 'pro'; // UPSC only has Pro
+    if (!isValidAmount) {
+      return NextResponse.json({ error: 'Invalid payment amount' }, { status: 400 });
     }
 
     // 📅 Calculate Expiry Date (Upgrades are always to Pro/Extended)
@@ -151,6 +148,7 @@ export async function POST(req: Request) {
         planTier: planTier as 'lite' | 'pro',
         status: 'captured',
         currency: 'INR',
+        examType: 'upsc' as const, // UPSC-only repo
       });
 
       await tx
@@ -165,7 +163,7 @@ export async function POST(req: Request) {
     // 📧 Send Receipt Email
     const resend = new Resend(process.env.RESEND_API_KEY);
 
-    const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
+    const fromName = process.env.EMAIL_FROM_NAME || 'UPSC 2026';
     const fromAddress =
       process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
     const fromEmail = `${fromName} <${fromAddress}>`;
@@ -173,7 +171,7 @@ export async function POST(req: Request) {
     const { error: emailError } = await resend.emails.send({
       from: fromEmail,
       to: [user.email],
-      subject: '🚀 Upgrade Successful — MPPSC ZEN',
+      subject: '🚀 Upgrade Successful — UPSC ZEN',
       html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
                 <h1 style="color: #111;">Upgrade Successful!</h1>
@@ -186,7 +184,7 @@ export async function POST(req: Request) {
                 <p>All Pro features are now unlocked for your account.</p>
                 <p>Keep practicing!</p>
                 <hr style="border: none; border-top: 1px solid #eaeaea; margin: 40px 0;" />
-                <p style="color: #888; font-size: 12px;">Mindful MPPSC Zen App</p>
+                <p style="color: #888; font-size: 12px;">UPSC Zen App</p>
             </div>
         `,
     });

@@ -7,8 +7,9 @@ import { verifyAuth } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 import { cachedData } from '@/lib/cache';
 import { SCORING_CONFIG } from '@/lib/quiz-scoring';
+import { unstable_cache } from 'next/cache';
 
-// 🎯 MPPSC Expected Cutoff (based on historical data)
+// 🎯 UPSC Expected Cutoff (based on historical data)
 const EXPECTED_CUTOFF_PERCENTAGE = 80;
 
 const getAttemptTotalMarks = (attempt: any): number => {
@@ -19,9 +20,19 @@ const getAttemptTotalMarks = (attempt: any): number => {
 };
 
 // Cache Analytics per user for 5 minutes to avoid DB spam on refresh
-export const getUserAnalytics = async (userId: string) => {
+export const getUserAnalytics = async (userId: string, examId?: string) => {
   if (!userId) return null;
-  return await fetchAnalyticsInternal(userId);
+
+  const getCachedAnalytics = unstable_cache(
+    async (uid: string, eid?: string) => {
+      // ... The entire logic ...
+      return await fetchAnalyticsInternal(uid, eid);
+    },
+    [`user-analytics-${userId}-${examId || 'all'}`],
+    { revalidate: 300, tags: [`analytics-${userId}`] }
+  );
+
+  return await getCachedAnalytics(userId, examId);
 };
 
 // Action to explicitly revalidate analytics cache (for Client Components)
@@ -45,7 +56,12 @@ function calculateExamInsights(
     userScore: overallAvg,
     expectedCutoff: EXPECTED_CUTOFF_PERCENTAGE,
     difference: Math.round(difference),
-    status: difference >= 5 ? 'above' : difference >= -5 ? 'near' : 'below' as 'above' | 'below' | 'near',
+    status:
+      difference >= 5
+        ? 'above'
+        : difference >= -5
+          ? 'near'
+          : ('below' as 'above' | 'below' | 'near'),
   };
 
   // 2. Trend Analysis (Compare last 5 tests vs previous 5)
@@ -56,39 +72,47 @@ function calculateExamInsights(
   const recent5 = sortedAttempts.slice(0, 5);
   const previous5 = sortedAttempts.slice(5, 10);
 
-    const calcAvg = (arr: any[]) => {
-      if (arr.length === 0) return 0;
-      const total = arr.reduce((sum, a) => {
-        const maxMarks = getAttemptTotalMarks(a);
-        // Fix: Clamp percentage to 0-100 range
-        const pct = Math.min(100, Math.max(0, ((a.score || 0) / maxMarks) * 100));
-        return sum + pct;
-      }, 0);
+  const calcAvg = (arr: any[]) => {
+    if (arr.length === 0) return 0;
+    const total = arr.reduce((sum, a) => {
+      const maxMarks = getAttemptTotalMarks(a);
+      // Fix: Clamp percentage to 0-100 range
+      const pct = Math.min(100, Math.max(0, ((a.score || 0) / maxMarks) * 100));
+      return sum + pct;
+    }, 0);
     return Math.round(total / arr.length);
   };
 
   const recentAvg = calcAvg(recent5);
   const previousAvg = calcAvg(previous5);
-  const changePercent = previousAvg > 0 ? Math.round(((recentAvg - previousAvg) / previousAvg) * 100) : 0;
+  const changePercent =
+    previousAvg > 0 ? Math.round(((recentAvg - previousAvg) / previousAvg) * 100) : 0;
 
   const trend = {
-    direction: changePercent > 5 ? 'improving' : changePercent < -5 ? 'declining' : 'stable' as 'improving' | 'declining' | 'stable',
+    direction:
+      changePercent > 5
+        ? 'improving'
+        : changePercent < -5
+          ? 'declining'
+          : ('stable' as 'improving' | 'declining' | 'stable'),
     changePercent: Math.abs(changePercent),
     recentAvg,
     previousAvg,
   };
 
   // 3. Consistency Score (Low variance = consistent)
-  const percentages = attempts.map(a => {
+  const percentages = attempts.map((a) => {
     const maxMarks = getAttemptTotalMarks(a);
     // Clamp to 0-100
     return Math.min(100, Math.max(0, ((a.score || 0) / maxMarks) * 100));
   });
 
-  const mean = percentages.length > 0 ? percentages.reduce((a, b) => a + b, 0) / percentages.length : 0;
-  const variance = percentages.length > 0
-    ? percentages.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / percentages.length
-    : 0;
+  const mean =
+    percentages.length > 0 ? percentages.reduce((a, b) => a + b, 0) / percentages.length : 0;
+  const variance =
+    percentages.length > 0
+      ? percentages.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / percentages.length
+      : 0;
   const stdDev = Math.sqrt(variance);
 
   // Consistency score: 100 - (stdDev * 2), clamped 0-100
@@ -97,15 +121,20 @@ function calculateExamInsights(
   const consistency = {
     score: consistencyScore,
     variance: Math.round(variance),
-    status: consistencyScore >= 70 ? 'consistent' : consistencyScore >= 40 ? 'moderate' : 'inconsistent' as 'consistent' | 'moderate' | 'inconsistent',
+    status:
+      consistencyScore >= 70
+        ? 'consistent'
+        : consistencyScore >= 40
+          ? 'moderate'
+          : ('inconsistent' as 'consistent' | 'moderate' | 'inconsistent'),
   };
 
   // 4. Time Efficiency
-  const timeData = attempts.filter(a => a.startTime && a.endTime && a.durationMinutes);
+  const timeData = attempts.filter((a) => a.startTime && a.endTime && a.durationMinutes);
   let avgTimeUsed = 75; // Default
 
   if (timeData.length > 0) {
-    const timeRatios = timeData.map(a => {
+    const timeRatios = timeData.map((a) => {
       const start = new Date(a.startTime).getTime();
       const end = new Date(a.endTime).getTime();
       const usedSeconds = Math.max(0, (end - start) / 1000); // Fix: Prevent negative time
@@ -117,21 +146,29 @@ function calculateExamInsights(
   }
 
   // Fix: Determine status BEFORE clamping for UI display
-  const timeStatus = avgTimeUsed <= 70 ? 'efficient' : avgTimeUsed <= 90 ? 'normal' : 'slow' as 'efficient' | 'normal' | 'slow';
-  
+  const timeStatus =
+    avgTimeUsed <= 70
+      ? 'efficient'
+      : avgTimeUsed <= 90
+        ? 'normal'
+        : ('slow' as 'efficient' | 'normal' | 'slow');
+
   const timeEfficiency = {
     avgTimeUsed: Math.min(100, avgTimeUsed), // Cap at 100% for display
     status: timeStatus,
-    suggestion: timeStatus === 'efficient'
-      ? 'Great speed! Consider spending more time on difficult questions.'
-      : timeStatus === 'normal'
-        ? 'Good time management. Maintain this pace.'
-        : 'Try to improve speed with more practice tests.',
+    suggestion:
+      timeStatus === 'efficient'
+        ? 'Great speed! Consider spending more time on difficult questions.'
+        : timeStatus === 'normal'
+          ? 'Good time management. Maintain this pace.'
+          : 'Try to improve speed with more practice tests.',
   };
 
   // 5. Study Streak - Fixed calculation
-  const dates = attempts.map(a => new Date(a.createdAt).toDateString());
-  const uniqueDates = [...new Set(dates)].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  const dates = attempts.map((a) => new Date(a.createdAt).toDateString());
+  const uniqueDates = [...new Set(dates)].sort(
+    (a, b) => new Date(b).getTime() - new Date(a).getTime()
+  );
 
   let currentStreak = 0;
   let longestStreak = 0;
@@ -141,10 +178,10 @@ function calculateExamInsights(
   if (uniqueDates.length > 0) {
     // Start streak from 1 if there's any activity
     let tempStreak = 1;
-    
+
     // Check if user was active today or yesterday to count current streak
     const isActiveRecently = uniqueDates[0] === today || uniqueDates[0] === yesterday;
-    
+
     // Calculate streaks by comparing consecutive dates
     for (let i = 1; i < uniqueDates.length; i++) {
       const currentDate = new Date(uniqueDates[i - 1]);
@@ -160,10 +197,10 @@ function calculateExamInsights(
         tempStreak = 1;
       }
     }
-    
+
     // Final comparison
     longestStreak = Math.max(longestStreak, tempStreak);
-    
+
     // Current streak only counts if active recently
     currentStreak = isActiveRecently ? tempStreak : 0;
   }
@@ -181,15 +218,16 @@ function calculateExamInsights(
       nameEn: data.nameEn,
       percentage: data.totalMax > 0 ? Math.round((data.totalScore / data.totalMax) * 100) : 0,
       questionsAttempted: data.count,
-      priority: data.totalMax > 0
-        ? (data.totalScore / data.totalMax) * 100 < 40
-          ? 'high'
-          : (data.totalScore / data.totalMax) * 100 < 60
-            ? 'medium'
-            : 'low'
-        : 'high' as 'high' | 'medium' | 'low',
+      priority:
+        data.totalMax > 0
+          ? (data.totalScore / data.totalMax) * 100 < 40
+            ? 'high'
+            : (data.totalScore / data.totalMax) * 100 < 60
+              ? 'medium'
+              : 'low'
+          : ('high' as 'high' | 'medium' | 'low'),
     }))
-    .filter(t => t.priority !== 'low')
+    .filter((t) => t.priority !== 'low')
     .sort((a, b) => a.percentage - b.percentage)
     .slice(0, 5);
 
@@ -204,10 +242,15 @@ function calculateExamInsights(
 }
 
 // Extracted internal function
-async function fetchAnalyticsInternal(userId: string) {
+async function fetchAnalyticsInternal(userId: string, examId?: string) {
   try {
-    // 1. Fetch only completed, non-deleted attempts for the user
-    const attempts = await db
+    // Determine test type filter based on exam
+    // MPPSC logic: Everything NOT starting with UPSC_
+    // UPSC logic: Everything starting with UPSC_
+    const isUPSC = examId === 'upsc';
+
+    // 1. Fetch all completed attempts for the user
+    let query = db
       .select({
         id: userAttempts.id,
         score: userAttempts.score,
@@ -234,6 +277,20 @@ async function fetchAnalyticsInternal(userId: string) {
           isNull(userAttempts.deletedAt)
         )
       );
+
+    // Apply exam filter if provided
+    if (examId) {
+      const { like, notLike, or, and } = await import('drizzle-orm');
+      if (isUPSC) {
+        // @ts-ignore - type safe enough for runtime
+        query = query.where(and(eq(userAttempts.userId, userId), like(tests.type, 'UPSC_%')));
+      } else {
+        // @ts-ignore
+        query = query.where(and(eq(userAttempts.userId, userId), notLike(tests.type, 'UPSC_%')));
+      }
+    }
+
+    const attempts = await query;
 
     if (!attempts.length) {
       return {
@@ -278,7 +335,7 @@ async function fetchAnalyticsInternal(userId: string) {
     // Prefer derived score when answer rows exist (fixes stale/incorrect user_attempts.score)
     const attemptsWithScore = attempts.map((a) => ({
       ...a,
-      score: derivedScoreByAttempt.has(a.id) ? derivedScoreByAttempt.get(a.id)! : (a.score || 0),
+      score: derivedScoreByAttempt.has(a.id) ? derivedScoreByAttempt.get(a.id)! : a.score || 0,
     }));
 
     // 2. Calculate Overall Stats
@@ -300,7 +357,7 @@ async function fetchAnalyticsInternal(userId: string) {
 
     // 3. Granular Analysis by Subject (Question Level)
 
-    let subjectStats: Record<
+    const subjectStats: Record<
       string,
       { totalScore: number; totalMax: number; count: number; name: string; nameEn: string }
     > = {};
@@ -488,7 +545,7 @@ async function fetchAnalyticsInternal(userId: string) {
 
       // 3. Time Calculations
       let timeTakenFormatted = '0m';
-      let totalDurationFormatted = `${activity.durationMinutes || 0}m`;
+      const totalDurationFormatted = `${activity.durationMinutes || 0}m`;
 
       if (activity.startTime && activity.endTime) {
         const start = new Date(activity.startTime).getTime();

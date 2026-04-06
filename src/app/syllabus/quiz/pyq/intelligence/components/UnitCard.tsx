@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Eye, ExternalLink } from 'lucide-react';
+import { ChevronDown, ChevronUp, Eye, ExternalLink, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -11,8 +11,12 @@ import { UnitBadge } from './shared/UnitBadge';
 import { formatUnitTitle, getUnitColor } from './shared/constants';
 import { QuestionList, QuestionData } from './QuestionItem';
 import { TransitionLink } from '@/components/ui/transition-link';
+import { getCurrentExam } from '@/config/exams';
+import { useSettingsStore } from '@/store/useSettingsStore';
+import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 
 interface UnitCardProps {
+  examId?: string;
   unitId: string;
   unitTitle: string;
   questionCount: number;
@@ -27,7 +31,10 @@ interface UnitCardProps {
   year?: number;
 }
 
+const FREE_SUBJECT = 'History';
+
 export function UnitCard({
+  examId,
   unitId,
   unitTitle,
   questionCount,
@@ -43,20 +50,64 @@ export function UnitCard({
 }: UnitCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [showAllQuestions, setShowAllQuestions] = useState(false);
+  const [lockModalOpen, setLockModalOpen] = useState(false);
+
+  const { isSubscribed, user } = useSettingsStore();
+  const isPro = isSubscribed || user?.role === 'admin';
+  const isUnlocked = isPro || unitId === FREE_SUBJECT;
+
   const percentage = totalQuestions > 0 ? Math.round((questionCount / totalQuestions) * 100) : 0;
   const colorClass = getUnitColor(unitId);
+  const exam = getCurrentExam(examId);
+  const isSubjectMode = exam.layoutMode === 'SUBJECT_WISE';
+  
+  const isUPSC = examId === 'upsc';
+  const intelligenceBase = isUPSC ? '/upsc/intelligence' : '/syllabus/quiz/pyq/intelligence';
 
-  // Build View All URL
-  const viewAllUrl = `/syllabus/quiz/pyq/intelligence/questions?unit=${unitId}&source=${variant}${year ? `&year=${year}` : ''}`;
+  const viewAllUrl = isSubjectMode 
+    ? `${intelligenceBase}/questions?subject=${unitId}&source=${variant}${year ? `&year=${year}` : ''}`
+    : `${intelligenceBase}/questions?unit=${unitId}&source=${variant}${year ? `&year=${year}` : ''}`;
+
+  const toggleSection = () => {
+    if (!isUnlocked) {
+      setLockModalOpen(true);
+      return;
+    }
+    setIsExpanded(!isExpanded);
+  };
+
+  const handleActionClick = (e: React.MouseEvent) => {
+    if (!isPro) {
+      e.preventDefault();
+      setLockModalOpen(true);
+    }
+  };
 
   return (
-    <div className="rounded-xl border border-slate-800/50 bg-slate-800/30 transition-colors hover:bg-slate-800/50">
+    <div className={cn(
+      "rounded-xl border transition-colors",
+      isUnlocked 
+        ? "border-slate-800/50 bg-slate-800/30 hover:bg-slate-800/50" 
+        : "border-slate-800/20 bg-slate-900/20 opacity-75 grayscale-[0.3]"
+    )}>
+      <SyllabusLockModal 
+        open={lockModalOpen}
+        onOpenChange={setLockModalOpen}
+      />
+
       {/* Header */}
       <div
         className="flex cursor-pointer items-center gap-4 p-4 sm:p-5"
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={toggleSection}
       >
-        <UnitBadge unitId={unitId} size="lg" />
+        <div className="relative">
+          <UnitBadge unitId={unitId} size="lg" />
+          {!isUnlocked && (
+            <div className="absolute -right-1 -top-1 rounded-full bg-slate-950 p-1 shadow-lg ring-1 ring-white/10">
+              <Lock className="h-2.5 w-2.5 text-amber-500" />
+            </div>
+          )}
+        </div>
         
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -70,9 +121,11 @@ export function UnitCard({
               {questionCount}
             </Badge>
           </div>
-          <p className="mt-0.5 text-xs text-slate-500 truncate">
-            {unitTitle}
-          </p>
+          {!isSubjectMode && (
+            <p className="mt-0.5 text-xs text-slate-500 truncate">
+              {unitTitle}
+            </p>
+          )}
           
           {showPercentage && (
             <div className="mt-2 flex items-center gap-2">
@@ -88,17 +141,17 @@ export function UnitCard({
         </div>
 
         <div className="shrink-0">
-          {isExpanded ? (
-            <ChevronUp className="h-5 w-5 text-emerald-400" />
+          {isUnlocked ? (
+            isExpanded ? <ChevronUp className="h-5 w-5 text-emerald-400" /> : <ChevronDown className="h-5 w-5 text-slate-600" />
           ) : (
-            <ChevronDown className="h-5 w-5 text-slate-600" />
+            <Lock className="h-4 w-4 text-slate-600" />
           )}
         </div>
       </div>
 
       {/* Expanded content */}
       <AnimatePresence>
-        {isExpanded && (
+        {isExpanded && isUnlocked && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
@@ -106,7 +159,6 @@ export function UnitCard({
             className="overflow-hidden"
           >
             <div className="border-t border-slate-800/50">
-              {/* Header with View All button */}
               <div className="flex items-center justify-between px-4 py-3 sm:px-5">
                 <span className="text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
                   {isHindi ? 'प्रश्न' : 'Questions'} ({questions.length})
@@ -128,7 +180,7 @@ export function UnitCard({
                   </Button>
                   <TransitionLink
                     href={viewAllUrl}
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={handleActionClick}
                     transitionTypes={['slide']}
                     className="inline-flex h-7 items-center gap-1.5 rounded-md bg-emerald-500/10 px-3 text-xs font-bold text-emerald-400 transition-colors hover:bg-emerald-500/20 hover:text-emerald-300"
                   >
@@ -150,7 +202,21 @@ export function UnitCard({
                   groupByYear={groupQuestionsByYear}
                   variant="card"
                   showAllExpanded={showAllQuestions}
+                  examId={examId}
                 />
+
+                {/* Lock Footer for non-pro if more questions exist */}
+                {!isPro && questionCount > questions.length && (
+                  <div className="mx-4 mb-6 mt-4">
+                    <Button
+                      onClick={() => setLockModalOpen(true)}
+                      className="w-full h-12 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 font-black text-xs uppercase tracking-widest text-white shadow-xl shadow-amber-900/20"
+                    >
+                      <Lock className="mr-2 h-4 w-4" />
+                      {isHindi ? `${questionCount - questions.length} और प्रश्न अनलॉक करें` : `Unlock ${questionCount - questions.length} More Questions`}
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

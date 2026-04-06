@@ -107,9 +107,9 @@ export async function POST(req: Request) {
     const paidAmount = order.amount as number; // amount in paise
 
     // 🛡️ CRITICAL FIX: Order Ownership Verification (IDOR Prevention)
-    // Bhai, ye sabse important check hai! Agar order kisi aur user ka hai,
-    // to uska payment claim nahi kar sakte. Cross-user attack block karta hai.
     const orderUserId = order.notes?.userId;
+    const examId = 'upsc'; // UPSC-only platform
+
     if (orderUserId && orderUserId !== userId) {
       logger.warn('Payment verification failed: Order ownership mismatch', {
         category: 'payment',
@@ -126,17 +126,24 @@ export async function POST(req: Request) {
     const pricingRows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.id, examId))
       .limit(1);
-    const p = pricingRows[0] || PRICING_DEFAULTS;
+
+    let p = pricingRows[0];
+    if (!p) {
+      const defaultRows = await db
+        .select()
+        .from(pricingConfig)
+        .where(eq(pricingConfig.id, 'default'))
+        .limit(1);
+      p = defaultRows[0] || PRICING_DEFAULTS;
+    }
+
     const proAmountPaise = (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100;
-    const planTier = paidAmount >= proAmountPaise ? 'pro' : 'lite';
+    const planTier = 'pro' as const; // UPSC only has Pro plan
 
     // 📅 Calculate Expiry Date
-    const months =
-      planTier === 'pro'
-        ? p.proMonths ?? PRICING_DEFAULTS.proMonths
-        : p.liteMonths ?? PRICING_DEFAULTS.liteMonths;
+    const months = p.proMonths ?? PRICING_DEFAULTS.proMonths;
     const accessExpiresAt = new Date();
     accessExpiresAt.setMonth(accessExpiresAt.getMonth() + months);
 
@@ -152,6 +159,7 @@ export async function POST(req: Request) {
         planTier,
         status: 'captured',
         currency: 'INR',
+        examType: 'upsc' as const, // UPSC-only repo
       });
 
       await tx
@@ -179,19 +187,19 @@ export async function POST(req: Request) {
     // Resend API se beautiful email bhejo jisme Magic Link ho.
     const resend = new Resend(process.env.RESEND_API_KEY);
 
-    const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
+    const fromName = 'UPSC Intelligence'; // UPSC platform sender name
     const fromAddress =
       process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
     const actionUrl = `${appPath('auth/set-password')}?token=${token}`;
 
-    const planLabel = planTier === 'pro' ? 'Pro Plan' : 'Lite Plan';
+    const planLabel = 'Pro Plan';
 
     const { error: emailError } = await resend.emails.send({
       from: fromEmail,
       to: [user.email],
-      subject: '🎉 Welcome to MPPSC ZEN — Set Your Password',
+      subject: `🎉 Welcome to UPSC Intelligence — Set Your Password`,
       react: EmailTemplate({ name: user.name || 'Student', actionUrl, planName: planLabel }),
     });
 
@@ -202,15 +210,16 @@ export async function POST(req: Request) {
         userId,
         metadata: { to: user.email },
       });
-      
+
       // 📧 CRITICAL: Admin ko batao ki user ko email nahi gaya
       // Taaki manually contact kar sake!
       notifyAdminOnEmailFailure({
         userName: user.name || 'Unknown',
         userEmail: user.email,
-        errorMessage: typeof emailError === 'object' && emailError !== null && 'message' in emailError 
-          ? String(emailError.message) 
-          : JSON.stringify(emailError),
+        errorMessage:
+          typeof emailError === 'object' && emailError !== null && 'message' in emailError
+            ? String(emailError.message)
+            : JSON.stringify(emailError),
         paymentId: razorpay_payment_id,
       }).catch(() => {});
     }

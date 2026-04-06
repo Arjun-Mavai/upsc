@@ -6,7 +6,7 @@ import { questions, tests, pyqQuestionTopics, pyqTopics } from '@/db/schema';
 import { eq, inArray, sql } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import ViewAllQuestionsClient from './ViewAllQuestionsClient';
-import { getUnitDistributionStats } from '@/actions/pyq-analytics';
+import { getUnitDistributionStats, getUserAccess } from '@/actions/pyq-analytics';
 import { getScopedStateServiceYear, PYQ_SCOPE_START_YEAR, PYQ_SCOPE_END_YEAR } from '@/features/tests/utils/pyq-scope';
 import { getYearFromTestId } from '@/lib/pyq-constants';
 
@@ -122,6 +122,7 @@ const UNIT_TITLES: Record<string, string> = {
 export default async function ViewAllQuestionsPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const isPdfMode = params.pdf_mode === 'true';
+  const { isPro } = await getUserAccess();
   
   // Skip authentication for PDF generation mode
   if (!isPdfMode) {
@@ -129,21 +130,16 @@ export default async function ViewAllQuestionsPage({ searchParams }: PageProps) 
     if (!user) {
       redirect('/pricing');
     }
-
-    const tier = getUserTier(user);
-    if (tier === 'free') {
-      redirect('/pricing');
-    }
   }
 
-  const unitId = params.unit || 'unit_1';
+  const subject = params.subject;
+  const unitId = params.unit || params.subject || 'unit_1';
   const year = params.year ? parseInt(params.year) : undefined;
   const topicSlug = params.topic;
   const source = (params.source as 'paper' | 'overall' | 'topic' | 'subject') || 'overall';
-  const subject = params.subject;
 
   let questionList: any[] = [];
-  let unitTitle = UNIT_TITLES[unitId] || '';
+  let unitTitle = UNIT_TITLES[unitId] || unitId;
   let topicTitle: string | undefined;
 
   if (topicSlug) {
@@ -155,7 +151,7 @@ export default async function ViewAllQuestionsPage({ searchParams }: PageProps) 
     // Subject-based query - get questions by subject
     const { getOverallWeightageSubjectData } = await import('@/actions/pyq-analytics');
     // 🔧 No limit here, we want all questions for "View All" page
-    const subjectData = await getOverallWeightageSubjectData();
+    const subjectData = await getOverallWeightageSubjectData(undefined, undefined, isPro);
     
     if (subject === 'All') {
       const allQuestionIds = subjectData.flatMap(data => data.questions.map(q => q.id));
@@ -171,11 +167,11 @@ export default async function ViewAllQuestionsPage({ searchParams }: PageProps) 
     }
   } else {
     // Unit-based query - get from cached analytics data
-    const stats = await getUnitDistributionStats();
+    const stats = await getUnitDistributionStats(undefined, undefined, isPro);
     
     // Filter stats by unit and optionally by year
     const relevantStats = stats.filter(s => {
-      if (s.unitId !== unitId) return false;
+      if (s.unitId.toLowerCase() !== unitId.toLowerCase()) return false;
       if (year && s.year !== year) return false;
       return true;
     });
@@ -203,6 +199,7 @@ export default async function ViewAllQuestionsPage({ searchParams }: PageProps) 
       topicTitle={topicTitle}
       year={year}
       subject={subject}
+      isPro={isPro}
     />
   );
 }

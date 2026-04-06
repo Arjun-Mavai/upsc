@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 import { getUserAnalytics } from '@/features/analytics/actions';
 
+import { getExamContext } from '@/lib/exam-context';
 import { syllabusData } from '@/data/syllabusData';
 import { verifyAuth } from '@/lib/auth';
 import { getUserSyllabusProgress } from '@/features/syllabus/actions/revision';
@@ -11,14 +12,13 @@ import { DashboardClient } from './components/DashboardClient';
 
 export default async function DashboardPage() {
   const user = await verifyAuth();
+  if (!user) redirect('/login');
 
-  if (!user) {
-    redirect('/login');
-  }
+  const exam = await getExamContext();
 
   // Fetch Analytics & Progress concurrently for maximum performance
   const [analyticsData, syllabusProgress] = await Promise.all([
-    getUserAnalytics(user.id),
+    getUserAnalytics(user.id, exam.id),
     getUserSyllabusProgress()
   ]);
 
@@ -33,6 +33,7 @@ export default async function DashboardPage() {
       analyticsData={analyticsData}
       syllabusProgress={syllabusProgress}
       totalTopics={totalTopics}
+      exam={exam}
     />
   );
 }

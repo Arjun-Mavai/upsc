@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { contactEmail } from '../contact/page';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | Mindful MPPSC',
+  title: 'Terms of Service | UPSC Intelligence',
   description:
-    'Terms of Service for Mindful MPPSC — the rules and guidelines for using our MPPSC exam preparation platform.',
+    'Terms of Service for UPSC Intelligence — the rules and guidelines for using our UPSC exam preparation platform.',
 };
 
 export default function TermsOfServicePage() {
@@ -20,15 +20,15 @@ export default function TermsOfServicePage() {
         </Link>
 
         <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">Terms of Service</h1>
-        <p className="mt-2 text-sm text-slate-500">Last updated: June 2025</p>
+        <p className="mt-2 text-sm text-slate-500">Last updated: April 2026</p>
 
         <div className="mt-10 space-y-10 leading-relaxed text-slate-700">
           <section>
             <h2 className="text-xl font-semibold text-slate-900">1. Acceptance of Terms</h2>
             <p className="mt-3">
-              By accessing Mindful MPPSC (&ldquo;the Platform&rdquo;), you acknowledge that you have
+              By accessing UPSC Intelligence (&ldquo;the Platform&rdquo;), you acknowledge that you have
               read, understood, and agree to be bound by these Terms of Service. These terms
-              constitute a legally binding agreement between you and Mindful MPPSC. We reserve the
+              constitute a legally binding agreement between you and UPSC Intelligence. We reserve the
               right to amend these terms at our discretion; continued usage after such amendments
               constitutes formal acceptance of the revised terms.
             </p>
@@ -57,24 +57,24 @@ export default function TermsOfServicePage() {
               3. Intellectual Property Rights
             </h2>
             <p className="mt-3">
-              All content hosted on the Platform—including but not limited to study materials, test
-              series, mnemonics, and software—is the exclusive intellectual property of Mindful
-              MPPSC. Unauthorized reproduction, distribution, or commercial exploitation of any
+              All content hosted on the Platform—including but not limited to study materials, PYQ analysis,
+              explanations, and software—is the exclusive intellectual property of UPSC Intelligence.
+              Unauthorized reproduction, distribution, or commercial exploitation of any
               material is strictly prohibited and may result in legal action.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-slate-900">
-              4. Payments &amp; Strict No-Refund Policy
+              4. Payments &amp; No-Refund Policy
             </h2>
             <ul className="mt-3 list-disc space-y-2 pl-5">
               <li>
                 <strong>Immediate Digital Access:</strong> Since our services involve immediate
-                access to digital content (test series, mnemonics, etc.), all purchases are final.
+                access to digital content (PYQ papers, analysis, explanations), all purchases are final.
               </li>
               <li>
-                <strong>No Refunds:</strong> Under no circumstances shall Mindful MPPSC be liable to
+                <strong>No Refunds:</strong> Under no circumstances shall UPSC Intelligence be liable to
                 provide a refund once a subscription has been activated or digital content has been
                 accessed.
               </li>
@@ -88,7 +88,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-xl font-semibold text-slate-900">5. Limitation of Liability</h2>
             <p className="mt-3">
-              Mindful MPPSC provides educational tools on an &ldquo;as-is&rdquo; and
+              UPSC Intelligence provides educational tools on an &ldquo;as-is&rdquo; and
               &ldquo;as-available&rdquo; basis. While we strive for the highest degree of accuracy,
               we do not guarantee specific exam results or absolute factual error-freedom. To the
               maximum extent permitted by law, our liability is limited to the subscription fee paid
@@ -103,12 +103,12 @@ export default function TermsOfServicePage() {
             <p className="mt-3">
               These Terms shall be governed by and construed in accordance with the laws of India.
               Any legal action or proceeding arising under these Terms shall be brought exclusively
-              in the courts of Madhya Pradesh, India.
+              in the courts of New Delhi, India.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-slate-900">9. Contact Us</h2>
+            <h2 className="text-xl font-semibold text-slate-900">7. Contact Us</h2>
             <p className="mt-3">
               Questions about these terms? Visit our{' '}
               <Link href="/contact" className="text-slate-900 underline hover:text-slate-600">

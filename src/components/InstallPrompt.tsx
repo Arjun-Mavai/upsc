@@ -108,7 +108,7 @@ export function InstallPrompt() {
                 <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-500 text-[10px] font-black text-black">!</div>
                 <div className="space-y-1">
                    <p className="text-sm font-black text-amber-500 uppercase tracking-tight">Open in Safari</p>
-                   <p className="text-xs text-slate-300">Google Chrome and Facebook browsers don't support app installation. Please open <span className="text-amber-200 font-bold underline">mppsc.zenscroll.app</span> in Safari to install.</p>
+                   <p className="text-xs text-slate-300">Google Chrome and Facebook browsers don't support app installation. Please open <span className="text-amber-200 font-bold underline">upsc.zenscroll.app</span> in Safari to install.</p>
                 </div>
               </div>
             </div>

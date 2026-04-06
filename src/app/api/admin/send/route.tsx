@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     const body = (await request.json().catch(() => ({}))) as { to?: string };
     const to = body.to || adminUser.email;
 
-    const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
+    const fromName = process.env.EMAIL_FROM_NAME || 'UPSC 2026';
     const fromAddress =
       process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev';
     const fromEmail = `${fromName} <${fromAddress}>`;
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     const { data, error } = await resend.emails.send({
       from: fromEmail,
       to: [to],
-      subject: 'Test Email — MPPSC ZEN',
+      subject: 'Test Email — UPSC ZEN',
       react: (
         <EmailTemplate
           name={adminUser.name || 'Admin'}

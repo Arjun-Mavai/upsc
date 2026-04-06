@@ -8,19 +8,14 @@
 export const API = {
   // ── Auth ──────────────────────────────────────────────
   AUTH: {
-    LOGIN: '/api/auth/login',
+    LOGIN: '/api/auth/check/login',
     SIGNUP: '/api/auth/signup',
     LOGOUT: '/api/auth/logout',
     FORGOT_PASSWORD: '/api/auth/forgot-password',
+    CHECK: '/api/auth/check',
     ME: '/api/auth/me',
     UPGRADE: '/api/auth/upgrade',
     EXTEND_ACCESS: '/api/auth/extend-access',
-    // MPPSC-specific auth
-    MPPSC_LOGIN: '/api/auth/mppsc-login',
-    MPPSC_SIGNUP: '/api/auth/mppsc-signup',
-    MPPSC_LOGOUT: '/api/auth/mppsc-logout',
-    MPPSC_FORGOT_PASSWORD: '/api/auth/mppsc-forgot-password',
-    MPPSC_CHECK: '/api/auth/mppsc-check',
     CHECK_EMAIL: '/api/auth/check-email',
   },
 

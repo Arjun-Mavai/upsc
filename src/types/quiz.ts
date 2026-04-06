@@ -7,7 +7,7 @@ export interface Question {
   question: string;
   questionEn?: string | null;
   options: BilingualOption[];
-  correctAnswer: number;
+  correctAnswer: string | number;
   explanation?: string;
   explanationEn?: string | null;
   explanation_hi?: string | null; // Optional override handling if needed

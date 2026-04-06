@@ -5,10 +5,11 @@ import { QuizPlayClient } from './QuizPlayClient';
 import { verifyAuth } from '@/lib/auth';
 import { Question } from '@/types/quiz';
 import { logger } from '@/lib/logger';
-import { SCORING_CONFIG } from '@/lib/quiz-scoring';
+import { SCORING_CONFIG, getExamScoring } from '@/lib/quiz-scoring';
 import { getCachedAttemptLimits } from '@/app/admin/test-access/actions';
 import { getSubjectPartAccess } from '@/app/syllabus/quiz/pyq/actions';
 import { canAccessTest, getUserTier } from '@/lib/access-control';
+import { getCurrentExam } from '@/config/exams';
 
 interface PageProps {
   searchParams: Promise<{
@@ -103,13 +104,16 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
       );
     }
 
+    const exam = getCurrentExam();
+    const scoring = getExamScoring(exam, 'PYQ'); // Subject practice is usually GS/PYQ style
+
     const questions: Question[] = questionsSlice.map((q: any) => {
       const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
       return {
         id: q.id,
         question: q.questionText,
         questionEn: q.questionTextEn || undefined,
-        correctAnswer: Number(q.correctAnswer),
+        correctAnswer: q.correctAnswer,
         options: parsedOptions as string[],
         explanation: q.explanation || undefined,
         explanationEn: q.explanationEn || undefined,
@@ -117,8 +121,8 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
         subject: `PYQ ${q.year}`,
         type: q.type || 'standard',
         matchPairs: q.matchPairs, // Fixed typo matchPairs
-        negativeMarks: SCORING_CONFIG.NEGATIVE_MARKING,
-        marks: SCORING_CONFIG.MARKS_PER_QUESTION,
+        negativeMarks: scoring.negativeMarking,
+        marks: scoring.marksPerQuestion,
       };
     });
 
@@ -183,6 +187,9 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
   const userId = user?.id;
   const isTestingUser = user?.role === 'admin';
 
+  const exam = getCurrentExam();
+  const scoring = getExamScoring(exam, testData.type);
+
   // Map Questions
   const questions: Question[] = testData.questions.map((q) => {
     // Ensure options are parsed if they come as a stringified array
@@ -198,15 +205,15 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
           q.questionTextEn.trim().toLowerCase() === 'na')
           ? q.questionText
           : q.questionTextEn || undefined,
-      correctAnswer: Number(q.correctAnswer),
+      correctAnswer: q.correctAnswer,
       options: parsedOptions as string[], // Cast assumes standard string[] options for now
       explanation: q.explanation || undefined,
       explanationEn: q.explanationEn || undefined,
       subject: q.subject || undefined,
       type: (q.type as 'standard' | 'matching') || 'standard',
       matchPairs: (q.matchPairs as any) || undefined,
-      negativeMarks: SCORING_CONFIG.NEGATIVE_MARKING, // Force Global Config (1)
-      marks: SCORING_CONFIG.MARKS_PER_QUESTION, // Force Global Config (3)
+      negativeMarks: q.negativeMarks ?? scoring.negativeMarking,
+      marks: q.marks ?? scoring.marksPerQuestion,
     };
   });
 

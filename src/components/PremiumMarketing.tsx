@@ -10,7 +10,7 @@ import { Star, Users, Flame, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { type PricingData, LITE_FEATURES, PRO_FEATURES, PRICING_DEFAULTS } from '@/config/pricing';
+import { type PricingData, PRO_FEATURES, PRICING_DEFAULTS } from '@/config/pricing';
 import { PricingCard } from '@/components/PricingCard';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useQuery } from '@tanstack/react-query';
@@ -25,10 +25,10 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
   const hi = language === 'hi';
   const isLiteUser = user?.planTier === 'lite';
 
-  // 🔒 Dynamic pricing — Server Action + React Query (no API visible!)
+  // 🔒 Dynamic pricing — Server Action + React Query
   const { data: pricingData, isLoading } = useQuery({
-    queryKey: ['pricing'],
-    queryFn: getPricingData,
+    queryKey: ['pricing', 'upsc'],
+    queryFn: () => getPricingData('upsc'),
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
@@ -36,20 +36,6 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
 
   // Loading Skeleton State
   if (isLoading) {
-    if (isLiteUser) {
-      return (
-        <div className="animate-in fade-in zoom-in-95 relative flex min-h-[500px] flex-col items-center justify-center bg-slate-50 p-4 duration-200 md:p-8">
-          <Skeleton className="mb-6 h-6 w-32 rounded-full" />
-          <Skeleton className="mb-4 h-10 w-3/4 max-w-sm" />
-          <Skeleton className="mb-8 h-4 w-full max-w-md" />
-          <Skeleton className="h-[200px] w-full max-w-md rounded-xl" />
-          <DialogPrimitive.Close className="absolute top-2 right-2 p-2">
-            <X className="h-6 w-6 text-slate-300" />
-          </DialogPrimitive.Close>
-        </div>
-      );
-    }
-
     return (
       <div className="animate-in fade-in zoom-in-95 relative flex flex-col items-center bg-slate-50 px-4 py-6 duration-200 md:p-8">
         <Skeleton className="mb-4 h-10 w-3/4 max-w-lg" />
@@ -59,8 +45,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
           <Skeleton className="h-8 w-48 rounded-full" />
         </div>
 
-        <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
-          <Skeleton className="h-[450px] w-full rounded-2xl" />
+        <div className="mx-auto w-full max-w-md">
           <Skeleton className="h-[450px] w-full rounded-2xl" />
         </div>
 
@@ -115,9 +100,8 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
   return (
     <div className="animate-in fade-in zoom-in-95 relative flex flex-col items-center bg-slate-50 px-4 py-6 text-center duration-200 md:p-8">
       {/* Header */}
-      {/* Header */}
       <h2 className="font-display mb-3 text-2xl leading-tight font-black tracking-tighter text-slate-900 uppercase md:text-5xl">
-        {hi ? 'अपना MPPSC सफलता प्लान' : 'Choose Your MPPSC Success Plan'}
+        {hi ? 'अपना UPSC सफलता प्लान' : 'Choose Your UPSC Success Plan'}
       </h2>
       <p className="mx-auto mb-6 max-w-lg px-4 text-sm font-medium text-slate-500 md:text-lg">
         {hi ? 'छात्रों के साथ स्मार्ट तैयारी करें' : 'Join aspirants who are preparing smarter'}
@@ -137,7 +121,7 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
         </div>
       </div>
 
-      <div className="mx-auto grid w-full max-w-md grid-cols-1 gap-6 px-0 md:gap-8 md:px-4">
+      <div className="mx-auto w-full max-w-md">
         <PricingCard
           planType="pro"
           pricing={p}

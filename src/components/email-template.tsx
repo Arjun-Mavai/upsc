@@ -38,11 +38,11 @@ export default function EmailTemplate({
             letterSpacing: '-0.5px',
           }}
         >
-          MPPSC Prelims - 2026
+          UPSC Intelligence - 2026
         </h1>
         <p
           style={{
-            color: '#00F0FF',
+            color: '#818CF8',
             fontSize: '12px',
             fontWeight: '600',
             margin: '0',
@@ -50,7 +50,7 @@ export default function EmailTemplate({
             textTransform: 'uppercase',
           }}
         >
-          Smart Test Series
+          Smart PYQ Analysis
         </p>
       </div>
 
@@ -61,13 +61,13 @@ export default function EmailTemplate({
           <span
             style={{
               display: 'inline-block',
-              background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
-              color: '#059669',
+              background: 'linear-gradient(135deg, #eef2ff, #e0e7ff)',
+              color: '#4f46e5',
               fontSize: '13px',
               fontWeight: '700',
               padding: '6px 16px',
               borderRadius: '20px',
-              border: '1px solid #a7f3d0',
+              border: '1px solid #c7d2fe',
             }}
           >
             🎉 Congratulations!
@@ -77,14 +77,14 @@ export default function EmailTemplate({
         <p style={{ fontSize: '16px', marginBottom: '8px', fontWeight: '600' }}>Hi {name},</p>
 
         <p style={{ fontSize: '15px', marginBottom: '16px', color: '#374151' }}>
-          Welcome aboard! Your <strong style={{ color: '#0a0a0a' }}>{planName}</strong> plan is
-          activated. You&apos;ve taken the first step towards cracking MPPSC — and that takes
-          courage. 💪
+          Welcome aboard! Your <strong style={{ color: '#4f46e5' }}>{planName}</strong> plan is
+          activated. You&apos;ve taken a major step towards mastering UPSC CSE PYQs — the core of
+          the exam. 💪
         </p>
 
         <p style={{ fontSize: '15px', marginBottom: '24px', color: '#374151' }}>
-          Set your password below to unlock your full access — topic-wise tests, full-length mocks,
-          PYQ papers, smart analytics, and everything you need to succeed.
+          Set your password below to unlock your full access — year-wise segregation, subject-wise trends,
+          expert-led logic explanations, and everything you need for UPSC intelligence.
         </p>
 
         {/* CTA Button */}
@@ -94,14 +94,14 @@ export default function EmailTemplate({
             style={{
               display: 'inline-block',
               padding: '14px 36px',
-              background: 'linear-gradient(135deg, #0a0a0a, #1a1a2e)',
-              color: '#00F0FF',
+              background: 'linear-gradient(135deg, #4f46e5, #4338ca)',
+              color: '#ffffff',
               textDecoration: 'none',
               borderRadius: '8px',
               fontWeight: '700',
               fontSize: '15px',
               letterSpacing: '0.5px',
-              boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
+              boxShadow: '0 4px 14px rgba(79,70,229,0.25)',
             }}
           >
             Set Your Password →
@@ -115,12 +115,12 @@ export default function EmailTemplate({
             borderRadius: '8px',
             padding: '16px',
             marginBottom: '20px',
-            borderLeft: '4px solid #00F0FF',
+            borderLeft: '4px solid #4f46e5',
           }}
         >
           <p style={{ fontSize: '14px', color: '#475569', margin: '0', fontStyle: 'italic' }}>
-            &quot;सफलता उन्हीं को मिलती है जो मेहनत करते हैं।&quot; — Your MPPSC journey starts now.
-            Consistent practice is the key. We&apos;re here to help you every step of the way.
+            &quot;Syllabus is the map, and PYQs are the compass.&quot; — Your UPSC Intelligence journey starts now.
+            We&apos;re here to help you decode the patterns and score higher.
           </p>
         </div>
 
@@ -141,19 +141,19 @@ export default function EmailTemplate({
           <table style={{ width: '100%', fontSize: '14px', color: '#4b5563' }}>
             <tbody>
               <tr>
-                <td style={{ padding: '4px 0' }}>✅ Topic-wise &amp; Unit-wise Tests</td>
+                <td style={{ padding: '4px 0' }}>✅ Year-wise PYQ Analytics (2020-2025)</td>
               </tr>
               <tr>
-                <td style={{ padding: '4px 0' }}>✅ Full Length Mock Tests (100 Questions)</td>
+                <td style={{ padding: '4px 0' }}>✅ Subject-wise Segmented Question Banks</td>
               </tr>
               <tr>
-                <td style={{ padding: '4px 0' }}>✅ PYQ Papers with Smart Explanations</td>
+                <td style={{ padding: '4px 0' }}>✅ Instant Expert Logic for Every Question</td>
               </tr>
               <tr>
-                <td style={{ padding: '4px 0' }}>✅ Bilingual — Hindi &amp; English</td>
+                <td style={{ padding: '4px 0' }}>✅ High-Performance Thematic Dashboard</td>
               </tr>
               <tr>
-                <td style={{ padding: '4px 0' }}>✅ Performance Analytics Dashboard</td>
+                <td style={{ padding: '4px 0' }}>✅ Premium Intelligence Strategy Blogs</td>
               </tr>
             </tbody>
           </table>
@@ -191,10 +191,10 @@ export default function EmailTemplate({
         }}
       >
         <p style={{ fontSize: '12px', color: '#6b7280', margin: '0 0 4px 0', fontWeight: '600' }}>
-          Mindful MPPSC — Smart Test Series
+          UPSC Intelligence — Smart Test Series
         </p>
         <p style={{ fontSize: '11px', color: '#9ca3af', margin: '0' }}>
-          Secure • Trusted • Built for MPPSC Aspirants
+          Secure • Trusted • Built for Serious UPSC Aspirants
         </p>
       </div>
     </div>

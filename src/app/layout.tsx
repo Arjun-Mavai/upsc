@@ -39,56 +39,59 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
 };
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://mppsc.zenscroll.app';
-export const metadata: Metadata = {
-  title: {
-    default: 'Mindful MPPSC - Crack MPPSC 2026 | Bilingual Tests & Mnemonics',
-    template: '%s | Mindful MPPSC',
-  },
-  description:
-    "Master the new MPPSC 2026 pattern with India's first bilingual mnemonic-based platform. Get 100+ topic tests, 5+ years PYQs, and smart explanations in Hindi & English.",
-  keywords: [
-    'MPPSC 2026 Test Series',
-    'MPPSC Prelims Mock Test',
-    'MPPSC Previous Year Papers',
-    'MPPSC Mnemonics',
-    'MPPSC Notes Hindi',
-  ],
-  metadataBase: new URL(baseUrl),
-  openGraph: {
-    type: 'website',
-    locale: 'en_IN',
-    url: baseUrl,
-    title: 'MPPSC 2026 Elite Test Series | नवीनतम पैटर्न पर आधारित सर्वश्रेष्ठ अभ्यास',
-    description:
-      'Looking for MPPSC 2026 Test Series? Get 5+ Years PYQs, Topic-wise Tests, and Mnemonics in Hindi & English. The smartest way to clear MPPSC Prelims.',
-    siteName: 'Mindful MPPSC',
-    images: [
-      {
-        url: '/og-hero.webp',
-        width: 1200,
-        height: 630,
-        alt: 'Mindful MPPSC - Crack MPPSC 2026',
-      },
+import { getExamContext } from '@/lib/exam-context';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const exam = await getExamContext();
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `https://${exam.id}.zenscroll.app`;
+
+  return {
+    title: {
+      default: exam.title,
+      template: `%s | ${exam.name}`,
+    },
+    description: exam.description,
+    keywords: [
+      `${exam.name} 2026 Test Series`,
+      `${exam.name} Prelims Mock Test`,
+      `${exam.name} Previous Year Papers`,
+      `${exam.name} Analysis`,
     ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Mindful MPPSC | Best App for MPPSC 2026',
-    description: "Master MPPSC with India's first Bilingual Mnemonic App.",
-    images: ['/og-hero.webp'],
-  },
-  manifest: '/manifest.json',
-  icons: {
-    icon: '/icons/icon-192x192.png',
-    apple: '/icons/icon-192x192.png',
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'Mindful MPPSC',
-  },
-};
+    metadataBase: new URL(baseUrl),
+    openGraph: {
+      type: 'website',
+      locale: 'en_IN',
+      url: baseUrl,
+      title: `${exam.name} Elite Test Series | सर्वोत्तम अभ्यास`,
+      description: exam.description,
+      siteName: exam.name,
+      images: [
+        {
+          url: '/og-hero.webp',
+          width: 1200,
+          height: 630,
+          alt: `Mindful ${exam.name} - Crack ${exam.id.toUpperCase()}`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${exam.name} | Best App for aspirants`,
+      description: exam.description,
+      images: ['/og-hero.webp'],
+    },
+    manifest: '/manifest.json',
+    icons: {
+      icon: '/icons/icon-192x192.png',
+      apple: '/icons/icon-192x192.png',
+    },
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: 'black-translucent',
+      title: exam.name,
+    },
+  };
+}
 
 import { verifyAuth } from '@/lib/auth';
 import { AppNavbar } from '@/components/layout/AppNavbar';
@@ -116,14 +119,16 @@ export default async function RootLayout({
       }
     : null;
 
+  const exam = await getExamContext();
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `https://${exam.id}.zenscroll.app`;
+
   // JSON-LD structured data — helps Google show rich results
   const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Mindful MPPSC',
+    name: exam.name,
     url: baseUrl,
-    description:
-      'The #1 App for MPPSC 2026 Preparation with Mnemonics, Bilingual Notes, Tests & Quizzes',
+    description: exam.description,
     potentialAction: {
       '@type': 'SearchAction',
       target: `${baseUrl}/blogs?q={search_term_string}`,
@@ -134,9 +139,9 @@ export default async function RootLayout({
   const organizationSchema = {
     '@context': 'https://schema.org',
     '@type': 'EducationalOrganization',
-    name: 'Mindful MPPSC',
+    name: exam.name,
     url: baseUrl,
-    description: "India's first bilingual mnemonic-based MPPSC preparation platform",
+    description: exam.description,
     sameAs: [],
   };
 

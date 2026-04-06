@@ -269,8 +269,8 @@ export function AppInstallGuide() {
                             <span className="font-black text-white text-lg">M</span>
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-black text-sm text-white tracking-tight">Mindful MPPSC</h4>
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">mppsc.zenscroll.app</p>
+                            <h4 className="font-black text-sm text-white tracking-tight">UPSC Intelligence</h4>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">upsc.zenscroll.app</p>
                           </div>
                         </div>
 

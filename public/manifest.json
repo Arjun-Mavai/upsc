@@ -1,11 +1,11 @@
 {
-  "name": "Mindful MPPSC",
-  "short_name": "Mindful",
+  "name": "UPSC Intelligence",
+  "short_name": "UPSC Intel",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#050810",
-  "theme_color": "#f59e0b",
-  "description": "Master your MPPSC Syllabus with Mnemonics and Flashcards.",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "description": "Master UPSC CSE PYQs (2020-2025) with Expert Logic and Organized Analysis.",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",

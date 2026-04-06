@@ -80,8 +80,10 @@ export async function getUserDashboardData(): Promise<UserWithStats[]> {
     .where(
       and(
         isNull(mppscUsers.deletedAt),
-        // Exclude admin
-        sql`${mppscUsers.role} != 'admin'`
+        // Exclude admin  
+        sql`${mppscUsers.role} != 'admin'`,
+        // UPSC-only users
+        eq(mppscUsers.examType, 'upsc')
       )
     )
     .groupBy(mppscUsers.id)

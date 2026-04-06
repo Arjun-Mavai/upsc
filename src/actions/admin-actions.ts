@@ -22,6 +22,7 @@ export async function getExistingTests() {
       })
       .from(tests)
       .leftJoin(questions, eq(tests.id, questions.testId))
+      .where(eq(tests.examType, 'upsc')) // UPSC-only tests
       .groupBy(tests.id)
       .orderBy(tests.createdAt);
 
@@ -39,7 +40,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
     const existingTestId = formData.get('existingTestId') as string;
 
     const title = formData.get('title') as string;
-    const type = formData.get('type') as 'FLT' | 'UNIT' | 'PYQ' | 'CSAT' | 'TOPIC' | 'MISC';
+    const type = formData.get('type') as 'FLT' | 'UNIT' | 'PYQ' | 'CSAT' | 'TOPIC' | 'MISC' | 'UPSC_PYQ' | 'UPSC_FLT' | 'UPSC_FREE_QUIZ';
     const unitId = formData.get('unitId') as string;
     const topicId = formData.get('topicId') as string; // Changed from null/undefined
     const subjectTag = formData.get('subjectTag') as string; // MISC ke liye subject tag
@@ -92,18 +93,19 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
         title: title,
         slug: slug,
         type: type, // FLT, UNIT, MISC, etc.
-        unitId: type === 'UNIT' || type === 'TOPIC' || type === 'MISC' ? unitId : null,
+        unitId: type === 'UNIT' || type === 'TOPIC' || type === 'MISC' || type === 'UPSC_FREE_QUIZ' ? unitId : null,
         topicId: type === 'TOPIC' ? topicId : null,
         description: `Imported test: ${title}`,
         totalMarks: parsedQuestions.length * 2, // Initial marks
         totalQuestions: parsedQuestions.length,
         durationMinutes: 120,
-        // MISC type = free quiz → isFreeAccess ON by default
-        isFreeAccess: type === 'MISC' ? true : false,
+        // MISC/UPSC_FREE_QUIZ type = free quiz → isFreeAccess ON by default
+        isFreeAccess: (type === 'MISC' || type === 'UPSC_FREE_QUIZ') ? true : false,
         // Tags — subject tag bhi store karo (filter me kaam aayega)
         tags: subjectTag ? [type, '2026', subjectTag] : [type, '2026'],
         createdAt: new Date(),
         updatedAt: new Date(),
+        examType: 'upsc' as const, // UPSC-only repo with proper typing
       });
     } else {
       // Fetch title for success message
@@ -157,6 +159,8 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
       subject: q.subject || 'General',
       type: q.type || 'standard',
       matchPairs: q.matchPairs || null,
+      extendedData: q.extendedData || null,
+      examType: 'upsc' as const, // UPSC-only repo with proper typing
     }));
 
     // Filter out duplicates (check against existing questions in this test)
@@ -246,7 +250,8 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
         totalQuestions: tests.totalQuestions,
         updatedAt: tests.updatedAt,
       })
-      .from(tests);
+      .from(tests)
+      .where(eq(tests.examType, 'upsc')) // UPSC-only tests
 
     const blogsData = await db
       .select({
@@ -256,7 +261,8 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
         contentType: contentBlogs.contentType,
         createdAt: contentBlogs.createdAt,
       })
-      .from(contentBlogs);
+      .from(contentBlogs)
+      .where(eq(contentBlogs.examType, 'upsc')); // UPSC-only blogs
 
     const recentGuests = await db
       .select({
@@ -267,6 +273,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
         createdAt: guests.createdAt,
       })
       .from(guests)
+      .where(eq(guests.examType, 'upsc')) // UPSC-only guests
       .orderBy(desc(guests.createdAt))
       .limit(100); // Increased limit to show more history per user request
 
@@ -281,6 +288,9 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
       CSAT: 0,
       PYQ: 0,
       MISC: 0,
+      UPSC_PYQ: 0,
+      UPSC_FLT: 0,
+      UPSC_FREE_QUIZ: 0,
     };
 
     // Blog category count
@@ -345,6 +355,7 @@ export async function getPaymentExitStats() {
     const reasons = await db
       .select()
       .from(paymentExitReasons)
+      .where(eq(paymentExitReasons.examType, 'upsc'))
       .orderBy(desc(paymentExitReasons.createdAt))
       .limit(50);
 

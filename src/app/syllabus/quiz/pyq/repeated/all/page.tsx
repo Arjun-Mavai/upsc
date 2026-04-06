@@ -29,8 +29,8 @@ const getRepeatedQuestionsWithDetails = unstable_cache(
       .innerJoin(tests, eq(questions.testId, tests.id))
       .where(
         and(
-          sql`${tests.title} LIKE '%MPPSC%'`,
-          sql`${tests.title} LIKE '%State Service%'`,
+          sql`${tests.title} LIKE '%UPSC%'`,
+          sql`${tests.title} LIKE '%Civil Services%'`,
           sql`${tests.title} LIKE '%Prelims%'`,
           sql`${tests.title} LIKE '%Paper-1%'`,
           sql`substr(${tests.title}, -4) BETWEEN '2020' AND '2025'`

@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { YearBadge } from './shared/UnitBadge';
+import { UPSCQuestionRenderer } from '@/features/tests/components/UPSCQuestionRenderer';
+import { UPSCPremiumQuestionCard } from '@/components/ui/UPSCPremiumQuestionCard';
 
 export interface QuestionData {
   id: string;
@@ -20,6 +22,7 @@ export interface QuestionData {
   options?: any; // Can be string[] or DB JSON [{id, text, text_en}]
   optionsEn?: string[];
   correctAnswer?: number | string;
+  extendedData?: any;
 }
 
 interface QuestionItemProps {
@@ -30,6 +33,7 @@ interface QuestionItemProps {
   showYear?: boolean;
   variant?: 'compact' | 'full' | 'card';
   defaultExpanded?: boolean;
+  examId?: string;
 }
 
 export function QuestionItem({
@@ -40,6 +44,7 @@ export function QuestionItem({
   showYear = true,
   variant = 'compact',
   defaultExpanded = false,
+  examId,
 }: QuestionItemProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const displayText = isHindi ? question.text : question.textEn || question.text;
@@ -119,14 +124,24 @@ export function QuestionItem({
 
           {/* Question Content */}
           <div className="min-w-0 flex-1">
-            <p
-              className={cn(
-                'mb-2 text-xs leading-relaxed font-medium text-slate-300 transition-colors',
-                isExpanded ? 'text-white' : 'line-clamp-2'
-              )}
-            >
-              {displayText}
-            </p>
+            {examId === 'upsc' ? (
+              <UPSCQuestionRenderer question={question as any} isHindi={isHindi} />
+            ) : question.extendedData ? (
+              <UPSCPremiumQuestionCard
+                extendedData={question.extendedData}
+                isHindi={isHindi}
+                isExpanded={isExpanded}
+              />
+            ) : (
+              <p
+                className={cn(
+                  'mb-2 text-xs leading-relaxed font-medium text-slate-300 transition-colors',
+                  isExpanded ? 'text-white' : 'line-clamp-2'
+                )}
+              >
+                {displayText}
+              </p>
+            )}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[9px] font-black tracking-widest text-slate-500 uppercase">
               <span className="text-emerald-500/80">{question.year}</span>
               <span className="h-1 w-1 rounded-full bg-slate-800" />
@@ -170,8 +185,8 @@ export function QuestionItem({
                   <p className="text-[11px] leading-relaxed text-slate-500 italic">{altText}</p>
                 )}
 
-                {/* Options if available */}
-                {normalizedOptions.length > 0 && (
+                {/* Options if available (Skip if UPSC renderer already showed them) */}
+                {normalizedOptions.length > 0 && examId !== 'upsc' && (
                   <div className="space-y-2">
                     {normalizedOptions.map((opt, i) => {
                       const isCorrect = correctIdx === i;
@@ -223,14 +238,24 @@ export function QuestionItem({
           </span>
 
           <div className="min-w-0 flex-1">
-            <p
-              className={cn(
-                'text-sm leading-relaxed text-slate-300 transition-colors',
-                isExpanded ? 'text-white' : 'line-clamp-2'
-              )}
-            >
-              {displayText}
-            </p>
+            {examId === 'upsc' ? (
+              <UPSCQuestionRenderer question={question as any} isHindi={isHindi} />
+            ) : question.extendedData ? (
+              <UPSCPremiumQuestionCard
+                extendedData={question.extendedData}
+                isHindi={isHindi}
+                isExpanded={isExpanded}
+              />
+            ) : (
+              <p
+                className={cn(
+                  'text-sm leading-relaxed text-slate-300 transition-colors',
+                  isExpanded ? 'text-white' : 'line-clamp-2'
+                )}
+              >
+                {displayText}
+              </p>
+            )}
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
@@ -269,16 +294,18 @@ export function QuestionItem({
               className="overflow-hidden"
             >
               <div className="space-y-3 border-t border-slate-800/50 bg-slate-900/50 px-4 py-4 sm:px-5">
-                {/* Full question text */}
-                <p className="text-sm leading-relaxed text-slate-200">{displayText}</p>
+                {/* Full question text or Extended Data is handled in the header itself for compact variant */}
+                {!question.extendedData && (
+                  <p className="text-sm leading-relaxed text-slate-200">{displayText}</p>
+                )}
 
                 {/* Alternate language */}
-                {altText && altText !== displayText && (
+                {altText && altText !== displayText && !question.extendedData && (
                   <p className="text-xs leading-relaxed text-slate-500 italic">{altText}</p>
                 )}
 
-                {/* Options if available */}
-                {normalizedOptions.length > 0 && (
+                {/* Options if available (Skip if UPSC renderer already handles them) */}
+                {normalizedOptions.length > 0 && examId !== 'upsc' && (
                   <div className="mt-3 space-y-2">
                     {normalizedOptions.map((opt, i) => {
                       const isCorrect = correctIdx === i;
@@ -338,13 +365,27 @@ export function QuestionItem({
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <p className="text-sm leading-relaxed font-medium break-words whitespace-normal text-slate-300 transition-colors group-hover/question:text-white sm:text-base">
-              {displayText}
-            </p>
-            {altText && altText !== displayText && (
-              <p className="mt-2 text-xs leading-relaxed break-words whitespace-normal text-slate-500 italic sm:text-sm">
-                {altText}
-              </p>
+            {examId === 'upsc' ? (
+              <div className="cursor-default">
+                <UPSCQuestionRenderer question={question as any} isHindi={isHindi} />
+              </div>
+            ) : question.extendedData ? (
+              <UPSCPremiumQuestionCard
+                extendedData={question.extendedData}
+                isHindi={isHindi}
+                isExpanded={true}
+              />
+            ) : (
+              <>
+                <p className="text-sm leading-relaxed font-medium break-words whitespace-normal text-slate-300 transition-colors group-hover/question:text-white sm:text-base">
+                  {displayText}
+                </p>
+                {altText && altText !== displayText && (
+                  <p className="mt-2 text-xs leading-relaxed break-words whitespace-normal text-slate-500 italic sm:text-sm">
+                    {altText}
+                  </p>
+                )}
+              </>
             )}
           </div>
           {repeatCount > 1 && (
@@ -369,6 +410,7 @@ interface QuestionListProps {
   maxVisible?: number;
   variant?: 'compact' | 'full' | 'card';
   showAllExpanded?: boolean;
+  examId?: string;
 }
 
 export function QuestionList({
@@ -380,6 +422,7 @@ export function QuestionList({
   maxVisible,
   variant = 'compact',
   showAllExpanded = false,
+  examId,
 }: QuestionListProps) {
   const [showAll, setShowAll] = useState(false);
 
@@ -434,6 +477,7 @@ export function QuestionList({
                   showYear={false}
                   variant={variant}
                   defaultExpanded={showAllExpanded}
+                  examId={examId}
                 />
               ))}
             </div>
@@ -464,6 +508,7 @@ export function QuestionList({
             showYear={showYears}
             variant={variant}
             defaultExpanded={showAllExpanded}
+            examId={examId}
           />
         ))}
       </div>

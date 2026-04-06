@@ -28,13 +28,15 @@ import {
   FileText,
   Flame,
   History,
-  Newspaper,
+  TrendingUp,
+  BrainCircuit,
+  LayoutGrid,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { PRICING_DEFAULTS, LITE_FEATURES, PRO_FEATURES } from '@/config/pricing';
+import { PRICING_DEFAULTS, PRO_FEATURES } from '@/config/pricing';
 import { PaymentModal } from '@/components/payment/PaymentModal';
 import { PricingCard } from '@/components/PricingCard';
 import { cn } from '@/lib/utils';
@@ -46,15 +48,8 @@ const faqData = [
   {
     q: { en: 'How long is my access valid?', hi: 'मेरा एक्सेस कब तक वैध रहेगा?' },
     a: {
-      en: 'Pro access is valid till MPPSC 2026 Mains.',
-      hi: 'प्रो एक्सेस MPPSC 2026 मेन्स तक वैध है।',
-    },
-  },
-  {
-    q: { en: 'What if the exam is delayed?', hi: 'अगर परीक्षा में देरी हुई तो?' },
-    a: {
-      en: 'If MPPSC delays the exam, we will extend your access accordingly. No extra charge.',
-      hi: 'अगर MPPSC परीक्षा में देरी करता है, तो हम आपका एक्सेस उसी हिसाब से बढ़ा देंगे। कोई अतिरिक्त शुल्क नहीं।',
+      en: 'Access is valid till UPSC CSE Prelims 2026.',
+      hi: 'एक्सेस UPSC CSE प्रीलिम्स 2026 तक वैध है।',
     },
   },
 ];
@@ -70,12 +65,10 @@ const ICON_MAP: Record<string, any> = {
   Zap,
   BarChart3,
   History,
+  TrendingUp,
 };
 
-// const liteFeatures = LITE_FEATURES.map((f) => ({ ...f, icon: ICON_MAP[f.icon || ''] || Target }));
-const proFeatures = PRO_FEATURES.map((f) => ({ ...f, icon: ICON_MAP[f.icon || ''] || Target }));
-
-// ── Pricing data from centralized config ────────────────
+const proFeatures = PRO_FEATURES.map((f) => ({ ...f, icon: f.icon || 'Target' }));
 
 // ── FAQ Accordion Item ──────────────────────────────────────
 function FaqItem({ question, answer }: { question: string; answer: string }) {
@@ -102,13 +95,11 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
   );
 }
 
-// ... (existing imports)
-
 export default function PricingPage() {
   // Payment Modal State
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState({
-    planType: 'pro' as 'lite' | 'pro' | 'upgrade',
+    planType: 'pro' as 'pro' | 'upgrade',
     name: '',
   });
 
@@ -117,12 +108,11 @@ export default function PricingPage() {
   const router = useRouter();
   const planTier = user?.planTier ?? 'free';
   const isProUser = planTier === 'pro';
-  const isLiteUser = planTier === 'lite';
 
   // 🔒 Fetch pricing with React Query + Server Action
   const { data: pricingData, isLoading } = useQuery({
-    queryKey: ['pricing'],
-    queryFn: async () => await getPricingData(),
+    queryKey: ['pricing', 'upsc'],
+    queryFn: async () => await getPricingData('upsc'),
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
@@ -135,10 +125,8 @@ export default function PricingPage() {
     }
   }, [isProUser, router]);
 
-  const handleBuy = (plan: 'lite' | 'pro' | 'upgrade') => {
-    if (plan === 'lite') {
-      setSelectedPlan({ planType: 'lite', name: `Lite Plan — ₹${p.litePrice}` });
-    } else if (plan === 'pro') {
+  const handleBuy = (plan: 'pro' | 'upgrade') => {
+    if (plan === 'pro') {
       setSelectedPlan({ planType: 'pro', name: `Pro Plan — ₹${p.proPrice}` });
     } else if (plan === 'upgrade') {
       setSelectedPlan({ planType: 'upgrade', name: `Pro Upgrade — ₹${p.upgradePrice}` });
@@ -146,7 +134,7 @@ export default function PricingPage() {
     setShowPaymentModal(true);
   };
 
-  // 🦴 SKELETON LOADING STATE (Correct Placement)
+  // 🦴 SKELETON LOADING STATE
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white pt-24 pb-20">
@@ -156,10 +144,7 @@ export default function PricingPage() {
             <Skeleton className="mx-auto h-12 w-3/4 max-w-lg rounded-xl" />
             <Skeleton className="mx-auto h-6 w-1/2 max-w-md rounded-lg" />
           </div>
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-            <div className="h-[600px] w-full animate-pulse rounded-3xl bg-slate-100" />
-            <div className="h-[600px] w-full animate-pulse rounded-3xl bg-slate-100" />
-          </div>
+          <div className="mx-auto max-w-md h-[600px] w-full animate-pulse rounded-3xl bg-slate-100" />
         </div>
       </div>
     );
@@ -174,13 +159,13 @@ export default function PricingPage() {
       {/* ── Hero Header ──────────────────────────────────── */}
       <section className="relative z-10 px-4 pt-24 pb-4 text-center md:pt-32 md:pb-8">
         <Badge className="mb-6 cursor-default border-amber-200 bg-amber-50 px-5 py-2 text-xs font-black tracking-widest text-amber-800 uppercase shadow-sm">
-          MPPSC 2026 Special
+          UPSC 2026 Special
         </Badge>
         <h1 className="font-display mb-4 text-4xl leading-tight font-black tracking-tight text-slate-900 md:text-6xl">
           {hi ? (
-             <>अपनी <span className="text-amber-600">MPPSC सफलता</span> में निवेश करें</>
+             <>अपनी <span className="text-amber-600">UPSC सफलता</span> में निवेश करें</>
           ) : (
-             <>Invest in Your <span className="text-amber-600">MPPSC Success</span></>
+             <>Invest in Your <span className="text-amber-600">UPSC Success</span></>
           )}
         </h1>
         <p className="mx-auto mb-2 max-w-2xl text-lg font-bold text-slate-600 md:text-xl">
@@ -188,25 +173,8 @@ export default function PricingPage() {
         </p>
       </section>
 
-      {/* ── Pro user gets redirected by useEffect above ────── */}
-
-      {/* ── Lite user — upgrade to Pro card ──────────────── */}
-      {isLiteUser && (
-        <section className="px-4 pb-8">
-          <div className="mx-auto max-w-lg">
-            <PricingCard
-              planType="upgrade"
-              pricing={p}
-              features={proFeatures}
-              language={language}
-              onBuy={() => handleBuy('upgrade')}
-            />
-          </div>
-        </section>
-      )}
-
-      {/* ── Free users — both plans ──────────────────────── */}
-      {!isProUser && !isLiteUser && (
+      {/* ── Free users — One plan ──────────────────────── */}
+      {!isProUser && (
         <section className="px-4 pb-16">
           
           {/* ── What You Get Section (Value First) ───────── */}
@@ -221,51 +189,51 @@ export default function PricingPage() {
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {[
                 {
-                  icon: BarChart3,
-                  label: hi ? 'एग्जाम DNA विश्लेषण' : 'Exam DNA Analysis',
-                  sub: hi ? 'विषय वितरण और रुझान' : 'Topic Distribution & Trends',
+                  icon: BrainCircuit,
+                  label: hi ? 'विशेषज्ञ विजडम' : 'Expert Wisdom',
+                  sub: hi ? 'फैसला, तर्क और ट्रैप वॉच' : 'Verdict, Logic & Trap Watch',
                   highlight: true
                 },
                 {
                   icon: Target,
-                  label: hi ? 'सिलेबस पर महारत' : 'Master Your Syllabus',
-                  sub: hi ? 'सभी 10 यूनिट्स की पूरी समझ' : 'Basic understanding of all 10 units',
+                  label: hi ? 'व्यवस्थित PYQs' : 'Organized PYQs',
+                  sub: hi ? 'विषय-वार और वर्ष-वार' : 'Subject & Year-wise (2020-2025)',
                   highlight: true
                 },
                 {
                   icon: Sparkles,
-                  label: hi ? 'प्रीमियम फैक्ट्स लाइब्रेरी' : 'Premium Facts Library',
-                  sub: hi ? 'हाई-यील्ड एग्जाम फैक्ट्स' : 'High-yield Exam Facts',
+                  label: hi ? 'प्रीमियम फैक्ट्स' : 'Premium Facts',
+                  sub: hi ? 'हाई-यील्ड एग्जाम डेटा' : 'High-yield Exam Data',
                   highlight: true
                 },
                 {
                   icon: Zap,
-                  label: hi ? '5000+ प्रश्न' : '5000+ Questions',
-                  sub: hi ? 'सभी विषयों में' : 'Across all topics',
-                },
-                {
-                  icon: FileText,
-                  label: hi ? 'फुल मॉक टेस्ट' : 'Full Mock Tests',
-                  sub: hi ? '100 प्रश्न प्रत्येक' : '100Q each',
+                  label: hi ? 'इंस्टेंट मोड' : 'Instant Mode',
+                  sub: hi ? 'हर विकल्प के पीछे का तर्क' : 'Logic behind every option',
                 },
                 {
                   icon: History,
-                  label: hi ? '5+ साल के PYQ' : '5+ Years PYQs',
-                  sub: hi ? 'विस्तृत उत्तर सहित' : 'With Explanations',
+                  label: hi ? '6 साल के PYQs' : '6 Years PYQs',
+                  sub: hi ? 'विस्तृत व्याख्या सहित' : 'With detailed breakdowns',
                   badges: hi 
-                    ? ['वर्ष-वार', 'विषय-वार', 'यूनिट-वार'] 
-                    : ['Year-wise', 'Subject-wise', 'Unit-wise'],
+                    ? ['UPSC 2020-25'] 
+                    : ['UPSC 2020-25'],
                   highlight: true
                 },
                 {
-                  icon: Newspaper,
-                  label: hi ? 'प्रीमियम ब्लॉग्स' : 'Premium Blogs',
-                  sub: hi ? 'MPPSC की सभी 10 यूनिट्स की बेसिक समझ' : 'Basic understanding of all 10 units of MPPSC',
+                  icon: LayoutGrid,
+                  label: hi ? 'व्यक्तिगत डैशबोर्ड' : 'Personal Dashboard',
+                  sub: hi ? 'टेस्ट हिस्ट्री और प्रोग्रेस' : 'Test History & Progress',
+                },
+                {
+                  icon: TrendingUp,
+                  label: hi ? 'एनालिटिकल इनसाइट्स' : 'Analytical Insights',
+                  sub: hi ? 'सबसे महत्वपूर्ण टॉपिक्स' : 'Most important topics',
                 },
                 {
                   icon: BookOpen,
-                  label: hi ? 'कॉन्सेप्ट पर महारत' : 'Master The Concept',
-                  sub: hi ? 'विस्तृत व्याख्या और शॉर्ट-कट' : 'Structured Breakdowns & Shortcuts',
+                  label: hi ? 'कॉन्सेप्ट क्लैरिटी' : 'Concept Clarity',
+                  sub: hi ? 'विस्तृत ब्रेकडाउन' : 'Detailed Breakdowns',
                   highlight: true
                 },
               ].map((item) => {
@@ -282,7 +250,6 @@ export default function PricingPage() {
                         : "border-slate-100 bg-white hover:border-amber-100 hover:shadow-lg"
                     )}
                   >
-                    {/* Unique Sparkle for Highlighted PYQ Card */}
                     {badges && (
                       <div className="absolute -top-1.5 -right-1.5 flex h-7 w-7 animate-bounce items-center justify-center rounded-full bg-amber-400 text-white shadow-lg">
                         <Sparkles size={14} className="animate-pulse" />
@@ -298,7 +265,6 @@ export default function PricingPage() {
                     
                     <p className="mb-1 text-sm font-black text-slate-900 md:text-base tracking-tight">{label}</p>
                     
-                    {/* Badges Organized Flow */}
                     {badges && (
                       <div className="mb-3 flex flex-wrap gap-1.5">
                         {badges.map((badge: string) => (
@@ -319,7 +285,7 @@ export default function PricingPage() {
             </div>
           </div>
 
-          {/* FOMO badge — Now just above pricing */}
+          {/* FOMO badge */}
           <div className="mb-10 flex justify-center">
             <div className="relative inline-flex items-center gap-3 rounded-full border border-amber-200 bg-amber-50/80 backdrop-blur-sm px-5 py-2.5 shadow-xl shadow-amber-500/5">
               <Flame className="h-4 w-4 text-orange-600 animate-pulse" />
@@ -335,11 +301,11 @@ export default function PricingPage() {
           </div>
 
           {/* ── Pricing Cards ────────────────────────────── */}
-          <div className="mx-auto grid w-full max-w-md grid-cols-1 gap-5">
+          <div className="mx-auto max-w-md">
             <PricingCard
               planType="pro"
               pricing={p}
-              features={PRO_FEATURES}
+              features={proFeatures}
               language={language}
               onBuy={() => handleBuy('pro')}
               isPopular

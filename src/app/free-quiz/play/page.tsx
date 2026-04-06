@@ -72,7 +72,7 @@ async function FreeQuizDataFetcher({ searchParams }: { searchParams: Promise<{ t
         id: q.id,
         question: q.questionText,
         questionEn: q.questionTextEn || undefined,
-        correctAnswer: Number(q.correctAnswer),
+        correctAnswer: q.correctAnswer,
         options: parsedOptions,
         explanation: q.explanation || undefined,
         explanationEn: q.explanationEn || undefined,

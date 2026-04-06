@@ -5,6 +5,7 @@ import { CheckCircle2, X, Flag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Question } from '@/types/quiz';
+import { getCorrectAnswerIndex } from '@/lib/quiz-scoring';
 import { FormattedQuestionText, cleanMatchingQuestionText } from '../../utils/questionFormatter';
 
 interface QuizQuestionProps {
@@ -126,11 +127,8 @@ export function QuizQuestion({
       <div className="space-y-3">
         {parsedOptions.map((opt: any, idx: number) => {
           const isSelected = selectedAnswer === idx;
-          // Bhai correctAnswer NaN ho sakta h agar DB me galat data h — safe check lagao
-          const correctIdx =
-            typeof question.correctAnswer === 'number' && !isNaN(question.correctAnswer)
-              ? question.correctAnswer
-              : -1; // -1 = koi bhi match nahi karega
+          // Use the more robust getCorrectAnswerIndex which handles A/B/C/D, numeric, or text match
+          const correctIdx = getCorrectAnswerIndex(question.correctAnswer, parsedOptions);
           const isCorrect = correctIdx === idx;
 
           let optionText = opt;

@@ -13,6 +13,7 @@ import {
 } from '@/db/schema';
 import { eq, and, inArray, desc } from 'drizzle-orm';
 import { verifyAuth } from '@/lib/auth';
+import { getCorrectAnswerIndex } from '@/lib/quiz-scoring';
 import { checkQualification } from '@/features/tests/utils/cutoff-logic';
 
 // ------------------------------------------------------------------
@@ -60,7 +61,7 @@ export interface SmartResultResponse {
 // Main Action
 // ------------------------------------------------------------------
 
-export async function calculateMPPSCResult(
+export async function calculateUPSCResult(
   testId: string, 
   attemptId?: string // Optional: if null, fetch latest
 ): Promise<SmartResultResponse | { error: string }> {
@@ -112,7 +113,7 @@ export async function calculateMPPSCResult(
 
       if (ans) {
         userAnswer = ans.userAnswer;
-        if (ans.userAnswer === q.correctAnswer) {
+        if (Number(ans.userAnswer) === getCorrectAnswerIndex(q.correctAnswer, q.options as any)) {
           status = 'correct';
           delta = marks;
         } else {

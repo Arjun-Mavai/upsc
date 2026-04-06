@@ -1,6 +1,6 @@
+import Image from 'next/image';
 import { memo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { cn } from '@/lib/utils';
 
 interface NavbarLogoProps {
   user: any;
@@ -19,15 +19,22 @@ export const NavbarLogo = memo(function NavbarLogo({ user }: NavbarLogoProps) {
       onClick={handleLogoClick}
       className="group flex cursor-pointer items-center gap-2"
     >
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-white shadow-lg shadow-slate-900/20 transition-transform group-hover:scale-105">
-        <span className="text-xs font-bold tracking-tighter">MP</span>
+      <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-slate-950/50 backdrop-blur-sm shadow-lg shadow-indigo-500/10 transition-all duration-300 group-hover:scale-105 group-hover:shadow-indigo-500/20">
+        <Image
+          src="/icons/upsc-logo.png"
+          alt="UPSC Logo"
+          width={40}
+          height={40}
+          className="object-contain"
+          priority
+        />
       </div>
       <div className="flex flex-col">
-        <span className="font-display text-lg leading-none font-bold text-slate-900">
-          MPPSC<span className="text-slate-500">26</span>
+        <span className="font-display text-lg leading-none font-bold text-slate-900 tracking-tight">
+          UPSC<span className="text-indigo-600">Intel</span>
         </span>
-        <span className="text-[10px] font-medium tracking-wider text-slate-500 uppercase">
-          Mindful Prep
+        <span className="text-[10px] font-semibold tracking-[0.1em] text-slate-500 uppercase opacity-80">
+          PYQ Intelligence
         </span>
       </div>
     </div>

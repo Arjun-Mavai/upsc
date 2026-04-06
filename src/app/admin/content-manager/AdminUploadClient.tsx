@@ -373,7 +373,7 @@ export default function AdminUploadPage() {
                       <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 p-4">
                         <Label className="mb-2 block text-emerald-800">Test Type</Label>
                         <div className="flex flex-wrap gap-2">
-                          {['TOPIC', 'UNIT', 'FLT', 'CSAT', 'PYQ', 'MISC'].map((type) => (
+                          {['TOPIC', 'UNIT', 'FLT', 'CSAT', 'PYQ', 'MISC', 'UPSC_PYQ', 'UPSC_FLT'].map((type) => (
                             <div
                               key={type}
                               onClick={() => setTestData((p) => ({ ...p, type }))}
@@ -383,7 +383,7 @@ export default function AdminUploadPage() {
                                   : 'border-emerald-200 bg-white text-emerald-900 hover:border-emerald-400'
                               } `}
                             >
-                              {type === 'TOPIC' ? 'Topic Check' : type === 'MISC' ? 'Free Quiz' : type}
+                              {type === 'TOPIC' ? 'Topic Check' : type === 'MISC' ? 'Free Quiz' : type.replace('_', ' ')}
                             </div>
                           ))}
                         </div>
@@ -527,13 +527,16 @@ export default function AdminUploadPage() {
                     <Label className="flex justify-between">
                       <span>Questions JSON Array</span>
                       <div className="flex gap-2">
-                        <span className="text-xs font-normal text-slate-400">
-                          Format:{' '}
-                          <code>
-                            [{`{ "questionText": "...", "options": ["A","B"], "correctAnswer": 0 }`}
-                            ]
-                          </code>
-                        </span>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs font-normal text-slate-400">
+                            Format:{' '}
+                            <code>
+                              [{`{ "questionText": "...", "extendedData": {}, "options": ["A","B"], "correctAnswer": "A" }`}
+                              ]
+                            </code>
+                          </span>
+                          <span className="text-[10px] text-emerald-500 font-medium">✨ Supports "extendedData" for complex UPSC Numbered/Table questions</span>
+                        </div>
                         {testData.type === 'MISC' && (
                           <a
                             href="/prompts/free_quiz_generation.md"
@@ -551,7 +554,7 @@ export default function AdminUploadPage() {
                       value={testData.questionsJson}
                       onChange={handleTestChange}
                       className="h-[300px] bg-emerald-50/30 font-mono text-xs font-medium text-slate-700"
-                      placeholder='[{ "questionText": "Question 1", "options": ["A", "B", "C", "D"], "correctAnswer": "A", "explanation": "..." }]'
+                      placeholder='[{ "questionText": "Standard Question", "extendedData": { "layoutType": "table", ... }, "options": ["A", "B", "C", "D"], "correctAnswer": "A", "explanation": "..." }]'
                       required
                     />
                   </div>

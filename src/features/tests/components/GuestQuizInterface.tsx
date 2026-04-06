@@ -11,7 +11,12 @@ import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { PYQFactsLoader } from '@/components/ui/PYQFactsLoader';
 import { toast } from 'sonner';
 import { useGuestResultStore } from '../store/guestResultStore';
-import { requestFullscreenSafely, exitFullscreenSafely, isFullscreenActive, isFullscreenSupported } from '@/lib/fullscreen-utils';
+import {
+  requestFullscreenSafely,
+  exitFullscreenSafely,
+  isFullscreenActive,
+  isFullscreenSupported,
+} from '@/lib/fullscreen-utils';
 
 import { QuizHeader } from './quiz/QuizHeader';
 import { QuizQuestion } from './quiz/QuizQuestion';
@@ -20,7 +25,7 @@ import { QuizPaletteMobile, QuizPaletteDesktop } from './quiz/QuizPalette';
 import { QuizExitDialog } from './quiz/QuizExitDialog';
 import { GuestEntryDialog } from './quiz/GuestEntryDialog';
 import { QuizExplanation } from './quiz/QuizExplanation';
-
+import { getCorrectAnswerIndex } from '@/lib/quiz-scoring';
 
 interface GuestQuizInterfaceProps {
   questions: Question[];
@@ -259,7 +264,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
         if (q) {
           if (answers[q.id] === undefined) {
             skippedCount++;
-          } else if (q.correctAnswer === ansIdx) {
+          } else if (getCorrectAnswerIndex(q.correctAnswer, q.options) === ansIdx) {
             earnedScore += q.marks || QUIZ_CONSTANTS.MARKS_PER_QUESTION;
             correctCount++;
           } else {
@@ -289,14 +294,13 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
 
       // Prefetch results page for even faster transition
       router.prefetch('/guest-result');
-      
+
       // Navigate instantly
       router.replace('/guest-result');
     }
   }, [isSubmitted, answers, questions, timeLimitInMinutes, timeLeft, router]);
 
   // No local facts state needed — PYQFactsLoader bundles facts internally
-
 
   if (isProcessingResult || (isSubmitted && !isProcessingResult)) {
     return <PYQFactsLoader variant="page" label="Calculating your results..." theme="light" />;
@@ -335,9 +339,10 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
         onInstantModeToggle={() => {
           if (disableInstantMode) {
             toast('🔒 Pro Feature', {
-              description: language === 'hi'
-                ? 'Instant Mode सिर्फ Pro users के लिए है। Upgrade करें!'
-                : 'Instant Mode is a Pro feature. Upgrade to unlock!',
+              description:
+                language === 'hi'
+                  ? 'Instant Mode सिर्फ Pro users के लिए है। Upgrade करें!'
+                  : 'Instant Mode is a Pro feature. Upgrade to unlock!',
             });
             return;
           }
@@ -363,7 +368,8 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
               totalQuestions={totalQuestions}
               selectedAnswer={answers[currentQuestion.id]}
               isAnswered={isAnswered}
-              instantModeEnabled={effectiveInstantMode}              isMarkedForReview={markedforReview.includes(currentQuestion.id)}
+              instantModeEnabled={effectiveInstantMode}
+              isMarkedForReview={markedforReview.includes(currentQuestion.id)}
               language={language}
               onOptionSelect={handleOptionSelect}
               onToggleReview={toggleMarkForReview}

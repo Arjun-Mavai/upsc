@@ -25,6 +25,7 @@ export async function submitSupportTicket(data: any) {
       message,
       status: 'open',
       createdAt: new Date(),
+      examType: 'upsc', // UPSC-only for this platform
     });
 
     // revalidatePath('/admin/dashboard'); // If we show tickets there
@@ -47,7 +48,11 @@ export async function getSupportTickets() {
   }
 
   try {
-    const tickets = await db.select().from(supportTickets).orderBy(desc(supportTickets.createdAt));
+    const tickets = await db
+      .select()
+      .from(supportTickets)
+      .where(eq(supportTickets.examType, 'upsc'))
+      .orderBy(desc(supportTickets.createdAt));
     return { success: true, tickets };
   } catch (error) {
     return { success: false, error: 'Failed to fetch tickets' };

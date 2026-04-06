@@ -311,8 +311,8 @@ export function ExamSimulationSection() {
             </h2>
             <p className="text-lg leading-relaxed font-medium text-slate-400">
               {language === 'hi'
-                ? 'MPPSC 2026 के नए पैटर्न (3 अंक/प्रश्न, 1/3 नेगेटिव मार्किंग) पर आधारित लेटेस्ट सिमुलेशन। नए 300-अंकों वाले फॉर्मेट में अपनी तैयारी परखें।'
-                : 'Master the new MPPSC 2026 pattern: 3 marks per question with 1/3rd negative marking. Real-time simulation for the latest 300-mark format.'}
+                ? 'UPSC 2026 Civil Services Prelims पैटर्न पर आधारित। 100 प्रश्न, 200 अंक, 2 घंटे — असली परीक्षा जैसा अनुभव।'
+                : 'Practice with UPSC 2026 Civil Services Prelims pattern. 100 questions, 200 marks, 2 hours — real exam simulation.'}
             </p>
             <Button
               onClick={handleMockStart}

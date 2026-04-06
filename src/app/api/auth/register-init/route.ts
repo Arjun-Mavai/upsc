@@ -98,6 +98,7 @@ export async function POST(req: Request) {
       role: 'guest',
       metadata: JSON.stringify({ source }),
       planTier: 'free',
+      examType: 'upsc' as const, // UPSC-only repo
     });
 
     return NextResponse.json({ userId, isNew: true });

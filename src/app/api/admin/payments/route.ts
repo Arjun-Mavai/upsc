@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/jwt';
 import { db } from '@/db';
 import { payments, mppscUsers } from '@/db/schema';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, and } from 'drizzle-orm';
 
 export async function GET(req: Request) {
   let payload: any;
@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     const [admin] = await db
       .select({ role: mppscUsers.role })
       .from(mppscUsers)
-      .where(eq(mppscUsers.id, payload.userId as string))
+      .where(and(eq(mppscUsers.id, payload.userId as string), eq(mppscUsers.examType, 'upsc')))
       .limit(1);
     if (!admin || admin.role !== 'admin')
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -38,7 +38,7 @@ export async function GET(req: Request) {
     const monthStart = new Date(todayStart);
     monthStart.setDate(monthStart.getDate() - 30);
 
-    // ── Fetch all captured payments with user info ──
+    // ── Fetch all captured UPSC payments with user info ──
     const allPayments = await db
       .select({
         id: payments.id,
@@ -55,7 +55,7 @@ export async function GET(req: Request) {
       })
       .from(payments)
       .leftJoin(mppscUsers, eq(payments.userId, mppscUsers.id))
-      .where(eq(payments.status, 'captured'))
+      .where(and(eq(payments.status, 'captured'), eq(payments.examType, 'upsc'))) // UPSC-only
       .orderBy(desc(payments.createdAt));
 
     // ── Stats ──

@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ConnectSocials } from '@/components/ConnectSocials';
 import {
   CheckCircle2,
   XCircle,
@@ -34,17 +33,18 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { PremiumExplanation } from './PremiumExplanation';
-import { SCORING_CONFIG } from '@/lib/quiz-scoring';
 import { getTestLeaderboard } from '@/actions/leaderboard-actions';
 import { revalidateAnalyticsAction } from '@/features/analytics/actions';
 import { LoadingQuotes } from '@/components/ui/LoadingQuotes';
 import { getRandomFeedback } from '../constants/feedback';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { SCORING_CONFIG, getCorrectAnswerIndex } from '@/lib/quiz-scoring';
 import {
   FormattedQuestionText,
   RenderTableQuestion,
   cleanMatchingQuestionText,
 } from '@/features/tests/utils/questionFormatter';
+
 import { logger } from '@/lib/logger';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
@@ -69,7 +69,6 @@ interface QuizResultProps {
   isGuest?: boolean;
   showFeedbackModal?: boolean;
   questionTimes?: Record<string, number>;
-  userName?: string;
 }
 
 export function QuizResult({
@@ -82,7 +81,6 @@ export function QuizResult({
   title,
   testId,
   userId,
-  userName,
   disableRetry = false,
   isGuest = false,
   showFeedbackModal = true,
@@ -220,7 +218,7 @@ export function QuizResult({
         testId: currentTestId,
         testType,
         data,
-        userName: userName || guestName,
+        userName: guestName,
       });
 
       if (response.success) {
@@ -244,14 +242,14 @@ export function QuizResult({
   let maxMarks = 0;
 
   questions.forEach((q) => {
-    const qMarks = SCORING_CONFIG.MARKS_PER_QUESTION;
-    const qNegative = SCORING_CONFIG.NEGATIVE_MARKING;
+    const qMarks = q.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION;
+    const qNegative = q.negativeMarks ?? SCORING_CONFIG.NEGATIVE_MARKING;
 
     maxMarks += qMarks;
 
     if (answers[q.id] === undefined) {
       skippedCount++;
-    } else if (answers[q.id] === q.correctAnswer) {
+    } else if (answers[q.id] === getCorrectAnswerIndex(q.correctAnswer, q.options)) {
       correctCount++;
       totalScore += qMarks;
     } else {
@@ -300,7 +298,11 @@ export function QuizResult({
     if (mode === 'pyq' && wrongCount > 0) {
       setIsFetchingInsights(true);
       const wrongQIds = questions
-        .filter((q) => answers[q.id] !== undefined && answers[q.id] !== q.correctAnswer)
+        .filter(
+          (q) =>
+            answers[q.id] !== undefined &&
+            answers[q.id] !== getCorrectAnswerIndex(q.correctAnswer, q.options)
+        )
         .map((q) => q.id);
 
       getPYQIntelligenceForWrongQuestions(wrongQIds)
@@ -333,7 +335,7 @@ export function QuizResult({
         if (activeQuestionTab === 'all') return true;
         const userAnswer = answers[q.id];
         const isSkipped = userAnswer === undefined;
-        const isCorrect = userAnswer === q.correctAnswer;
+        const isCorrect = userAnswer === getCorrectAnswerIndex(q.correctAnswer, q.options);
 
         if (activeQuestionTab === 'skipped') return isSkipped;
         if (activeQuestionTab === 'correct') return isCorrect;
@@ -356,10 +358,10 @@ export function QuizResult({
     return filteredQuestions.map((q) => {
       const idx = q.originalIndex;
       const userAnswer = answers[q.id];
-      const isCorrect = userAnswer === q.correctAnswer;
+      const isCorrect = userAnswer === getCorrectAnswerIndex(q.correctAnswer, q.options);
       const isSkipped = userAnswer === undefined;
       const isExpanded = expandedQuestion === q.id;
-      const isLocked = isGuestLocked && (isCorrect || isSkipped);
+      const isLocked = isGuestLocked && !isCorrect;
 
       return (
         <Card
@@ -468,7 +470,7 @@ export function QuizResult({
               <div className="space-y-2">
                 {q.options.map((opt, optIdx) => {
                   const isSelected = userAnswer === optIdx;
-                  const isCorrectOpt = q.correctAnswer === optIdx;
+                  const isCorrectOpt = getCorrectAnswerIndex(q.correctAnswer, q.options) === optIdx;
 
                   let styleClass = 'border-slate-200 bg-white text-slate-600';
                   if (isCorrectOpt)
@@ -538,7 +540,6 @@ export function QuizResult({
                 <PremiumExplanation
                   explanation={q.explanation || 'No explanation available.'}
                   explanationEn={q.explanationEn}
-                  explanationHi={q.explanation_hi}
                 />
               </div>
             </motion.div>
@@ -552,7 +553,8 @@ export function QuizResult({
   const renderResultContent = () => {
     // Math for progress bar segments to prevent overflow and visual glitches
     const progressPositive = Math.max(0, totalScore);
-    const progressNegative = Math.max(0, wrongCount * SCORING_CONFIG.NEGATIVE_MARKING);
+    const avgNegative = questions[0]?.negativeMarks ?? SCORING_CONFIG.NEGATIVE_MARKING;
+    const progressNegative = Math.max(0, wrongCount * avgNegative);
     // Green = Score, Space = Skipped/Margin, Red = Penalty
 
     return (
@@ -563,25 +565,8 @@ export function QuizResult({
           <div className="absolute bottom-0 left-0 -mb-20 -ml-20 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl"></div>
 
           <div className="relative z-10">
-            <div className="mb-2 flex items-center justify-between">
-              <div className="text-sm font-bold text-slate-400 capitalize">
-                {title || 'Test Result'}
-              </div>
-
-              {isGuest && (
-                <Link
-                  href="/"
-                  className="group relative flex items-center gap-2 overflow-hidden rounded-full border border-amber-400/30 bg-slate-950 px-4 py-1.5 text-[10px] font-black tracking-wider text-white uppercase shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all hover:scale-105 hover:border-amber-400 hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] active:scale-95"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-amber-500/20 opacity-0 transition-opacity group-hover:opacity-100" />
-                  <div className="absolute inset-0 animate-[shimmer_3s_infinite] bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%)] bg-[length:250%_250%]" />
-                  <span className="relative flex items-center gap-1.5">
-                    <Sparkles className="h-3 w-3 animate-pulse text-amber-400" />
-                    <span>Explore MPPSC 2026 Pro Platform 🚀</span>
-                    <ArrowRight className="h-3 w-3 text-amber-400 transition-transform group-hover:translate-x-1" />
-                  </span>
-                </Link>
-              )}
+            <div className="mb-2 text-sm font-bold text-slate-400 capitalize">
+              {title || 'Test Result'}
             </div>
 
             <div className="mt-4 mb-8 flex flex-col items-center justify-between gap-6 sm:flex-row">
@@ -590,7 +575,7 @@ export function QuizResult({
                   {totalScore}
                   <span className="text-2xl font-bold text-slate-500">/{maxMarks}</span>
                 </div>
-                {SCORING_CONFIG.NEGATIVE_MARKING > 0 && wrongCount > 0 && (
+                {wrongCount > 0 && (
                   <div className="mt-1 inline-flex rounded-full border border-rose-500/20 bg-rose-500/10 px-2 py-0.5 text-sm font-medium text-rose-400">
                     Includes penalty
                   </div>
@@ -875,8 +860,11 @@ export function QuizResult({
       const simCorrect = Math.round(simAttempts * accRate);
       const simWrong = simAttempts - simCorrect;
 
-      const posMarks = simCorrect * SCORING_CONFIG.MARKS_PER_QUESTION;
-      const negMarks = simWrong * SCORING_CONFIG.NEGATIVE_MARKING;
+      const marks = questions[0]?.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION;
+      const neg = questions[0]?.negativeMarks ?? SCORING_CONFIG.NEGATIVE_MARKING;
+
+      const posMarks = simCorrect * marks;
+      const negMarks = simWrong * neg;
       return parseFloat((posMarks - negMarks).toFixed(2));
     };
 
@@ -892,15 +880,15 @@ export function QuizResult({
           <p className="text-sm font-medium tracking-wide text-slate-500">
             {isHindi ? (
               <>
-                {SCORING_CONFIG.MARKS_PER_QUESTION} अंक सही{' '}
+                {questions[0]?.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION} अंक सही{' '}
                 <span className="mx-1 font-bold text-rose-500">|</span> -
-                {SCORING_CONFIG.NEGATIVE_MARKING} नकारात्मक अंकन
+                {questions[0]?.negativeMarks ?? SCORING_CONFIG.NEGATIVE_MARKING} नकारात्मक अंकन
               </>
             ) : (
               <>
-                {SCORING_CONFIG.MARKS_PER_QUESTION} marks correct{' '}
+                {questions[0]?.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION} marks correct{' '}
                 <span className="mx-1 font-bold text-rose-500">|</span> -
-                {SCORING_CONFIG.NEGATIVE_MARKING} negative marking
+                {questions[0]?.negativeMarks ?? SCORING_CONFIG.NEGATIVE_MARKING} negative marking
               </>
             )}
           </p>
@@ -934,9 +922,9 @@ export function QuizResult({
               <span className="font-bold text-emerald-600">
                 {correctCount}{' '}
                 <span className="mx-1 text-xs font-medium text-slate-400">
-                  × {SCORING_CONFIG.MARKS_PER_QUESTION} =
+                  × {questions[0]?.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION} =
                 </span>{' '}
-                +{correctCount * SCORING_CONFIG.MARKS_PER_QUESTION}
+                +{correctCount * (questions[0]?.marks ?? SCORING_CONFIG.MARKS_PER_QUESTION)}
               </span>
             </div>
             <div className="flex items-center justify-between bg-rose-50/30 p-4 transition-colors hover:bg-slate-50/50">
@@ -947,9 +935,9 @@ export function QuizResult({
               <span className="font-bold text-rose-600">
                 {wrongCount}{' '}
                 <span className="mx-1 text-xs font-medium text-slate-400">
-                  × {SCORING_CONFIG.NEGATIVE_MARKING} =
+                  × {questions[0]?.negativeMarks ?? SCORING_CONFIG.NEGATIVE_MARKING} =
                 </span>{' '}
-                -{wrongCount * SCORING_CONFIG.NEGATIVE_MARKING}
+                -{wrongCount * (questions[0]?.negativeMarks ?? SCORING_CONFIG.NEGATIVE_MARKING)}
               </span>
             </div>
             <div className="flex items-center justify-between border-t-2 border-slate-200 bg-slate-50/80 p-4">
@@ -992,8 +980,8 @@ export function QuizResult({
                 {skippedCount}{' '}
                 <span className="ml-1 text-xs font-medium text-slate-400">
                   {isHindi
-                    ? `बचाए ~${skippedCount * SCORING_CONFIG.NEGATIVE_MARKING} नकारात्मक अंक`
-                    : `saved ~${skippedCount * SCORING_CONFIG.NEGATIVE_MARKING} negative points`}
+                    ? `बचाए ~${skippedCount * (questions[0]?.negativeMarks ?? SCORING_CONFIG.NEGATIVE_MARKING)} नकारात्मक अंक`
+                    : `saved ~${skippedCount * (questions[0]?.negativeMarks ?? SCORING_CONFIG.NEGATIVE_MARKING)} negative points`}
                 </span>
               </span>
             </div>
@@ -1017,14 +1005,17 @@ export function QuizResult({
                       {isHindi ? (
                         <>
                           आपने <span className="font-bold">{wrongCount} गलत उत्तर</span> दिए। यह{' '}
-                          {wrongCount * SCORING_CONFIG.NEGATIVE_MARKING} अंकों का नुकसान है। यदि
-                          आत्मविश्वास नहीं है, तो छोड़ना बेहतर है।
+                          {wrongCount *
+                            (questions[0]?.negativeMarks ?? SCORING_CONFIG.NEGATIVE_MARKING)}{' '}
+                          अंकों का नुकसान है। यदि आत्मविश्वास नहीं है, तो छोड़ना बेहतर है।
                         </>
                       ) : (
                         <>
                           You got <span className="font-bold">{wrongCount} wrong answers</span>.
-                          That's {wrongCount * SCORING_CONFIG.NEGATIVE_MARKING} points lost to
-                          negative marking. If not confident, it's better to skip.
+                          That's{' '}
+                          {wrongCount *
+                            (questions[0]?.negativeMarks ?? SCORING_CONFIG.NEGATIVE_MARKING)}{' '}
+                          points lost to negative marking. If not confident, it's better to skip.
                         </>
                       )}
                     </li>
@@ -1067,13 +1058,6 @@ export function QuizResult({
               </div>
             </div>
           </Card>
-        )}
-
-        {/* Connect Socials for guests - prominent display */}
-        {isGuest && (
-          <div className="mx-auto max-w-md">
-            <ConnectSocials variant="light" />
-          </div>
         )}
 
         <Card className="overflow-hidden border border-slate-200 bg-white shadow-sm">
@@ -1283,61 +1267,40 @@ export function QuizResult({
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* ── Header: Unified Light Look for All Users ───────────────── */}
-      <div className="sticky top-14 z-40 border-b border-slate-200 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto max-w-3xl px-4 pt-4 pb-4 sm:px-6">
-          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-3">
-              {/* If auth user, show Home button to navigate back, else Sparkles */}
-              {!isGuest ? (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    if (onExit) onExit();
-                    else router.push('/syllabus/quiz');
-                  }}
-                  className="h-10 w-10 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
-                >
-                  <Home className="h-5 w-5" />
-                </Button>
-              ) : (
-                <div className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 sm:h-10 sm:w-10">
-                  <Sparkles className="h-4 w-4" />
-                </div>
-              )}
-              <div>
-                <h1 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">
-                  {title || (isHindi ? 'क्विज़ रिजल्ट' : 'Quiz Result')}
-                </h1>
-                <p className="text-xs font-medium text-slate-500">
-                  {isHindi
-                    ? 'अपनी तैयारी को अगले स्तर पर ले जाएं'
-                    : 'Take your preparation to the next level'}
-                </p>
-              </div>
-            </div>
-
-            {/* ── Connect Socials + Retry Button ────────── */}
-            <div className="flex w-full items-center justify-between gap-3 sm:w-auto">
-              <ConnectSocials className="flex-1 sm:w-auto" />
-              {!disableRetry && !isGuest && (
-                <Button
-                  onClick={onRetry}
-                  variant="outline"
-                  size="sm"
-                  className="hidden h-9 font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 sm:flex"
-                >
-                  <RefreshCw className="mr-2 h-4 w-4" /> Retry
-                </Button>
-              )}
-            </div>
+      {/* App-like Header */}
+      <div className="sticky top-0 z-40 border-b border-slate-800 bg-slate-900 shadow-md">
+        <div className="mx-auto flex max-w-3xl items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                if (onExit) onExit();
+                else router.push('/syllabus/quiz');
+              }}
+              className="h-10 w-10 rounded-full text-slate-400 hover:bg-slate-800 hover:text-white"
+            >
+              <Home className="h-5 w-5" />
+            </Button>
+            <h1 className="font-display max-w-[200px] truncate text-lg font-bold text-white sm:max-w-md">
+              {title || 'Results'}
+            </h1>
           </div>
+          {!disableRetry && (
+            <Button
+              onClick={onRetry}
+              variant="ghost"
+              size="sm"
+              className="font-bold text-slate-400 hover:bg-slate-800 hover:text-white"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" /> Retry
+            </Button>
+          )}
         </div>
       </div>
 
       <Tabs defaultValue="result" className="mx-auto w-full max-w-3xl px-4 md:px-0">
-        <div className="sticky top-[140px] z-40 border-b border-slate-200/60 bg-slate-50 pt-4 pb-2 shadow-sm/50 sm:top-[118px]">
+        <div className="sticky top-[73px] z-40 border-b border-slate-200/60 bg-slate-50 pt-4 pb-2 shadow-sm/50">
           <TabsList
             className={cn(
               'grid w-full rounded-xl bg-slate-200/50 p-1',

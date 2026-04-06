@@ -8,6 +8,9 @@ import {
   Newspaper,
   Smartphone,
   GraduationCap,
+  Leaf,
+  Library,
+  Network,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -36,6 +39,7 @@ export type SubjectColorKey =
 
 // Subject configuration - icons and color mapping
 export const SUBJECTS: SubjectConfig[] = [
+  // Core / MPPSC Subjects
   { name: 'MP GK', nameHi: 'एमपी सामान्य ज्ञान', icon: BookOpen, color: 'amber' },
   { name: 'History', nameHi: 'इतिहास', icon: Calendar, color: 'pink' },
   { name: 'Geography', nameHi: 'भूगोल', icon: MapPin, color: 'blue' },
@@ -45,6 +49,26 @@ export const SUBJECTS: SubjectConfig[] = [
   { name: 'Current Affairs', nameHi: 'समसामयिकी', icon: Newspaper, color: 'purple' },
   { name: 'ICT', nameHi: 'सूचना संचार प्रौद्योगिकी', icon: Smartphone, color: 'rose' },
   { name: 'GS', nameHi: 'सामान्य अध्ययन', icon: GraduationCap, color: 'slate' },
+  
+  // UPSC Specific / Shared Extended
+  { name: 'History & Culture', nameHi: 'इतिहास और संस्कृति', icon: Library, color: 'pink' },
+  { name: 'Polity & Governance', nameHi: 'शासन और राजव्यवस्था', icon: Scale, color: 'indigo' },
+  { name: 'Environment', nameHi: 'पर्यावरण', icon: Leaf, color: 'emerald' },
+  { name: 'Science & Tech', nameHi: 'विज्ञान और तकनीक', icon: Atom, color: 'cyan' },
+  { name: 'International Relations', nameHi: 'अंतरराष्ट्रीय संबंध', icon: Network, color: 'indigo' },
+  { name: 'Quantitative Aptitude', nameHi: 'अंकगणित', icon: TrendingUp, color: 'amber' },
+  { name: 'Reasoning', nameHi: 'तर्कशक्ति', icon: Smartphone, color: 'blue' },
+
+  // UPSC Specific DB Mappings
+  { name: 'Science & Technology', nameHi: 'विज्ञान और तकनीक', icon: Atom, color: 'cyan' },
+  { name: 'Agriculture', nameHi: 'कृषि', icon: Leaf, color: 'emerald' },
+  { name: 'Economy / Agriculture', nameHi: 'अर्थव्यवस्था / कृषि', icon: TrendingUp, color: 'cyan' },
+  { name: 'Defence', nameHi: 'रक्षा', icon: Scale, color: 'rose' },
+  { name: 'Defence / IR', nameHi: 'रक्षा / अंतरराष्ट्रीय संबंध', icon: Network, color: 'indigo' },
+  { name: 'Geography / IR', nameHi: 'भूगोल / अंतरराष्ट्रीय संबंध', icon: MapPin, color: 'blue' },
+  { name: 'Environment / IR', nameHi: 'पर्यावरण / अंतरराष्ट्रीय संबंध', icon: Leaf, color: 'emerald' },
+  { name: 'Governance / Economy', nameHi: 'शासन / अर्थव्यवस्था', icon: Scale, color: 'indigo' },
+  { name: 'Governance / Social Issues', nameHi: 'शासन / सामाजिक मुद्दे', icon: Scale, color: 'slate' },
 ];
 
 // Color variants for cards, badges, progress bars

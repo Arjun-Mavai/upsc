@@ -203,7 +203,7 @@ function SidebarContent({ pathname, onClose }: { pathname: string; onClose?: () 
           </div>
           <div>
             <h2 className="text-sm font-bold text-slate-900">Admin Panel</h2>
-            <p className="text-[10px] text-slate-500">MPPSC 2026</p>
+            <p className="text-[10px] text-slate-500">UPSC 2026</p>
           </div>
         </Link>
         {/* Close button (mobile only) */}

@@ -53,7 +53,7 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
 
     const resend = new Resend(apiKey);
 
-    const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
+    const fromName = process.env.EMAIL_FROM_NAME || 'UPSC 2026';
     const fromAddress = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
@@ -139,7 +139,7 @@ export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) 
 
     const resend = new Resend(apiKey);
 
-    const fromName = process.env.EMAIL_FROM_NAME || 'MPPSC 2026';
+    const fromName = process.env.EMAIL_FROM_NAME || 'UPSC 2026';
     const fromAddress = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
     const fromEmail = `${fromName} <${fromAddress}>`;
 

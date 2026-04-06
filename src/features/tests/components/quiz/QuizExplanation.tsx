@@ -27,7 +27,6 @@ export function QuizExplanation({ question, language, translations: t }: QuizExp
         <PremiumExplanation
           explanation={question.explanation || 'No explanation available.'}
           explanationEn={question.explanationEn}
-          explanationHi={question.explanation_hi}
           language={language as 'hi' | 'en'}
         />
       </div>

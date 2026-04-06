@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Clock, Trophy } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'MPPSC 2026 Test Series — Practice Quizzes & Mock Tests',
+  title: 'UPSC 2026 Test Series — Practice Quizzes & Mock Tests',
   description:
-    'Free MPPSC 2026 test series with unit-wise quizzes, PYQs, CSAT practice, and full-length mock tests. Track your score and improve daily!',
-  keywords: ['MPPSC Test Series', 'MPPSC Mock Test', 'MPPSC Quiz', 'MPPSC PYQ', 'MPPSC Practice'],
+    'Free UPSC 2026 test series with unit-wise quizzes, PYQs, CSAT practice, and full-length mock tests. Track your score and improve daily!',
+  keywords: ['UPSC Test Series', 'UPSC Mock Test', 'UPSC Quiz', 'UPSC PYQ', 'UPSC Practice'],
 };
 
 // ISR: Revalidate every week

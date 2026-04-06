@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { ContactForm } from '@/components/ContactForm';
 
 import { useSettingsStore } from '@/store/useSettingsStore';
-export const contactEmail = 'mppsc@zenscroll.app';
+export const contactEmail = 'upsc@zenscroll.app';
 export default function ContactPage() {
   const { language } = useSettingsStore();
 

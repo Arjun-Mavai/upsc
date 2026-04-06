@@ -75,7 +75,6 @@ export function GuestResultClient({ userId }: { userId?: string }) {
       testId={result.testId} // Pass testId from store
       isGuest={!userId}
       userId={userId}
-      userName={guestName || undefined}  // Pass guest name from localStorage
       disableRetry={true}
       showFeedbackModal={true}  // 🔥 ENABLE FEEDBACK MODAL FOR GUESTS
     />

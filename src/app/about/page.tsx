@@ -4,88 +4,71 @@ import React from 'react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Brain, Target, Users, BookOpen, CheckCircle2 } from 'lucide-react';
+import { Brain, CheckCircle2 } from 'lucide-react';
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-amber-100 selection:text-amber-900">
       {/* Hero Section */}
       <section className="bg-white px-4 pt-32 pb-16 md:pt-40 md:pb-24">
         <div className="mx-auto max-w-4xl text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-4 py-1.5">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-100 bg-amber-50 px-4 py-1.5">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75"></span>
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-indigo-500"></span>
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
             </span>
-            <span className="text-xs font-bold tracking-widest text-indigo-700 uppercase">
+            <span className="text-xs font-bold tracking-widest text-amber-700 uppercase">
               Our Mission
             </span>
           </div>
           <h1 className="font-display mb-6 text-4xl leading-tight font-black text-slate-900 md:text-6xl">
-            Revolutionizing{' '}
-            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-              MPPSC Prep
+            Decoding{' '}
+            <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+              UPSC Prelims
             </span>{' '}
-            with Science.
+            with Logic.
           </h1>
           <p className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-600 md:text-xl">
-            We don't just give you Tests. We give you the{' '}
-            <span className="font-semibold text-slate-800">memory hooks</span> to retain them
-            forever. Mindful MPPSC is MP's first bilingual mnemonic-based learning platform.
+            We don't just give you PYQs. We give you the{' '}
+            <span className="font-semibold text-slate-800">expert logic</span> to crack them.
+            UPSC Intelligence is India's first expert-led PYQ analysis platform for Civil Services.
           </p>
         </div>
       </section>
-
-      {/* Stats Section */}
-      {/* <section className="bg-white border-y border-slate-100">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 divide-x divide-slate-100">
-          {[
-            { label: 'Active Aspirants', value: '5,000+' },
-            { label: 'Mnemonics Created', value: '1,200+' },
-            { label: 'Questions Practiced', value: '1M+' },
-            { label: 'Success Rate', value: 'High' },
-          ].map((stat) => (
-            <div key={stat.label} className="p-6 md:p-8 text-center bg-white hover:bg-slate-50 transition-colors">
-              <div className="text-3xl md:text-4xl font-black text-slate-900 mb-1 tracking-tight">{stat.value}</div>
-              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-      </section> */}
 
       {/* Story / Problem-Solution */}
       <section className="px-4 py-20">
         <div className="mx-auto max-w-3xl">
           <div className="prose prose-lg prose-slate mx-auto">
             <h2 className="font-display mb-6 text-3xl font-bold text-slate-900">
-              Why we started Mindful MPPSC?
+              Why UPSC Intelligence?
             </h2>
             <p className="mb-6 text-slate-600">
-              The MPPSC syllabus is vast. History, Geography, Polity, MP GK, Ethics — the list goes
-              on. Most aspirants spend 80% of their time <strong>reading</strong> and only 20%{' '}
-              <strong>retaining</strong>.
+              The UPSC Civil Services Prelims is one of the most competitive exams in India. 
+              With over 10 lakh applicants and only a few thousand clearing Prelims, every mark counts.
             </p>
             <p className="mb-6 text-slate-600">
-              We realized that the traditional way of rote memorization wasn't working. Students
-              were forgetting key facts in the exam hall due to stress.
+              Most aspirants spend months reading without analyzing <strong>what UPSC actually asks</strong>. 
+              They miss patterns, ignore logical constraints, and fail to prioritize high-yield topics.
             </p>
             <p className="mb-8 text-slate-600">
-              <strong>Enter Mnemonics.</strong> By linking dry facts to vivid stories and mental
-              images, we turn information into long-term memory. Our platform is built on this core
-              scientific principle.
+              <strong>Enter UPSC Intelligence.</strong> We've analyzed 6 years of UPSC Prelims (2020-2025) 
+              with subject-wise segregation and expert-level explanations (Verdict, Logic Path, Trap Watch) 
+              that tell you <em>how</em> to reach the correct answer.
             </p>
 
             <div className="not-prose mb-10 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-slate-900">
-                <Brain className="h-5 w-5 text-indigo-600" />
-                The Mindful Advantage
+                <Brain className="h-5 w-5 text-amber-600" />
+                The UPSC Intelligence Advantage
               </h3>
               <ul className="space-y-3">
                 {[
-                  'Bilingual Content (English + Hindi) for maximum reach',
-                  'Entire MPPSC syllabus Analysis for each topic',
-                  'Smart Analytics to identify your weak spots instantly',
-                  'Curated PYQs (Previous Year Questions) from last 5+ years',
+                  'Subject-wise analysis of 600+ questions from 6 years (2020-2025)',
+                  'Expert Wisdom: Verdict, Logic Path, and Trap Watch for every question',
+                  'Instant Mode: Real-time logic during practice tests',
+                  'Personalized Dashboard to track your PYQ progress',
+                  'Bilingual support (English + Hindi) for maximum accessibility',
                 ].map((item) => (
                   <li
                     key={item}
@@ -105,10 +88,10 @@ export default function AboutPage() {
       <section className="bg-slate-900 px-4 py-20 text-center text-white">
         <div className="mx-auto max-w-2xl">
           <h2 className="font-display mb-6 text-3xl font-bold md:text-4xl">
-            Ready to ace MPPSC 2026?
+            Ready to crack UPSC Prelims 2026?
           </h2>
           <p className="mb-8 text-lg text-slate-400">
-            Join thousands of serious aspirants who are studying smarter, not harder.
+            Join serious aspirants who are analyzing PYQs intelligently, not blindly.
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link href="/pricing">
@@ -124,7 +107,7 @@ export default function AboutPage() {
                 size="lg"
                 className="h-12 w-full rounded-xl border-slate-700 px-8 font-bold text-white hover:bg-slate-800 sm:w-auto"
               >
-                Try Free Quiz
+                Explore PYQs
               </Button>
             </Link>
           </div>

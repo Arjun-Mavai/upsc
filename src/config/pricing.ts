@@ -1,19 +1,18 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 💰 CENTRALIZED PRICING — Single source of truth
+// 💰 UPSC Intelligence — Pricing Configuration
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Used by: PremiumMarketing, /pricing page, /admin/pricing, /api/pricing
-// Change features/defaults here → reflects everywhere.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export interface PricingData {
-  litePrice: number;
-  liteOriginalPrice: number;
-  liteValidityText: string;
-  liteMonths: number;
   proPrice: number;
   proOriginalPrice: number;
+  litePrice: number;
+  liteOriginalPrice: number;
   proValidityText: string;
   proMonths: number;
+  liteMonths: number;
+  liteValidityText: string;
   upgradePrice: number;
   upgradeOriginalPrice: number;
   urgencyText: string;
@@ -22,19 +21,19 @@ export interface PricingData {
 }
 
 export const PRICING_DEFAULTS: PricingData = {
-  litePrice: 99,
-  liteOriginalPrice: 299,
-  liteValidityText: 'Valid till MPPSC 2026 Prelims',
-  liteMonths: 8,
-  proPrice: 199,
+  proPrice: 249,
   proOriginalPrice: 999,
-  proValidityText: 'Valid for 6 Months',
-  proMonths: 6,
-  upgradePrice: 199,
-  upgradeOriginalPrice: 299,
-  urgencyText: 'Special pricing for first 100 students',
-  urgencyTextHi: 'पहले 100 छात्रों के लिए विशेष मूल्य',
-  studentsBought: 23,
+  litePrice: 99,
+  liteOriginalPrice: 499,
+  proValidityText: 'Valid till UPSC Prelims 2026',
+  proMonths: 12,
+  liteMonths: 6,
+  liteValidityText: 'Valid till UPSC Prelims 2026',
+  upgradePrice: 150,
+  upgradeOriginalPrice: 700,
+  urgencyText: 'Special pricing for first 100 UPSC aspirants',
+  urgencyTextHi: 'पहले 100 UPSC अभ्यर्थियों के लिए विशेष मूल्य',
+  studentsBought: 47,
 };
 
 // Icon types for pricing page (lucide icon components)
@@ -47,40 +46,21 @@ export interface PlanFeatureWithIcon extends PlanFeature {
   icon?: string; // lucide icon name for mapping
 }
 
-// ── Lite Plan Features ────────────────────────────────────
-export const LITE_FEATURES: PlanFeatureWithIcon[] = [
-  {
-    en: '6 Years PYQs with Detailed Analysis',
-    hi: '6 वर्षों के PYQ पेपर्स (सटीक Analysis के साथ)',
-    icon: 'BookOpen',
-  },
-  { en: 'CSAT Mock Papers ×2', hi: 'CSAT मॉक पेपर ×2', icon: 'BookOpen' },
-  { en: 'Full Length Tests ×2', hi: 'फुल लेंथ टेस्ट ×2', icon: 'FileText' },
-  // { en: '2 Topic Tests per Unit', hi: '2 टॉपिक टेस्ट प्रति यूनिट', icon: 'Target' },
-  { en: 'Limited Tests in Topic-wise', hi: 'टॉपिक वाइज़ में सीमित टेस्ट', icon: 'Target' },
-  {
-    en: 'Limited Syllabus Topics Analysis',
-    hi: 'सीमित सिलेबस टॉपिक्स एनालिसिस',
-    icon: 'BarChart3',
-  },
-  { en: 'Premium Study Blogs (Limited)', hi: 'प्रीमियम स्टडी ब्लॉग्स (सीमित)', icon: 'FileText' },
-  // { en: '5+ Years PYQs (With Explanations)', hi: '5+ साल के PYQ (उत्तर सहित)', icon: 'History' },
-];
-
-// ── Pro Plan Features ─────────────────────────────────────
+/**
+ * ── UPSC Pro Plan Features ─────────────────────────────────
+ * Focused on PYQ Intelligence for UPSC Civil Services.
+ */
 export const PRO_FEATURES: PlanFeatureWithIcon[] = [
-  { en: 'Unlimited Topic & Unit Tests', hi: 'अनलिमिटेड टॉपिक और यूनिट टेस्ट', icon: 'Target' },
-  { en: 'Full Length Mock Tests (100Q)', hi: 'फुल लेंथ मॉक टेस्ट (100 प्रश्न)', icon: 'FileText' },
-  { en: 'CSAT Mock Papers', hi: 'CSAT मॉक पेपर', icon: 'BookOpen' },
-  { en: 'PYQ Papers (2020-2025)', hi: 'PYQ पेपर (2020-2025)', icon: 'BookOpen' },
-  {
-    en: 'PYQ Intelligence: Topic Trends, Weightage & Exam DNA',
-    hi: 'PYQ इंटेलिजेंस: टॉपिक ट्रेंड, वेटेज और एग्जाम DNA',
-    icon: 'BarChart3',
+  { en: 'UPSC CSE PYQ Papers (2020-2025)', hi: 'UPSC CSE PYQ पेपर्स (2020-2025)', icon: 'BookOpen' },
+  { 
+    en: 'Expert Wisdom Explanations (Verdict, Logic Path)', 
+    hi: 'विशेषज्ञ व्याख्याएं (फैसला, तर्क मार्ग)', 
+    icon: 'Brain' 
   },
-  { en: 'Smart Analytics Dashboard', hi: 'स्मार्ट एनालिटिक्स डैशबोर्ड', icon: 'BarChart3' },
-  { en: 'Premium Study Blogs', hi: 'प्रीमियम स्टडी ब्लॉग्स', icon: 'FileText' },
-  { en: 'Test History for Revision', hi: 'रिवीज़न के लिए टेस्ट हिस्ट्री', icon: 'History' },
+  { en: 'Subject-Wise & Year-Wise Organised PYQs', hi: 'विषय-वार और वर्ष-वार व्यवस्थित PYQs', icon: 'LayoutGrid' },
+  { en: 'Instant Mode: Logic Behind Every Option', hi: 'इंस्टेंट मोड: हर विकल्प के पीछे का तर्क', icon: 'Zap' },
+  { en: 'Personal Test History & Dashboard', hi: 'व्यक्तिगत टेस्ट हिस्ट्री और डैशबोर्ड', icon: 'History' },
+  { en: 'Premium PYQ Analysis & Insights', hi: 'प्रीमियम PYQ विश्लेषण और इनसाइट्स', icon: 'TrendingUp' },
 ];
 
 // Helper: compute discount percentage

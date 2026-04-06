@@ -56,6 +56,7 @@ export async function POST(request: Request) {
       category: safeCategory,
       role: role || null,
       location: location || null,
+      examType: 'upsc' as const, // UPSC-only repo
     });
 
     logger.info('Feedback received from:', name);

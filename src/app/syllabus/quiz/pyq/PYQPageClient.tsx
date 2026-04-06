@@ -10,8 +10,9 @@ import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockMo
 import { PYQCard } from './PYQCard';
 import { SubjectSeriesDialog } from './SubjectSeriesDialog';
 import { cn } from '@/lib/utils';
-import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { QuizListItem } from '@/components/QuizListItem';
+import { getCurrentExam } from '@/config/exams';
+import { getExamScoring } from '@/lib/quiz-scoring';
 import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
 import { ViewTransition } from 'react';
 import { TransitionLink } from '@/components/ui/transition-link';
@@ -33,6 +34,7 @@ interface Test {
   attemptsLeft?: number;
   maxRetries?: number | null;
   year?: number;
+  type?: string;
 }
 
 interface PYQPageClientProps {
@@ -45,22 +47,16 @@ interface PYQPageClientProps {
 // --- Constants ---
 const SUBJECTS = [
   {
-    name: 'MP GK',
-    icon: BookOpen,
-    color: 'amber' as const,
-    description: 'History, Geography, Polity & Culture of MP',
+    name: 'Geography',
+    icon: LayoutGrid,
+    color: 'emerald' as const,
+    description: 'Physical, Indian & World Geography',
   },
   {
     name: 'History',
     icon: Calendar,
     color: 'pink' as const,
     description: 'Ancient, Medieval & Modern India',
-  },
-  {
-    name: 'Geography',
-    icon: LayoutGrid,
-    color: 'emerald' as const,
-    description: 'Physical, Indian & World Geography',
   },
   {
     name: 'Polity',
@@ -75,28 +71,28 @@ const SUBJECTS = [
     description: 'Indian Economy & Planning',
   },
   {
-    name: 'Science',
-    icon: Layers,
-    color: 'pink' as const,
-    description: 'Physics, Chemistry, Biology & Tech',
-  },
-  {
-    name: 'ICT',
+    name: 'Environment',
     icon: Layers,
     color: 'emerald' as const,
-    description: 'Information & Communication Technology',
+    description: 'Ecology, Biodiversity & Climate Change',
+  },
+  {
+    name: 'Science & Tech',
+    icon: Layers,
+    color: 'pink' as const,
+    description: 'Physics, Chemistry, Biology & Latest Tech',
+  },
+  {
+    name: 'International Relations',
+    icon: BookOpen,
+    color: 'indigo' as const,
+    description: 'Global Affairs & India\'s Foreign Policy',
   },
   {
     name: 'Current Affairs',
     icon: Calendar,
     color: 'blue' as const,
     description: 'National & International Events',
-  },
-  {
-    name: 'Misc',
-    icon: Layers,
-    color: 'amber' as const,
-    description: 'Other topics and uncategorized questions',
   },
 ];
 
@@ -109,6 +105,7 @@ export default function PYQPageClient({
   const router = useRouter();
   const queryClient = useQueryClient();
   const { language } = useSettingsStore();
+  const exam = getCurrentExam();
   const [, startTransition] = useTransition();
 
   // --- State ---
@@ -226,7 +223,7 @@ export default function PYQPageClient({
                       : 'text-slate-500 hover:text-slate-700'
                   )}
                 >
-                  {language === 'hi' ? 'विषय-वार' : 'Topic Wise'}
+                  {language === 'hi' ? 'विषय-वार' : 'Subject Wise'}
                 </button>
               </div>
             </div>
@@ -317,7 +314,7 @@ export default function PYQPageClient({
               subtitle={`${test.year}`}
               questions={test.totalQuestions || undefined}
               itemLabel={language === 'hi' ? 'प्रश्न' : 'Questions'}
-              marks={(test.totalQuestions || 0) * QUIZ_CONSTANTS.MARKS_PER_QUESTION}
+              marks={(test.totalQuestions || 0) * getExamScoring(exam, test.type).marksPerQuestion}
               duration={test.durationMinutes}
               isLocked={test.isLocked}
               isFree={test.isFree}

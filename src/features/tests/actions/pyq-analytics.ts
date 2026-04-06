@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { questions, tests } from '@/db/schema';
-import { and, eq, or } from 'drizzle-orm';
+import { and, eq, or, inArray } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
 
@@ -10,48 +10,49 @@ import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
 // 📊 Aggregation Action
 // Returns: { "History": 150, "Geography": 120, ... }
 // ------------------------------------------------------------------
-export const getSubjectWisePYQStats = unstable_cache(
-  async () => {
-    // Fetch all questions from PYQ tests
-    // Joined fetch using Drizzle's query builder for efficiency
-    // But since we need to normalize heavily, raw SQL or simple select + JS processing is easier
-    // and safer for complex string matching.
+export async function getSubjectWisePYQStats(examId?: string): Promise<Record<string, number>> {
+  const cacheKey = `subject-wise-pyq-stats-${examId || 'mppsc'}`;
+  
+  return unstable_cache(
+    async () => {
+      // Step 1: Get all relevant PYQ Test IDs
+      // MPPSC uses type='PYQ', UPSC uses type='UPSC_PYQ'
+      const testType = examId === 'upsc' ? 'UPSC_PYQ' : 'PYQ';
+      
+      const pyqTests = await db
+        .select({ id: tests.id, title: tests.title })
+        .from(tests)
+        .where(and(eq(tests.type, testType), eq(tests.isHidden, false)));
 
-    // Step 1: Get all PYQ Test IDs
-    const pyqTests = await db
-      .select({ id: tests.id, title: tests.title })
-      .from(tests)
-      .where(and(eq(tests.type, 'PYQ'), eq(tests.isHidden, false)));
+      if (pyqTests.length === 0) return {};
 
-    if (pyqTests.length === 0) return {};
+      const pyqTestIds = pyqTests.map((t) => t.id);
 
-    const pyqTestIds = pyqTests.map((t) => t.id);
+      // Step 2: Get all questions for these tests
+      const allQuestions = await db
+        .select({
+          id: questions.id,
+          subject: questions.subject,
+        })
+        .from(questions)
+        .where(and(inArray(questions.testId, pyqTestIds)));
 
-    // Step 2: Get all questions for these tests
-    // Query chunks if too many, but for < 10k questions, one query is fine.
-    const allQuestions = await db
-      .select({
-        id: questions.id,
-        subject: questions.subject,
-      })
-      .from(questions)
-      .where(or(...pyqTestIds.map((id) => eq(questions.testId, id))));
+      // Step 3: Aggregate
+      const stats: Record<string, number> = {};
 
-    // Step 3: Aggregate
-    const stats: Record<string, number> = {};
+      for (const q of allQuestions) {
+        const raw = q.subject?.trim() || 'General Studies';
+        // ALWAYS normalize to fix duplicates like 'History' and 'HISTORY'
+        const canonical = normalizeSubject(raw);
+        stats[canonical] = (stats[canonical] || 0) + 1;
+      }
 
-    for (const q of allQuestions) {
-      const canonical = normalizeSubject(q.subject);
-      stats[canonical] = (stats[canonical] || 0) + 1;
-    }
-
-    // Sort keys mostly for consistency if needed, but object keys are unordered technically
-    // Only return categories with > 0 questions
-    return stats;
-  },
-  ['subject-wise-pyq-stats'],
-  { revalidate: 3600, tags: ['pyq-stats'] } // Revalidate every hour
-);
+      return stats;
+    },
+    [cacheKey, 'v14'],
+    { revalidate: 3600, tags: ['pyq-stats'] }
+  )();
+}
 
 // ------------------------------------------------------------------
 // 🎮 Practice Mode Fetcher (CACHED)
@@ -79,8 +80,10 @@ export interface MixedQuestion {
 }
 
 // Internal fetcher - does the heavy lifting
-const fetchQuestionsBySubjectData = async (subject: string): Promise<MixedQuestion[]> => {
-  // 1. Fetch all PYQ Tests to map TestID -> Year
+const fetchQuestionsBySubjectData = async (subject: string, examId?: string): Promise<MixedQuestion[]> => {
+  // 1. Fetch all relevant PYQ Tests to map TestID -> Year
+  const testType = examId === 'upsc' ? 'UPSC_PYQ' : 'PYQ';
+  
   const pyqTests = await db
     .select({
       id: tests.id,
@@ -88,7 +91,7 @@ const fetchQuestionsBySubjectData = async (subject: string): Promise<MixedQuesti
       createdAt: tests.createdAt,
     })
     .from(tests)
-    .where(and(eq(tests.type, 'PYQ'), eq(tests.isHidden, false)));
+    .where(and(eq(tests.type, testType), eq(tests.isHidden, false)));
 
   if (pyqTests.length === 0) return [];
 
@@ -108,7 +111,10 @@ const fetchQuestionsBySubjectData = async (subject: string): Promise<MixedQuesti
 
   // 3. Filter & Map in JS
   const filteredQuestions = allQuestions
-    .filter((q) => normalizeSubject(q.subject) === subject)
+    .filter((q) => {
+      const raw = q.subject?.trim() || 'General Studies';
+      return normalizeSubject(raw) === subject;
+    })
     .map((q) => {
       const testInfo = testMap.get(q.testId) || { year: 'Unknown', title: 'Unknown Test' };
       return {
@@ -129,8 +135,8 @@ export const getCachedQuestionsBySubject = unstable_cache(
   { revalidate: 3600, tags: ['pyq-questions', 'tests'] }
 );
 
-export async function getQuestionsBySubject(subject: string): Promise<MixedQuestion[]> {
-  const cachedQuestions = await getCachedQuestionsBySubject(subject);
+export async function getQuestionsBySubject(subject: string, examId?: string): Promise<MixedQuestion[]> {
+  const cachedQuestions = await getCachedQuestionsBySubject(subject, examId);
   
   // Fisher-Yates Shuffle (done at runtime, not cached, for variety)
   const shuffled = [...cachedQuestions];

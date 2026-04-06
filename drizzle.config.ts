@@ -26,4 +26,5 @@ export default defineConfig({
     url: isDev ? localDbPath : process.env.TURSO_DATABASE_URL!,
     authToken: isDev ? undefined : process.env.TURSO_AUTH_TOKEN,
   },
+  tablesFilter: ['!questions_fts*'],
 });

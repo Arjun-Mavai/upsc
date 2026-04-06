@@ -164,6 +164,7 @@ export async function POST(request: Request) {
       accessExpiresAt,
       phone: phone?.trim() || null,
       metadata: metadata || null,
+      examType: 'upsc' as const, // UPSC-only repo
     });
 
     logger.info(

@@ -57,6 +57,7 @@ export async function createGuestEntry(data: GuestData) {
         name: name.trim(),
         email: email?.trim() || null,
         mobile: normalizedMobile,
+        examType: 'upsc' as const, // UPSC-only repo
       });
       
       return { success: true, guestId, isReturning: false };
@@ -70,6 +71,7 @@ export async function createGuestEntry(data: GuestData) {
       name: name.trim(),
       email: email?.trim() || null,
       mobile: mobile?.trim() || null,
+      examType: 'upsc' as const, // UPSC-only repo
     });
     
     return { success: true, guestId, isReturning: false };

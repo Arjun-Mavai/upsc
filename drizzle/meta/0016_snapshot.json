@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "cb317565-0355-415e-857e-8c705b26c320",
-  "prevId": "76ed11eb-3382-4b09-aa8b-91ab303133e0",
+  "id": "cb7842fd-bc4a-4842-ae01-faebe25c4db5",
+  "prevId": "cb317565-0355-415e-857e-8c705b26c320",
   "tables": {
     "attempt_answers": {
       "name": "attempt_answers",
@@ -157,6 +157,14 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "exam_type": {
+          "name": "exam_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'upsc'"
         },
         "image_url": {
           "name": "image_url",
@@ -2018,6 +2026,13 @@
         },
         "match_pairs": {
           "name": "match_pairs",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "extended_data": {
+          "name": "extended_data",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

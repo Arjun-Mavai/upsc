@@ -30,19 +30,7 @@ export function cleanMatchingQuestionText(questionText: string, question: Questi
 /**
  * Maps correct answer string (A/B/C/D or 0/1/2/3) to numeric index
  */
-export function mapCorrectAnswerToIndex(answer: string | number | null | undefined): number {
-  if (answer === null || answer === undefined || answer === '') return -1;
-  const num = Number(answer);
-  if (!isNaN(num)) return num;
-  
-  // Handle 'A', 'B', 'C', 'D'
-  if (typeof answer === 'string') {
-    const charCode = answer.toUpperCase().charCodeAt(0);
-    if (charCode >= 65 && charCode <= 90) return charCode - 65;
-  }
-  
-  return -1;
-}
+// (Already imported from @/lib/quiz-scoring)
 
 interface FormattedQuestionTextProps {
   text: string;
@@ -62,18 +50,17 @@ export function FormattedQuestionText({ text, className }: FormattedQuestionText
     return <RenderTableQuestion text={text} className={className} />;
   }
 
-  // 2. Check for "Assertion (A)" and "Reason (R)" or "Statement I" & "Statement II"
-  if (
-    (text.includes('Assertion (A)') && text.includes('Reason (R)')) ||
-    (text.includes('Statement I:') && text.includes('Statement II:'))
-  ) {
-    return <RenderAssertionReason text={text} className={className} />;
+  // 2. Check for "Assertion (A)" and "Reason (R)" or "Statement I" & "Statement II" (including Hindi equivalents)
+  const hasAssertionPattern = text.includes('Assertion (A)') && text.includes('Reason (R)');
+  const hasStatementPattern = 
+    /(?:Statement|कथन)\s*:?\s*I\b/i.test(text) && 
+    /(?:Statement|कथन)\s*:?\s*II\b/i.test(text);
+
+  if (hasAssertionPattern || hasStatementPattern) {
+    return <RenderStatementSet text={text} className={className} isAssertion={hasAssertionPattern} />;
   }
 
-  // 3. Check for Numbered Lists (1. ... 2. ... 3. ...)
-  // We use a heuristic: if distinct "1. ", "2. " patterns exist in the text closer to the end or middle
-  // This is tricky because the main question might be numbered.
-  // We'll rely on newline splits mostly.
+  // 3. Check for Numbered Lists (1. ... 2. ... 3. ...) or Roman (I. ... II. ...)
   return <RenderStandardText text={text} className={className} />;
 }
 
@@ -369,89 +356,144 @@ export function RenderTableQuestion({
   return <RenderStandardText text={text} className={className} />;
 }
 
-function RenderAssertionReason({ text, className }: FormattedQuestionTextProps) {
-  // Split into Intro, Statement 1, Statement 2
-  const isAssertion = text.includes('Assertion (A)');
+interface RenderStatementSetProps {
+  text: string;
+  className?: string;
+  isAssertion?: boolean;
+}
 
-  const marker1 = isAssertion ? 'Assertion (A)' : 'Statement I';
-  const marker2 = isAssertion ? 'Reason (R)' : 'Statement II';
+function RenderStatementSet({ text, className, isAssertion }: RenderStatementSetProps) {
+  // Broad regex for Statement I, कथन I, Statement: I, कथन: I, Assertion (A), Reason (R) etc.
+  const markerRegex = isAssertion 
+    ? /(Assertion \(A\)|Reason \(R\))/g
+    : /((?:Statement|कथन)\s*:?\s*(?:I|II|III|IV|V|VI|VII|VIII|IX|X)\b)/gi;
 
-  // Regex to split
-  // careful with special regex chars in markers
-  const parts = text.split(
-    isAssertion ? /(Assertion \(A\)|Reason \(R\))/ : /(Statement I:|Statement II:)/
-  );
+  const parts = text.split(markerRegex);
+  
+  // parts[0] = intro
+  // parts[1] = marker 1, parts[2] = content 1
+  // parts[3] = marker 2, parts[4] = content 2 ...
+  
+  if (parts.length < 3) return <RenderStandardText text={text} className={className} />;
 
-  // parts[0] = intro (e.g. "Read the following...")
-  // parts[1] = Marker 1
-  // parts[2] = Content 1
-  // parts[3] = Marker 2
-  // parts[4] = Content 2
-
-  // Simple check if split worked
-  if (parts.length < 5) return <RenderStandardText text={text} className={className} />;
+  const intro = parts[0].trim();
+  const statements = [];
+  for (let i = 1; i < parts.length; i += 2) {
+    statements.push({
+      marker: parts[i].trim(),
+      content: parts[i+1]?.replace(/^[:\s\-।]+/, '').trim()
+    });
+  }
 
   return (
     <div className={cn('space-y-4', className)}>
-      {/* Intro */}
-      {parts[0].trim() && (
+      {intro && (
         <div className="mb-4 text-lg leading-relaxed font-medium text-slate-900">
-          {parts[0].trim()}
+          {intro}
         </div>
       )}
 
       <div className="space-y-3">
-        <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4">
-          <span className="mb-1 block font-bold text-amber-800">
-            {isAssertion ? 'Assertion (A)' : 'Statement I'}
-          </span>
-          <div className="leading-relaxed font-medium text-slate-800">
-            {parts[2]?.replace(/^:/, '').trim()}
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4">
-          <span className="mb-1 block font-bold text-blue-800">
-            {isAssertion ? 'Reason (R)' : 'Statement II'}
-          </span>
-          <div className="leading-relaxed font-medium text-slate-800">
-            {parts[4]?.replace(/^:/, '').trim()}
-          </div>
-        </div>
+        {statements.map((s, idx) => {
+          const isAlt = idx % 2 !== 0;
+          return (
+            <div 
+              key={idx} 
+              className={cn(
+                "rounded-xl border p-4",
+                isAlt 
+                  ? "border-blue-100 bg-blue-50/50" 
+                  : "border-amber-100 bg-amber-50/50"
+              )}
+            >
+              <span className={cn(
+                "mb-1 block font-bold",
+                isAlt ? "text-blue-800" : "text-amber-800"
+              )}>
+                {s.marker}
+              </span>
+              <div className="leading-relaxed font-medium text-slate-800">
+                {s.content}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
 function RenderStandardText({ text, className }: FormattedQuestionTextProps) {
-  // Check for embedded numbered list "1. 2. 3. 4." in the text
-  // Many questions have "1. xxx 2. xxx" or newlines.
+  // Enhanced pattern detection for numbered and Roman numeral lists
+  // Even if they are inline, we'll try to split them if they follow a clear pattern
+  
+  const detectAndFormatList = (rawText: string) => {
+    // Check if the text contains a clear sequence like "I. ... II. ... III. ..."
+    const romanSequence = /((?:\s|^)(?:I|II|III|IV|V|VI)\.\s+.*?(?=(?:\s|^)(?:I|II|III|IV|V|VI)\.|$))/gs;
+    const matches = Array.from(rawText.matchAll(romanSequence));
+    
+    if (matches.length >= 2) {
+      const intro = rawText.substring(0, matches[0].index).trim();
+      const items = matches.map(m => {
+        const markerMatch = m[0].match(/^(\s*)([IVX]+\.)\s+(.*)/s);
+        return {
+          marker: markerMatch ? markerMatch[2] : "",
+          content: markerMatch ? markerMatch[3].trim() : m[0].trim()
+        };
+      });
+      return { intro, items };
+    }
+    
+    // Normal newline split as fallback
+    const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+    const items: {marker: string, content: string}[] = [];
+    let currentIntro = "";
+    
+    lines.forEach(line => {
+      const match = line.match(/^([0-9]+\.|[IVX]+\.)\s+(.*)/i);
+      if (match) {
+        items.push({ marker: match[1], content: match[2] });
+      } else if (items.length === 0) {
+        currentIntro += (currentIntro ? "\n" : "") + line;
+      } else {
+        // Append to last item if it doesn't look like a new item
+        items[items.length - 1].content += " " + line;
+      }
+    });
+    
+    return items.length >= 2 ? { intro: currentIntro, items } : null;
+  };
 
-  const lines = text
-    .split('\n')
-    .map((l) => l.trim())
-    .filter(Boolean);
+  const listData = detectAndFormatList(text);
 
-  // formatting logic:
-  // If line starts with "1.", "2." etc, allow indented rendering
-
-  return (
-    <div className={cn('space-y-1 text-lg leading-relaxed font-medium text-slate-900', className)}>
-      {lines.map((line, i) => {
-        // Check if numbered list item
-        const isListItem = line.match(/^\d+\./);
-        if (isListItem) {
-          return (
-            <div key={i} className="flex items-start gap-2 py-1 pl-4">
-              <span className="mt-1 rounded bg-slate-100 px-1.5 text-sm font-bold text-slate-500">
-                {line.split('.')[0]}
+  if (listData) {
+    return (
+      <div className={cn('space-y-4', className)}>
+        {listData.intro && (
+          <div className="text-lg leading-relaxed font-medium text-slate-900">
+            {listData.intro}
+          </div>
+        )}
+        <div className="space-y-2">
+          {listData.items.map((item, i) => (
+            <div key={i} className="flex items-start gap-3 py-1 pl-4">
+              <span className="mt-1 shrink-0 rounded bg-slate-100 px-1.5 text-sm font-bold text-slate-500">
+                {item.marker}
               </span>
-              <span>{line.substring(line.indexOf('.') + 1).trim()}</span>
+              <span className="text-lg leading-relaxed font-medium text-slate-900">{item.content}</span>
             </div>
-          );
-        }
-        return <div key={i}>{line}</div>;
-      })}
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Pure standard text if no list detected
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  return (
+    <div className={cn('space-y-2 text-lg leading-relaxed font-medium text-slate-900', className)}>
+      {lines.map((line, i) => <div key={i}>{line}</div>)}
     </div>
   );
 }
+

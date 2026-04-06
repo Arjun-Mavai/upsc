@@ -50,7 +50,7 @@ function formatText(text: string, highlightClassName: string = 'text-slate-900')
   }
 
   // Remove remaining stars
-  let cleaned = text.replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1');
+  const cleaned = text.replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1');
 
   // Bold quoted text
   const parts = cleaned.split(/(["'][^"']+["'])/g);
@@ -692,7 +692,7 @@ export default function BlogContentRenderer({
                 </div>
                 <h3 className="mb-2 text-2xl font-black text-slate-900">Read the Full Strategy</h3>
                 <p className="mb-6 text-slate-600">
-                  Unlock this premium article and get full access to MPPSC blogs, expert test
+                  Unlock this premium article and get full access to UPSC blogs, expert test
                   series, and detailed performance analytics.
                 </p>
                 <Button
@@ -747,7 +747,7 @@ export default function BlogContentRenderer({
             <div className="mt-12 flex items-center justify-between border-t border-slate-100 pt-6">
               <div>
                 <p className="text-xs font-medium text-slate-400">Published by</p>
-                <p className="text-sm font-bold text-slate-800">MPPSC 2026</p>
+                <p className="text-sm font-bold text-slate-800">UPSC 2026</p>
               </div>
             </div>
           </>

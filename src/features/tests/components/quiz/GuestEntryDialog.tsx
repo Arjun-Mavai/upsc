@@ -47,7 +47,7 @@
 //       >
 //         <DialogHeader className="relative">
 //           <DialogTitle className="text-center text-2xl font-black text-slate-900">
-//             Welcome to MPPSC 2026! 🚀
+//             Welcome to UPSC 2026! 🚀
 //           </DialogTitle>
 //           <button
 //             onClick={onExit}
@@ -237,7 +237,7 @@ export function GuestEntryDialog({
                   <Target className="h-5 w-5" />
                 </div>
                 <DialogTitle className="pr-4 text-left text-xl font-black text-slate-900 sm:text-2xl">
-                  Welcome to MPPSC 2026!
+                  Welcome to UPSC 2026!
                 </DialogTitle>
               </div>
               <DialogDescription className="text-left text-sm font-medium leading-relaxed text-slate-500">

@@ -2,7 +2,8 @@
 
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { getUnitColor } from './constants';
+import { getUnitColor, SUBJECT_ICONS } from './constants';
+import * as LucideIcons from 'lucide-react';
 
 interface UnitBadgeProps {
   unitId: string;
@@ -12,15 +13,33 @@ interface UnitBadgeProps {
 
 export function UnitBadge({ unitId, size = 'md', className }: UnitBadgeProps) {
   const colorClass = getUnitColor(unitId);
+  const iconName = SUBJECT_ICONS[unitId];
+  
+  // @ts-ignore
+  const Icon = iconName ? LucideIcons[iconName] : null;
   
   const sizeClasses = {
+    sm: 'h-4 w-4 p-0.5',
+    md: 'h-6 w-6 p-1',
+    lg: 'h-8 w-8 p-1.5',
+  };
+
+  const barSizeClasses = {
     sm: 'h-4 w-1',
     md: 'h-6 w-1.5',
     lg: 'h-8 w-2',
   };
 
+  if (Icon) {
+    return (
+      <div className={cn('flex items-center justify-center rounded-lg text-white shadow-lg', colorClass, sizeClasses[size], className)}>
+        <Icon className="h-full w-full" strokeWidth={2.5} />
+      </div>
+    );
+  }
+
   return (
-    <div className={cn('rounded-full shrink-0', colorClass, sizeClasses[size], className)} />
+    <div className={cn('rounded-full shrink-0', colorClass, barSizeClasses[size], className)} />
   );
 }
 

@@ -47,12 +47,8 @@ const isDatabaseUser = (value: unknown): value is User => {
 };
 
 /**
- * BlogsClient — Main client component for the Blogs page.
- * Handles:
- * - Infinite scrolling (Load More)
- * - Filtering by Unit/Category/Free
- * - Search with debouncing
- * - Access control & locking UI
+ * BlogsClient — UPSC-focused client component for the Blogs page
+ * Simplified to remove unit-based filtering and focus on subject categories
  */
 export default function BlogsClient({
   initialBlogs,
@@ -60,47 +56,33 @@ export default function BlogsClient({
   initialCounts,
   user,
 }: BlogsClientProps) {
-  // ------------------------------------------------------------------
-  // 🪝 HOOKS (Strict Order: Store -> Router -> State -> Effects -> Query)
-  // ------------------------------------------------------------------
+  const { isAccessible: hasAccess } = useSettingsStore();
+  const isGuest = !isDatabaseUser(user);
 
-  // 1. Store Hooks
-  const { user: storeUser, authCheckStatus } = useSettingsStore();
-
-  // 2. Router Hooks
-  // const router = useRouter();
-
-  // 3. State Hooks
-  const [activeUnit, setActiveUnit] = useState<string>(() => {
-    if (typeof window === 'undefined') return 'Free';
-    return new URLSearchParams(window.location.search).get('unit') || 'Free';
-  });
+  // 3. State Hooks - Simplified for UPSC (subject-wise only)
   const [activeCategory, setActiveCategory] = useState<string>(() => {
     if (typeof window === 'undefined') return 'All';
     return new URLSearchParams(window.location.search).get('category') || 'All';
+  });
+  const [showFreeOnly, setShowFreeOnly] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return new URLSearchParams(window.location.search).get('free') === 'true';
   });
   const [searchQuery, setSearchQuery] = useState(() => {
     if (typeof window === 'undefined') return '';
     return new URLSearchParams(window.location.search).get('search') || '';
   });
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
-  // Track which specific blog is being navigated to (for inline loading)
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
 
-  // 4. Effect Hooks (Debounce Search)
+  // 4. Debounce search
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-    }, 300);
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // 5. Query Hooks (Data Fetching)
-  // Derived fetch parameters to ensure Query Key matches actual fetch logic
-  const fetchUnitId = activeUnit === 'Free' || activeUnit === 'General' ? 'All' : activeUnit;
-  const fetchCategory = activeUnit === 'General' ? activeCategory : 'All';
-  // STRICT FILTERING: If tab is 'Free', explicitly request only isFreeAccess=true
-  const fetchIsFreeAccess = activeUnit === 'Free' ? true : undefined;
+  // 5. Query Hooks (Data Fetching) - Simplified for UPSC
+  const fetchIsFreeAccess = showFreeOnly ? true : undefined;
 
   const {
     data,
@@ -112,58 +94,48 @@ export default function BlogsClient({
     error,
     refetch,
   } = useInfiniteQuery({
-    // ⚡ PERFORMANCE: Use actual fetch parameters in key to avoid duplicate caching
-    queryKey: ['blogs', fetchUnitId, fetchCategory, fetchIsFreeAccess, debouncedSearch],
+    queryKey: ['blogs-upsc', activeCategory, fetchIsFreeAccess, debouncedSearch],
     queryFn: async ({ pageParam = 1 }) => {
       return await getBlogs({
         page: pageParam as number,
         limit: 10,
-        unitId: fetchUnitId,
-        category: fetchCategory,
+        unitId: 'All', // No unit filtering for UPSC
+        category: activeCategory,
         search: debouncedSearch,
         isFreeAccess: fetchIsFreeAccess,
+        examType: 'upsc', // Filter for UPSC only
       });
     },
     getNextPageParam: (lastPage) => {
       return lastPage.pagination.hasMore ? lastPage.pagination.page + 1 : undefined;
     },
-    initialPageParam: 1,
-    // Hydrate initial data ONLY if it matches the default 'Free' tab state
     initialData:
-      activeUnit === 'Free' && activeCategory === 'All' && !debouncedSearch
+      !showFreeOnly && activeCategory === 'All' && !debouncedSearch
         ? {
             pages: [{ blogs: initialBlogs, pagination: initialPagination }],
             pageParams: [1],
           }
         : undefined,
-    // ⚡ PERFORMANCE: Keep cache warm and retain previous list while changing filters
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    placeholderData: (previousData) => previousData,
   });
-
-  // ------------------------------------------------------------------
-  // 🧠 DERIVED STATE & CONSTANTS
-  // ------------------------------------------------------------------
-
-  // User resolution: Server prop > Store fallback
-  // User resolution: Server prop > Store fallback (only if it matches User shape)
-  // Both sources use camelCase (Drizzle Schema & Zustand Store)
-  const effectiveUser = user || (isDatabaseUser(storeUser) ? storeUser : undefined);
-  const currentUser = effectiveUser || null; // Ensure strictly User | null (no undefined)
-  const isGuest = !currentUser?.isSubscribed;
 
   // Flatten infinite query pages
   const blogs = data?.pages.flatMap((page) => page.blogs) || [];
   const hasMore = hasNextPage;
 
-  // Tab Definitions
-  const tabs = isGuest
-    ? ['Free', 'General', 'All', ...Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`)]
-    : ['General', 'All', ...Array.from({ length: 10 }, (_, i) => `unit_${i + 1}`)];
-  const defaultTab = isGuest ? 'Free' : 'General';
+  // Subject categories for UPSC
+  const subjects = [
+    { id: 'All', label: 'All Subjects' },
+    { id: 'general', label: 'General Studies' },
+    { id: 'history', label: 'History' },
+    { id: 'geography', label: 'Geography' },
+    { id: 'polity', label: 'Polity' },
+    { id: 'economy', label: 'Economy' },
+    { id: 'science_tech', label: 'Science & Tech' },
+    { id: 'environment', label: 'Environment' },
+    { id: 'current_affairs', label: 'Current Affairs' },
+  ];
 
-  // Hydration-safe restore from URL/session so Back never snaps to default unexpectedly.
+  // Hydration-safe restore from URL/session
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -172,21 +144,12 @@ export default function BlogsClient({
       const savedRaw = window.sessionStorage.getItem('blogs:last-filters');
       const saved = savedRaw ? JSON.parse(savedRaw) : null;
 
-      const nextUnit =
-        params.get('unit') ||
-        (saved && typeof saved.unit === 'string' ? saved.unit : undefined) ||
-        defaultTab;
-      const nextCategory =
-        params.get('category') ||
-        (saved && typeof saved.category === 'string' ? saved.category : undefined) ||
-        'All';
-      const nextSearch =
-        params.get('search') ||
-        (saved && typeof saved.search === 'string' ? saved.search : undefined) ||
-        '';
+      const nextCategory = params.get('category') || saved?.category || 'All';
+      const nextShowFree = params.get('free') === 'true' || saved?.showFreeOnly || false;
+      const nextSearch = params.get('search') || saved?.search || '';
 
-      setActiveUnit(nextUnit);
       setActiveCategory(nextCategory);
+      setShowFreeOnly(nextShowFree);
       setSearchQuery(nextSearch);
       setDebouncedSearch(nextSearch);
     };
@@ -194,56 +157,23 @@ export default function BlogsClient({
     readFromUrl();
     window.addEventListener('popstate', readFromUrl);
     return () => window.removeEventListener('popstate', readFromUrl);
-  }, [defaultTab]);
+  }, []);
 
-  // If user tier changes and current tab is no longer valid, move to default tab
-  useEffect(() => {
-    if (!tabs.includes(activeUnit)) {
-      setActiveUnit(defaultTab);
-    }
-  }, [tabs, activeUnit, defaultTab]);
-
-  // For non-General tabs, keep category reset so URL/query key stay clean
-  useEffect(() => {
-    if (activeUnit !== 'General' && activeCategory !== 'All') {
-      setActiveCategory('All');
-    }
-  }, [activeUnit, activeCategory]);
-
-  const subjects = [
-    { id: 'All', label: 'All Subjects' },
-    { id: 'general', label: 'General / Exam Info' },
-    { id: 'history', label: 'History' },
-    { id: 'geography', label: 'Geography' },
-    { id: 'polity', label: 'Polity' },
-    { id: 'economy', label: 'Economy' },
-    { id: 'science_tech', label: 'Science & Tech' },
-    { id: 'tribal_culture', label: 'Tribal Culture' },
-    { id: 'mp_general', label: 'MP General' },
-    { id: 'current_affairs', label: 'Current Affairs' },
-  ];
-
-  // ------------------------------------------------------------------
-  // 🧨 EVENT HANDLERS
-  // ------------------------------------------------------------------
-  const handleUnitChange = (unit: string) => setActiveUnit(unit);
+  // Event handlers
+  const handleCategoryChange = (category: string) => setActiveCategory(category);
   const handleLoadMore = () => fetchNextPage();
-
-  // ✅ OPTIMIZED: Stable callback to enable React.memo optimization in BlogCard
-  // This prevents all cards from re-rendering when one is clicked or other state changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleNavigate = useState(() => (id: string) => setNavigatingId(id))[0];
 
-  // Persist selected filters in URL so browser back restores exact selection
+  // Update URL and session storage when filters change
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
 
-    if (activeUnit === defaultTab) params.delete('unit');
-    else params.set('unit', activeUnit);
-
     if (activeCategory === 'All') params.delete('category');
     else params.set('category', activeCategory);
+
+    if (showFreeOnly) params.set('free', 'true');
+    else params.delete('free');
 
     if (searchQuery.trim()) params.set('search', searchQuery.trim());
     else params.delete('search');
@@ -257,28 +187,25 @@ export default function BlogsClient({
     window.sessionStorage.setItem(
       'blogs:last-filters',
       JSON.stringify({
-        unit: activeUnit,
         category: activeCategory,
+        showFreeOnly: showFreeOnly,
         search: searchQuery.trim(),
       })
     );
-  }, [activeUnit, activeCategory, searchQuery, defaultTab]);
+  }, [activeCategory, showFreeOnly, searchQuery]);
 
   const returnToQuery = useMemo(() => {
     const params = new URLSearchParams();
-    if (activeUnit !== defaultTab) params.set('unit', activeUnit);
     if (activeCategory !== 'All') params.set('category', activeCategory);
+    if (showFreeOnly) params.set('free', 'true');
     if (searchQuery.trim()) params.set('search', searchQuery.trim());
     return params.toString();
-  }, [activeUnit, activeCategory, searchQuery, defaultTab]);
+  }, [activeCategory, showFreeOnly, searchQuery]);
 
-  // ------------------------------------------------------------------
-  // 💀 SKELETON / LOADING UI
-  // ------------------------------------------------------------------
+  // Loading skeleton
   if (isBlogsLoading && !data) {
     return (
       <div className="min-h-screen bg-white">
-        {/* Header Skeleton */}
         <div className="sticky top-16 z-30 border-b border-slate-200 bg-white shadow-sm">
           <div className="mx-auto max-w-7xl px-4 py-4 md:px-8">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -288,171 +215,101 @@ export default function BlogsClient({
               </div>
               <Skeleton className="h-10 w-full rounded-lg md:w-96" />
             </div>
-            <div className="mt-6 flex gap-2 overflow-hidden">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Skeleton key={i} className="h-9 w-24 rounded-full" />
+            <div className="mt-4 flex gap-2 overflow-hidden">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-8 w-20 rounded-full" />
               ))}
             </div>
           </div>
         </div>
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 py-8 md:px-8 lg:grid-cols-4">
-          <div className="hidden lg:col-span-1 lg:block">
-            <div className="sticky top-44">
-              <Skeleton className="h-64 w-full rounded-2xl" />
-            </div>
-          </div>
-          <div className="space-y-6 lg:col-span-3">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {[1, 2, 3, 4].map((i) => (
-                <BlogSkeleton key={i} />
-              ))}
-            </div>
-          </div>
-        </div>
+        <BlogSkeleton />
       </div>
     );
   }
 
-  // Error State
-  if (isError) {
-    return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
-        <div className="rounded-full bg-red-50 p-4">
-          <BookOpen className="h-8 w-8 text-red-500" />
-        </div>
-        <h3 className="text-lg font-bold text-slate-800">Failed to load articles</h3>
-        <p className="max-w-md text-sm text-slate-500">
-          {error instanceof Error ? error.message : 'Something went wrong while fetching articles.'}
-        </p>
-        <Button onClick={() => refetch()} variant="outline">
-          Try Again
-        </Button>
-      </div>
-    );
-  }
-
-  // ------------------------------------------------------------------
-  // 🎨 MAIN RENDER
-  // ------------------------------------------------------------------
   return (
-    <ViewTransition>
-      <div className="min-h-screen bg-white">
-      {/* Header Section */}
+    <div className="min-h-screen bg-white">
+      {/* Header */}
       <div className="sticky top-16 z-30 border-b border-slate-200 bg-white shadow-sm">
         <div className="mx-auto max-w-7xl px-4 py-4 md:px-8">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-            {/* Logo/Back + Mobile Nav */}
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="-ml-2 text-slate-500 md:hidden"
-                asChild
-              >
-                <Link href="/">
-                  <ArrowLeft size={20} />
-                </Link>
-              </Button>
-              <div>
-                <h1 className="font-display text-2xl font-black tracking-tight text-slate-900">
-                  MPPSC Knowledge
-                </h1>
-                <p className="text-xs font-medium text-slate-500">
-                  Exam-focused articles & strategies
-                </p>
-              </div>
-            </div>
-
-            {/* Desktop Search */}
-            <div className="w-full md:w-96">
-              <SearchInput
-                value={searchQuery}
-                onChange={setSearchQuery}
-                className="border-slate-200 bg-slate-50 transition-all focus:bg-white"
-              />
-            </div>
-          </div>
-
-          {/* Tab Navigation */}
-          <div className="no-scrollbar -mx-4 mt-4 flex snap-x gap-2 overflow-x-auto px-4 pt-2 pb-2 md:mx-0 md:px-0">
-            {tabs.map((tab) => {
-              const count =
-                tab === 'General'
-                  ? initialCounts.categories['general'] || 0
-                  : initialCounts.units[tab] || 0;
-              const isActive = activeUnit === tab;
-              const isFreeTab = tab === 'Free';
-
-              return (
-                <button
-                  key={tab}
-                  onClick={() => handleUnitChange(tab)}
-                  className={cn(
-                    'group flex snap-start items-center gap-2 rounded-full border px-5 py-2.5 text-xs font-bold whitespace-nowrap transition-all',
-                    isFreeTab && isActive
-                      ? 'scale-105 border-emerald-600 bg-emerald-600 text-white shadow-lg shadow-emerald-200'
-                      : isFreeTab && !isActive
-                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                        : isActive
-                          ? 'scale-105 border-slate-900 bg-slate-900 text-white shadow-lg shadow-slate-300'
-                          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                  )}
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/"
+                  className="flex items-center gap-2 text-slate-600 hover:text-slate-800"
                 >
-                  <span>
-                    {tab === 'All'
-                      ? 'All Units'
-                      : tab === 'Free'
-                        ? '🎁 Free'
-                        : tab === 'General'
-                          ? '📚 Subjects'
-                          : `Unit ${tab.split('_')[1]}`}
-                  </span>
-                  {count > 0 && (
-                    <span
-                      className={cn(
-                        'flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[10px] font-black transition-colors',
-                        isActive
-                          ? 'bg-white text-slate-900'
-                          : 'bg-emerald-500 text-white group-hover:bg-emerald-600'
-                      )}
-                    >
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+                  <ArrowLeft className="h-4 w-4" />
+                  <span className="text-sm font-medium">Back to Home</span>
+                </Link>
+              </div>
+              <h1 className="text-2xl font-bold text-slate-800">UPSC Articles & Resources</h1>
+              <p className="text-sm text-slate-600">
+                Expert insights and analysis for UPSC preparation
+              </p>
+            </div>
+
+            <SearchInput
+              placeholder="Search articles..."
+              value={searchQuery}
+              onChange={setSearchQuery}
+              className="border-slate-200 bg-slate-50 transition-all focus:bg-white"
+            />
           </div>
 
-          {/* Sub-Category Tabs (Only for General) */}
-          {activeUnit === 'General' && (
-            <div className="animate-in fade-in slide-in-from-top-2 no-scrollbar -mx-4 mt-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
+          {/* Filter Controls */}
+          <div className="mt-4 flex flex-col gap-3">
+            {/* Free Access Toggle */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowFreeOnly(!showFreeOnly)}
+                className={cn(
+                  'flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all',
+                  showFreeOnly
+                    ? 'border-emerald-600 bg-emerald-600 text-white shadow-lg shadow-emerald-200'
+                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                )}
+              >
+                <span>{showFreeOnly ? '🎁 Free Only' : '📚 All Articles'}</span>
+              </button>
+              {isGuest && !showFreeOnly && (
+                <div className="text-xs text-slate-500">
+                  🔒 Premium articles require subscription
+                </div>
+              )}
+            </div>
+
+            {/* Subject Categories Navigation */}
+            <div className="no-scrollbar -mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
               {subjects.map((subject) => {
                 const count =
                   subject.id === 'All'
                     ? Object.values(initialCounts.categories || {}).reduce(
-                        (sum, value) => (typeof value === 'number' ? sum + value : sum),
+                        (sum, val) => sum + (val || 0),
                         0
                       )
                     : initialCounts.categories[subject.id] || 0;
                 const isActive = activeCategory === subject.id;
+
                 return (
                   <button
                     key={subject.id}
-                    onClick={() => setActiveCategory(subject.id)}
+                    onClick={() => handleCategoryChange(subject.id)}
                     className={cn(
-                      'group flex snap-start items-center gap-2 rounded-lg border px-4 py-2 text-[11px] font-black tracking-tight whitespace-nowrap transition-all',
+                      'group flex snap-start items-center gap-2 rounded-full border px-5 py-2.5 text-xs font-bold whitespace-nowrap transition-all',
                       isActive
-                        ? 'border-slate-900 bg-slate-100 text-slate-900'
-                        : 'border-slate-100 bg-slate-50 text-slate-500 hover:bg-slate-100'
+                        ? 'scale-105 border-amber-600 bg-amber-600 text-white shadow-lg shadow-amber-200'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
                     )}
                   >
                     <span>{subject.label}</span>
                     {count > 0 && (
                       <span
                         className={cn(
-                          'flex h-4 min-w-[1rem] items-center justify-center rounded-md px-1 text-[9px]',
-                          isActive ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-600'
+                          'flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[10px] font-black transition-colors',
+                          isActive
+                            ? 'bg-white text-amber-600'
+                            : 'bg-amber-500 text-white group-hover:bg-amber-600'
                         )}
                       >
                         {count}
@@ -462,145 +319,140 @@ export default function BlogsClient({
                 );
               })}
             </div>
-          )}
+          </div>
 
-          {/* Breadcrumbs */}
-          {activeUnit !== 'All' && activeUnit !== 'General' && activeUnit !== 'Free' && (
-            <div className="animate-in fade-in slide-in-from-top-1 mt-3 flex items-center gap-2 text-sm text-slate-600">
-              <span className="font-bold text-slate-800">Unit {activeUnit.split('_')[1]}</span>
-            </div>
-          )}
-          {activeUnit === 'General' && activeCategory !== 'All' && (
+          {/* Active Filter Breadcrumb */}
+          {activeCategory !== 'All' && (
             <div className="animate-in fade-in slide-in-from-top-1 mt-3 flex items-center gap-2 text-sm text-slate-600">
               <span className="font-bold text-slate-800">
                 {subjects.find((s) => s.id === activeCategory)?.label}
               </span>
+              {showFreeOnly && <span className="text-emerald-600">• Free Articles Only</span>}
             </div>
           )}
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 py-8 md:px-8 lg:grid-cols-4">
-        {/* Sidebar (Desktop Only) — clean dark style */}
-        <div className="hidden space-y-6 lg:col-span-1 lg:block">
-          <div className="sticky top-44 space-y-6">
-            <PromoCard user={currentUser} variant="vertical" />
-          </div>
-        </div>
-
-        {/* Main Content Area */}
-        <div className="space-y-6 lg:col-span-3">
-          {/* Mobile Promo Card (Visible only on mobile/tablet) */}
-          <div className="lg:hidden">
-            <PromoCard user={currentUser} variant="horizontal" />
-          </div>
-
-          {/* Blog Grid */}
-          <div className="animate-in fade-in grid grid-cols-1 gap-6 md:grid-cols-2">
-            {(() => {
-              // 1. Loading State (and no pre-fetched data)
-              if (isBlogsLoading && !data) {
-                return (
-                  <>
-                    {[1, 2, 3, 4].map((i) => (
-                      <BlogSkeleton key={i} />
-                    ))}
-                  </>
-                );
-              }
-
-              // 2. Empty State
-              if (blogs.length === 0) {
-                return (
-                  <div className="col-span-2 flex flex-col items-center gap-4 py-20 text-center text-slate-400">
-                    <div className="mb-2 flex h-20 w-20 items-center justify-center rounded-full bg-slate-50">
-                      <Search className="h-8 w-8 text-slate-300" />
-                    </div>
-                    <h3 className="text-lg font-bold text-slate-600">
-                      {activeUnit === 'Free' ? 'No free articles yet' : 'No content found'}
-                    </h3>
-                    <p className="mx-auto max-w-xs">
-                      {activeUnit === 'Free' ? (
-                        'Free articles will appear here soon.'
-                      ) : (
-                        <>
-                          No articles found for{' '}
-                          <span className="font-bold text-slate-800">
-                            {activeUnit === 'All' ? 'any unit' : `Unit ${activeUnit.split('_')[1]}`}
-                          </span>
-                          {searchQuery && <span> matching &quot;{searchQuery}&quot;</span>}.
-                        </>
-                      )}
-                    </p>
-                    {(activeUnit !== 'All' || searchQuery) && (
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setActiveUnit('All');
-                          setSearchQuery('');
-                        }}
-                      >
-                        Clear Filters
-                      </Button>
-                    )}
-                  </div>
-                );
-              }
-
-              // 3. Render Blogs
-              return blogs.map((blog: Blog, i: number) => {
-                const hasAccess = canAccessBlog(
-                  {
-                    isFreeAccess: blog.isFreeAccess,
-                    isLiteAccess: blog.isLiteAccess,
-                    isProAccess: blog.isProAccess,
-                  },
-                  currentUser
-                );
-
-                // Note: If a blog is in the 'Free' tab, logic dictates it must be free.
-                // We enforce this access=true visually for free blogs.
-                const isLocked = blog.isFreeAccess ? false : !hasAccess;
-
-                return (
+      {/* Main Content */}
+      <div className="mx-auto max-w-7xl px-4 py-8 md:px-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          {/* Content Column */}
+          <div className="md:col-span-2">
+            {isError ? (
+              <div className="py-12 text-center">
+                <h3 className="text-lg font-bold text-red-600">Failed to load articles</h3>
+                <p className="mt-2 text-slate-600">Please try again later.</p>
+                <Button onClick={() => refetch()} className="mt-4" variant="outline">
+                  Retry
+                </Button>
+              </div>
+            ) : blogs.length === 0 ? (
+              <div className="py-12 text-center">
+                <BookOpen className="mx-auto mb-4 h-16 w-16 text-slate-300" />
+                <h3 className="text-lg font-bold text-slate-600">
+                  {showFreeOnly ? 'No free articles found' : 'No articles found'}
+                </h3>
+                <p className="mx-auto mt-2 max-w-xs text-slate-500">
+                  {showFreeOnly ? (
+                    'Try browsing all articles or search for specific topics.'
+                  ) : (
+                    <>
+                      No articles found for{' '}
+                      <span className="font-bold text-slate-800">
+                        {activeCategory === 'All'
+                          ? 'your search'
+                          : subjects.find((s) => s.id === activeCategory)?.label}
+                      </span>
+                      {searchQuery && <span> matching "{searchQuery}"</span>}.
+                    </>
+                  )}
+                </p>
+                {(activeCategory !== 'All' || searchQuery || showFreeOnly) && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setActiveCategory('All');
+                      setSearchQuery('');
+                      setShowFreeOnly(false);
+                    }}
+                    className="mt-4"
+                  >
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {blogs.map((blog, index) => (
                   <BlogCard
                     key={blog.id}
                     blog={blog}
-                    index={i}
-                    isLocked={isLocked}
+                    user={user}
+                    returnToQuery={returnToQuery}
+                    hasAccess={hasAccess}
+                    canAccess={canAccessBlog(blog, user)}
                     isNavigating={navigatingId === blog.id}
                     onNavigate={handleNavigate}
-                    returnToQuery={returnToQuery}
+                    showPromo={index === 2}
                   />
-                );
-              });
-            })()}
+                ))}
+
+                {/* Load More */}
+                {hasMore && (
+                  <div className="pt-8 text-center">
+                    <Button
+                      onClick={handleLoadMore}
+                      disabled={isFetchingNextPage}
+                      variant="outline"
+                      className="min-w-[140px]"
+                    >
+                      {isFetchingNextPage ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        'Load More Articles'
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Load More Button */}
-          {hasMore && (
-            <div className="flex justify-center pt-8 pb-4">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={handleLoadMore}
-                disabled={isFetchingNextPage}
-                className="min-w-[160px] rounded-full font-bold text-slate-600 hover:border-slate-400 hover:text-slate-900"
-              >
-                {isFetchingNextPage ? (
-                  <>
-                    <Loader2 size={16} className="mr-2 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  'Load More Articles'
-                )}
-              </Button>
+          {/* Sidebar */}
+          <div className="space-y-6">
+            <PromoCard />
+
+            {/* Quick Stats */}
+            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="mb-4 font-bold text-slate-800">Quick Stats</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-600">Total Articles</span>
+                  <span className="text-sm font-bold text-slate-800">
+                    {Object.values(initialCounts.categories || {}).reduce(
+                      (sum, val) => sum + (val || 0),
+                      0
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-600">Categories</span>
+                  <span className="text-sm font-bold text-slate-800">{subjects.length - 1}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-600">Current Filter</span>
+                  <span className="text-sm font-bold text-amber-600">
+                    {subjects.find((s) => s.id === activeCategory)?.label}
+                  </span>
+                </div>
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
-  </ViewTransition>
-);
+  );
 }

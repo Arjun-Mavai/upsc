@@ -201,7 +201,7 @@ function ThankYouContent() {
 
         {/* Motivational note */}
         <p className="px-4 text-center text-xs text-slate-400">
-          &ldquo;सफलता उन्हें मिलती है जो मेहनत करते हैं&rdquo; — Your MPPSC journey starts now! 🚀
+          &ldquo;सफलता उन्हें मिलती है जो मेहनत करते हैं&rdquo; — Your UPSC journey starts now! 🚀
         </p>
       </div>
     </div>

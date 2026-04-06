@@ -183,7 +183,7 @@ export function GuestResultTeaser({
         </motion.div>
 
         <p className="mt-6 text-center text-xs text-slate-600">
-          Join a growing community of MPPSC 2026 aspirants.
+          Join a growing community of UPSC 2026 aspirants.
         </p>
       </div>
     </div>

@@ -2,6 +2,7 @@
 
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { UnitDistributionStats, RepeatedQuestion, TopicStat, SubjectDistributionStats, OverallWeightageSubjectData } from '@/actions/pyq-analytics';
+import { getCurrentExam } from '@/config/exams';
 import {
   PYQHeader,
   PYQMenu,
@@ -11,6 +12,7 @@ import {
 } from './components';
 
 interface PYQIntelligenceClientProps {
+  examId?: string;
   subjectStats: SubjectDistributionStats[];
   stats: UnitDistributionStats[];
   repeatedQuestions: RepeatedQuestion[];
@@ -20,6 +22,7 @@ interface PYQIntelligenceClientProps {
 }
 
 export default function PYQIntelligenceClient({
+  examId,
   subjectStats,
   stats,
   repeatedQuestions,
@@ -29,6 +32,7 @@ export default function PYQIntelligenceClient({
 }: PYQIntelligenceClientProps) {
   const { language } = useSettingsStore();
   const isHindi = language === 'hi';
+  const exam = getCurrentExam(examId);
 
   // Compute combined stats for MostRepeatedTopics - Temporarily disabled
   /*
@@ -53,17 +57,18 @@ export default function PYQIntelligenceClient({
 
       {/* Header */}
       <PYQHeader
-        title={isHindi ? 'प्रीमियम इंटेलिजेंस' : 'Premium Intelligence'}
-        subtitle={isHindi ? 'PYQ के हर रहस्य का विश्लेषण' : 'Extracting Every Secret of PYQs'}
+        title={isHindi ? exam.nameHi : exam.name}
+        subtitle={isHindi ? exam.subtitleHi : exam.subtitle}
       />
 
       {/* Main Content */}
       <div className="relative mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
-        {/* PYQ Analysis Menu - Restored on all screen sizes per User Request */}
-        <PYQMenu isHindi={isHindi} currentPage="intelligence" />
+        {/* PYQ Analysis Menu - Hidden per User Request */}
+        {/* <PYQMenu examId={examId} isHindi={isHindi} currentPage="intelligence" /> */}
 
         {/* Overall Weightage (Subject-wise 2020-2025) */}
         <OverallWeightage
+          examId={examId}
           simpleSubjectStats={simpleSubjectStats}
           subjectQuestionsData={subjectQuestionsData}
           isHindi={isHindi}
@@ -78,6 +83,7 @@ export default function PYQIntelligenceClient({
 
         {/* Paper-wise Analysis (Year by Year) */}
         <PaperAnalysis
+          examId={examId}
           stats={stats}
           repeatedQuestions={repeatedQuestions}
           isHindi={isHindi}

@@ -38,7 +38,7 @@ export default function AdminCreateUserPage() {
     setLoading(true);
     setResult(null);
     try {
-      const res = await fetch('/api/auth/mppsc-signup', {
+      const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -81,9 +81,9 @@ export default function AdminCreateUserPage() {
       <div className="mb-5">
         <h1 className="flex items-center gap-2 text-xl font-bold md:text-2xl">
           <UserPlus className="h-5 w-5 text-indigo-600" />
-          Create User
+          Create UPSC User
         </h1>
-        <p className="mt-1 text-sm text-slate-500">New user banao — turant login kar payega</p>
+        <p className="mt-1 text-sm text-slate-500">Create new UPSC platform user — instant login access</p>
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">

@@ -3,35 +3,36 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Bhai ye MPPSC related facts + motivation h - loading ke time user ko engage rakho
+// UPSC related facts + motivation - loading ke time user ko engage rakho
 const QUOTES = [
-  // --- Geography & Map Updates ---
-  '🗺️ Update: MP me ab **55 Districts** hain! (Mauganj, Pandhurna, Maihar jud gaye)',
-  '⛰️ MP ki sabse oonchi choti: **Dhupgarh (1350m)**, Mahadeo hills (Satpura) me h.',
-  '📍 MP ka sabse Paschimi (Western) jila: **Alirajpur**, Sabse Purvi (Eastern): **Singrauli**.',
+  // --- Geography & Environment ---
+  '🗺️ India has **28 States** and **8 Union Territories** after 2019 reorganization.',
+  '⛰️ India\'s highest peak: **Kangchenjunga (8,586m)** in Sikkim.',
+  '🌊 Longest river: **Ganga (2,525 km)**, Largest delta: **Sundarbans**.',
 
-  // --- Capitals of MP ---
-  '⚖️ Judicial Capital: **Jabalpur**, Energy Capital: **Singrauli**, Sports Capital: **Indore**.',
-  '🎼 Music Capital: **Maihar**, Summer Capital: **Pachmarhi**.',
+  // --- Polity Fundamentals ---
+  '📜 Constitution has **22 Parts**, **12 Schedules**, and **448 Articles** currently.',
+  '⚖️ Supreme Court: **34 judges** (1 CJI + 33). High Courts: **25** across India.',
+  '🗳️ Lok Sabha: **543 elected seats**, Rajya Sabha: **245 members**.',
 
-  // --- Exam Strategy (Strategic Value) ---
-  '💡 Pro Tip: MPPSC Prelims me **Negative Marking nahi hoti** (GS Paper 1) — Saare attempt karna!',
-  '📚 Unit 10 par focus rakho: **MP ki Janjatiya (Tribes)** ab game-changer h.',
-  '⏳ Loading... Tab tak socho: **Article 164** me Tribal Welfare Minister ka zikr kyu h?',
+  // --- Exam Strategy ---
+  '💡 Pro Tip: UPSC Prelims has **Negative Marking** — 1/3rd for wrong answers!',
+  '📚 Current Affairs from last **12-18 months** is crucial for Prelims.',
+  '⏳ Loading... Tab tak socho: **Article 370** ka current status kya h?',
 
-  // --- History & Culture (Unit 1) ---
-  '🏛️ UNESCO Sites: Khajuraho (1986), Sanchi (1989), Bhimbetka (2003).',
-  '🏹 MP ki sabse badi Janjati (Tribe): **Bhil** (Population wise), lekin Gond sabse bada Samuh (Group) h.',
-  '🦁 **Kuno National Park** (Sheopur) me African Cheetahs ka naya ghar h.',
+  // --- History & Culture ---
+  '🏛️ UNESCO World Heritage Sites in India: **42** (34 Cultural + 7 Natural + 1 Mixed).',
+  '🎭 Classical dances: Bharatanatyam, Kathak, Kathakali, Kuchipudi, Odissi, Manipuri, Mohiniyattam, Sattriya.',
+  '📿 **Ajanta Caves**: Buddhist, **Ellora Caves**: Buddhist + Hindu + Jain.',
 
-  // --- Polity & Economy (Unit 5 & 6) ---
-  '🗳️ MP me **230 Vidhan Sabha seats** aur **29 Lok Sabha seats** hain.',
-  '💰 **Soyabean State:** MP ko ab "Leopard State" aur "Tiger State" bhi kehte hain.',
+  // --- Economy & Current ---
+  '💰 India is **5th largest economy** by nominal GDP (2024).',
+  '🌾 Green Revolution crops: Wheat & Rice. White Revolution: Milk (Operation Flood).',
 
-  // --- Motivation & Loading ---
-  '📊 Rank calculate ho rahi h... lekin asli competition tumhara khud se h.',
-  '🔥 Sabr rakho, **Deputy Collector** wali feeling loading par h...',
-  '🏆 Consistency matters! Roz ke 50 MCQs tumhe bheed se alag banayenge.',
+  // --- Motivation ---
+  '📊 Result calculate ho rahi h... asli competition tumhara khud se h.',
+  '🔥 Sabr rakho, **IAS/IPS** wali feeling loading par h...',
+  '🏆 Consistency matters! Daily PYQ practice tumhe topper banayega.',
 ];
 
 export function LoadingQuotes() {

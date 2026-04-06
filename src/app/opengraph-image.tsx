@@ -4,7 +4,7 @@ import { ImageResponse } from 'next/og';
 export const runtime = 'edge';
 
 // Image metadata
-export const alt = 'MPPSC Prelims 2026 Test Series & Notes';
+export const alt = 'UPSC Prelims 2026 Test Series & PYQ Intelligence';
 export const size = {
   width: 1200,
   height: 630,
@@ -75,7 +75,7 @@ export default async function Image() {
           }}
         >
           <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '0.05em', color: 'white' }}>
-            TARGET: MPPSC 2026
+            TARGET: UPSC 2026
           </span>
         </div>
 
@@ -93,7 +93,7 @@ export default async function Image() {
             letterSpacing: '-0.03em',
           }}
         >
-          Prelims Test Series
+          PYQ Intelligence
         </h1>
 
         {/* Sub Headline */}
@@ -106,7 +106,7 @@ export default async function Image() {
             maxWidth: '600px',
           }}
         >
-          India's First Bilingual Platform with Smart Mnemonics
+          6 Years of Civil Services Prelims PYQs (2020-2025)
         </p>
 
         {/* Feature Grid */}
@@ -131,7 +131,7 @@ export default async function Image() {
             }}
           >
             <span style={{ fontSize: 24 }}>📊</span>
-            <span style={{ fontSize: 22, fontWeight: 600, color: '#e4e4e7' }}>Deep Analysis</span>
+            <span style={{ fontSize: 22, fontWeight: 600, color: '#e4e4e7' }}>Subject-wise</span>
           </div>
 
           {/* Feature 2 */}
@@ -146,8 +146,8 @@ export default async function Image() {
               borderRadius: '16px',
             }}
           >
-            <span style={{ fontSize: 24 }}>⚡</span>
-            <span style={{ fontSize: 22, fontWeight: 600, color: '#e4e4e7' }}>Flashcards</span>
+            <span style={{ fontSize: 24 }}>📅</span>
+            <span style={{ fontSize: 22, fontWeight: 600, color: '#e4e4e7' }}>Year-wise</span>
           </div>
 
           {/* Feature 3 */}
@@ -180,7 +180,7 @@ export default async function Image() {
         }}
       >
         <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4f46e5' }} />
-        <span style={{ fontSize: 18, color: '#71717a', fontWeight: 500 }}>Mindful MPPSC</span>
+        <span style={{ fontSize: 18, color: '#71717a', fontWeight: 500 }}>UPSC Intelligence</span>
       </div>
     </div>,
     {

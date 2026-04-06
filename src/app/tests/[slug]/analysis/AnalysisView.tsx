@@ -12,6 +12,7 @@ import {
   Filter,
   Languages,
 } from 'lucide-react';
+import { getCorrectAnswerIndex } from '@/lib/quiz-scoring';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -250,7 +251,7 @@ export default function AnalysisView({ result }: AnalysisViewProps) {
                       const isLegacyMatch = q.userAnswer === String(optIdx); // fallback logic if needed
 
                       // Determining Correctness
-                      const isThisCorrect = q.correctAnswer === optId;
+                      const isThisCorrect = getCorrectAnswerIndex(q.correctAnswer, q.options) === optIdx;
 
                       return (
                         <div

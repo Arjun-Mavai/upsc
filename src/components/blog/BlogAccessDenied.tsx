@@ -50,7 +50,7 @@ export function BlogAccessDenied() {
         </p>
         <ul className="space-y-2">
           {[
-            'Complete MPPSC Pre + Mains Strategies',
+            'Complete UPSC Pre + Mains Strategies',
             'High-Yield Bilingual Test Series',
             'Mnemonic-based learning for better recall',
           ].map((item, i) => (

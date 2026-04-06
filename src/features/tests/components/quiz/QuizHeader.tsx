@@ -61,7 +61,7 @@ export function QuizHeader({
           <span className="font-display text-sm font-bold tracking-tight text-slate-900 sm:text-base">
             {title || (
               <>
-                MPPSC<span className="text-slate-700">26</span>
+                UPSC<span className="text-slate-700">26</span>
               </>
             )}
           </span>

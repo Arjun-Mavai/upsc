@@ -83,7 +83,7 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
             <p className="mx-auto max-w-xl text-lg leading-relaxed font-medium text-slate-500 md:text-xl">
               {language === 'hi'
                 ? 'एमपीपीएससी प्रीलिम्स 2026 के लिए आधुनिक रणनीति। 100+ टॉपिक्स, नेमोनिक्स और टेस्ट सीरीज।'
-                : 'The most comprehensive roadmap for MPPSC 2026. 100+ topics, smart mnemonics, and real-time assessments.'}
+                : 'The most comprehensive roadmap for UPSC 2026. 6 years of PYQs, AI explanations, and subject analysis.'}
             </p>
           </div>
 
@@ -132,7 +132,7 @@ export function SyllabusClient({ syllabusData }: SyllabusClientProps) {
                     {language === 'hi' ? 'PYQ इंटेलिजेंस' : 'PYQ Intelligence'}
                   </h2>
                   <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                    {language === 'hi' ? '2020-2025 · MPPSC Prelims ट्रेंड्स' : '2020-2025 · MPPSC Prelims Trends'}
+                    {language === 'hi' ? '2020-2025 · UPSC Prelims ट्रेंड्स' : '2020-2025 · UPSC Prelims Trends'}
                   </p>
                 </div>
               </div>

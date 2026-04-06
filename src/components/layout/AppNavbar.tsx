@@ -103,25 +103,27 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const user = normalizeUser(rawUser);
 
   // ✅ PERFORMANCE: Memoized navigation items
-  const navItems = useMemo(() => [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, color: 'text-slate-700' },
-    { name: 'Syllabus', href: '/syllabus', icon: BookOpen, color: 'text-emerald-600' },
-    {
-      name: 'Test Series',
-      href: '/syllabus/quiz/pyq',
-      icon: GraduationCap,
-      color: 'text-amber-600',
-    },
-    { name: 'Free Daily Quiz', href: '/free-quiz', icon: Zap, color: 'text-orange-500' },
-    { name: 'Blogs', href: '/blogs', icon: BookOpen, color: 'text-sky-600' },
-    {
-      name: 'Test History',
-      href: '/syllabus/test-history',
-      icon: History,
-      color: 'text-violet-600',
-    },
-    { name: 'About Us', href: '/', icon: Info, color: 'text-slate-500' },
-  ], []);
+  const navItems = useMemo(
+    () => [
+      { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, color: 'text-slate-700' },
+      {
+        name: 'Test Series',
+        href: '/syllabus/quiz/pyq',
+        icon: GraduationCap,
+        color: 'text-amber-600',
+      },
+      { name: 'Free Daily Quiz', href: '/free-quiz', icon: Zap, color: 'text-orange-500' },
+      { name: 'Blogs', href: '/blogs', icon: BookOpen, color: 'text-sky-600' },
+      {
+        name: 'Test History',
+        href: '/syllabus/test-history',
+        icon: History,
+        color: 'text-violet-600',
+      },
+      { name: 'About Us', href: '/', icon: Info, color: 'text-slate-500' },
+    ],
+    []
+  );
 
   // ------------------------------------------------------------------
   // QUERY: SESSION RESTORATION (The "Hydration") - NOW WITH SERVER ACTION!
@@ -153,7 +155,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   });
 
   // ✅ OPTIMIZED: Split complex useEffect into focused effects
-  
+
   // Effect 1: Handle mounting state
   useEffect(() => {
     setIsMounted(true);
@@ -198,7 +200,15 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
     if (isSessionLoading) {
       setAuthCheckStatus('loading');
     }
-  }, [sessionData, isSessionLoading, authCheckStatus, initialUser, globalUser, setUser, setAuthCheckStatus]);
+  }, [
+    sessionData,
+    isSessionLoading,
+    authCheckStatus,
+    initialUser,
+    globalUser,
+    setUser,
+    setAuthCheckStatus,
+  ]);
 
   // ✅ OPTIMIZED: Extracted to useCallback to prevent re-renders
   const handleLogout = useCallback(async () => {
@@ -219,7 +229,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
       }
 
       // 4. Hit server to delete httpOnly cookie
-      await fetch('/api/auth/mppsc-logout', { method: 'POST' });
+      await fetch('/api/auth/logout', { method: 'POST' });
 
       // 5. Hard reload — flush Next.js router cache + RSC cache completely
       window.location.href = '/';
@@ -281,24 +291,18 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
           <NavbarLogo user={user} />
 
           {/* ✅ OPTIMIZED: Desktop Navigation Component */}
-          <DesktopNavigation 
-            navItems={navItems}
-            pathname={pathname}
-            user={user}
-          />
+          <DesktopNavigation navItems={navItems} pathname={pathname} user={user} />
 
           {/* Right Section */}
+
           <div className="flex items-center gap-2 sm:gap-3">
             {/* ✅ OPTIMIZED: Language Switcher Component */}
-            <LanguageSwitcher 
-              language={language}
-              setLanguage={setLanguage}
-            />
+            <LanguageSwitcher language={language} setLanguage={setLanguage} />
 
             <div className="hidden h-6 w-px bg-slate-200 sm:block"></div>
 
             {/* ✅ OPTIMIZED: User Section Component */}
-            <UserSection 
+            <UserSection
               user={user}
               authCheckStatus={authCheckStatus}
               isMounted={isMounted}
@@ -373,12 +377,21 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                           <div className="w-full">
                             <button
                               onClick={handleManualRefresh}
-                              className="group flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50/50 py-2.5 text-xs font-bold text-orange-700 transition-all hover:bg-orange-100 hover:border-orange-300 active:scale-95"
-                              title={language === 'hi' ? 'ऐप रिफ्रेश करें / लोडिंग समस्या ठीक करें' : 'Refresh App / Fix Loading Issues'}
+                              className="group flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50/50 py-2.5 text-xs font-bold text-orange-700 transition-all hover:border-orange-300 hover:bg-orange-100 active:scale-95"
+                              title={
+                                language === 'hi'
+                                  ? 'ऐप रिफ्रेश करें / लोडिंग समस्या ठीक करें'
+                                  : 'Refresh App / Fix Loading Issues'
+                              }
                             >
-                              <RefreshCw size={14} className="transition-transform group-hover:rotate-180 duration-300" />
+                              <RefreshCw
+                                size={14}
+                                className="transition-transform duration-300 group-hover:rotate-180"
+                              />
                               <span>
-                                {language === 'hi' ? 'ऐप रिफ्रेश करें (लोडिंग समस्या ठीक करें)' : 'Refresh App / Fix Loading'}
+                                {language === 'hi'
+                                  ? 'ऐप रिफ्रेश करें (लोडिंग समस्या ठीक करें)'
+                                  : 'Refresh App / Fix Loading'}
                               </span>
                             </button>
                           </div>
@@ -392,16 +405,25 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                             </div>
                             <SheetTitle className="font-display text-lg font-bold">Menu</SheetTitle>
                           </div>
-                          
+
                           {/* ✅ UX EXPERT: Positioned as a dedicated utility block below title */}
                           <button
                             onClick={handleManualRefresh}
-                            className="group flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50/50 py-2.5 text-xs font-bold text-orange-700 transition-all hover:bg-orange-100 hover:border-orange-300 active:scale-95"
-                            title={language === 'hi' ? 'ऐप रिफ्रेश करें / लोडिंग समस्या ठीक करें' : 'Refresh App / Fix Loading Issues'}
+                            className="group flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50/50 py-2.5 text-xs font-bold text-orange-700 transition-all hover:border-orange-300 hover:bg-orange-100 active:scale-95"
+                            title={
+                              language === 'hi'
+                                ? 'ऐप रिफ्रेश करें / लोडिंग समस्या ठीक करें'
+                                : 'Refresh App / Fix Loading Issues'
+                            }
                           >
-                            <RefreshCw size={14} className="transition-transform group-hover:rotate-180 duration-300" />
+                            <RefreshCw
+                              size={14}
+                              className="transition-transform duration-300 group-hover:rotate-180"
+                            />
                             <span>
-                              {language === 'hi' ? 'ऐप रिफ्रेश करें (लोडिंग समस्या ठीक करें)' : 'Refresh App / Fix Loading'}
+                              {language === 'hi'
+                                ? 'ऐप रिफ्रेश करें (लोडिंग समस्या ठीक करें)'
+                                : 'Refresh App / Fix Loading'}
                             </span>
                           </button>
                         </div>
@@ -409,10 +431,11 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                     </div>
                   </SheetHeader>
 
-
                   <div className="flex-1 space-y-1 overflow-y-auto px-4 py-5">
                     {navItems
                       .filter((item) => {
+                        // Multi-tenant Filter
+
                         // Dashboard & Test History — logged-in users only
                         if (item.name === 'Dashboard' || item.name === 'Test History')
                           return !!user;
@@ -449,7 +472,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                     <div className="tap-scale-96">
                       <SheetClose asChild>
                         <a
-                          href="https://t.me/MPPSC2026_Mission"
+                          href="https://t.me/UPSCIntelligence"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-sky-50 hover:text-sky-600"
@@ -464,16 +487,19 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                       {user?.isSubscribed && user.planTier === 'pro' ? (
                         <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 p-[1.5px] shadow-lg shadow-amber-200/40">
                           <div className="relative z-10 flex items-center gap-3 rounded-[11px] bg-slate-900 p-4 transition-all group-hover:bg-slate-800">
-                             {/* Glossy overlay */}
+                            {/* Glossy overlay */}
                             <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-50" />
                             <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
-                              <Crown size={14} className="fill-amber-400 text-amber-400 shadow-sm" />
+                              <Crown
+                                size={14}
+                                className="fill-amber-400 text-amber-400 shadow-sm"
+                              />
                             </div>
                             <div className="relative">
-                              <h4 className="text-sm leading-tight font-black text-white uppercase tracking-wider">
+                              <h4 className="text-sm leading-tight font-black tracking-wider text-white uppercase">
                                 Pro Active
                               </h4>
-                              <p className="text-[10px] font-bold text-amber-500/80 uppercase tracking-widest">
+                              <p className="text-[10px] font-bold tracking-widest text-amber-500/80 uppercase">
                                 Premium Access Unlocked
                               </p>
                             </div>
@@ -520,7 +546,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                           <SheetClose asChild>
                             <Link
                               href="/pricing"
-                              className="flex items-center gap-3 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-slate-900/20 transition-all duration-200 tap-scale-98"
+                              className="tap-scale-98 flex items-center gap-3 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-slate-900/20 transition-all duration-200"
                             >
                               <Crown size={18} className="text-yellow-400" />
                               Become Premium Member
@@ -564,12 +590,17 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                             className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-600"
                           >
                             <Download size={18} />
-                            {isIos ? (language === 'hi' ? 'ऐप इंस्टॉल करें' : 'Install App') : (language === 'hi' ? 'ऐप इंस्टॉल करें' : 'Install App')}
+                            {isIos
+                              ? language === 'hi'
+                                ? 'ऐप इंस्टॉल करें'
+                                : 'Install App'
+                              : language === 'hi'
+                                ? 'ऐप इंस्टॉल करें'
+                                : 'Install App'}
                           </button>
                         </SheetClose>
                       </div>
                     )}
-
                   </div>
 
                   <div className="border-t border-slate-100 bg-slate-50/50 p-4">

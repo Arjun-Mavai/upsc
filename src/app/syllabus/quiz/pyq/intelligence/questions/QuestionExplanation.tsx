@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { CheckCircle2, Lightbulb, Brain, AlertTriangle } from 'lucide-react';
+import { PremiumExplanationCard } from '@/components/ui/PremiumExplanationCard';
 
 interface QuestionExplanationProps {
   explanation?: string;
@@ -19,6 +20,16 @@ export default function QuestionExplanation({
   const rawText = isHindi ? explanation : explanationEn || explanation;
 
   if (!rawText) return null;
+
+  // Try parsing as Premium Wisdom JSON format first
+  try {
+    const parsed = JSON.parse(rawText);
+    if (parsed && typeof parsed === 'object' && ('quick_verdict' in parsed || 'core_concept' in parsed || 'elimination_wisdom' in parsed)) {
+      return <PremiumExplanationCard explanationRaw={rawText} language={isHindi ? 'hi' : 'en'} />;
+    }
+  } catch (e) {
+    // Not valid JSON, continue with normal markdown rendering
+  }
 
   const textToParse = rawText;
 
