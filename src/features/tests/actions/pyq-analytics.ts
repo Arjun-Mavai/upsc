@@ -43,13 +43,13 @@ export async function getSubjectWisePYQStats(examId?: string): Promise<Record<st
       for (const q of allQuestions) {
         const raw = q.subject?.trim() || 'General Studies';
         // ALWAYS normalize to fix duplicates like 'History' and 'HISTORY'
-        const canonical = normalizeSubject(raw);
+        const canonical = normalizeSubject(raw, examId === 'upsc');
         stats[canonical] = (stats[canonical] || 0) + 1;
       }
 
       return stats;
     },
-    [cacheKey, 'v14'],
+    [cacheKey, 'v16'],
     { revalidate: 3600, tags: ['pyq-stats'] }
   )();
 }
@@ -113,7 +113,7 @@ const fetchQuestionsBySubjectData = async (subject: string, examId?: string): Pr
   const filteredQuestions = allQuestions
     .filter((q) => {
       const raw = q.subject?.trim() || 'General Studies';
-      return normalizeSubject(raw) === subject;
+      return normalizeSubject(raw, examId === 'upsc') === subject;
     })
     .map((q) => {
       const testInfo = testMap.get(q.testId) || { year: 'Unknown', title: 'Unknown Test' };
@@ -131,7 +131,7 @@ const fetchQuestionsBySubjectData = async (subject: string, examId?: string): Pr
 // Cached version - subject-specific, revalidates every hour
 export const getCachedQuestionsBySubject = unstable_cache(
   fetchQuestionsBySubjectData,
-  ['pyq-questions-by-subject'],
+  ['pyq-questions-by-subject-v2'],
   { revalidate: 3600, tags: ['pyq-questions', 'tests'] }
 );
 

@@ -207,6 +207,7 @@ export default function RepeatedQuestionDetailClient({
                 explanation={question.explanation || ''}
                 explanationEn={question.explanationEn}
                 language={isHindi ? 'hi' : 'en'}
+                darkMode={false}
               />
             </CardContent>
           </Card>

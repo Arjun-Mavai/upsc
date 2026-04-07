@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { ArrowLeft, User, Lock, CheckCircle2, Loader2, Sparkles } from 'lucide-react';
+import { ArrowLeft, User, Lock, CheckCircle2, Loader2, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { updateUserName, updateUserPassword } from './actions';
 
@@ -36,6 +36,9 @@ export default function ProfileClient({ user }: ProfileClientProps) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [savingName, setSavingName] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
 
@@ -226,42 +229,69 @@ export default function ProfileClient({ user }: ProfileClientProps) {
                 <Label htmlFor="currentPassword" className="text-xs font-bold uppercase text-slate-500">
                   Current Password
                 </Label>
-                <Input
-                  id="currentPassword"
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="mt-1.5 border-slate-200 bg-slate-50 font-medium focus:border-slate-900 focus:ring-slate-900"
-                />
+                <div className="relative mt-1.5">
+                  <Input
+                    id="currentPassword"
+                    type={showCurrentPassword ? 'text' : 'password'}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="border-slate-200 bg-slate-50 pr-10 font-medium focus:border-slate-900 focus:ring-slate-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600 focus:outline-none"
+                  >
+                    {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <Label htmlFor="newPassword" className="text-xs font-bold uppercase text-slate-500">
                   New Password
                 </Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="mt-1.5 border-slate-200 bg-slate-50 font-medium focus:border-slate-900 focus:ring-slate-900"
-                />
+                <div className="relative mt-1.5">
+                  <Input
+                    id="newPassword"
+                    type={showNewPassword ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="border-slate-200 bg-slate-50 pr-10 font-medium focus:border-slate-900 focus:ring-slate-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600 focus:outline-none"
+                  >
+                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <Label htmlFor="confirmPassword" className="text-xs font-bold uppercase text-slate-500">
                   Confirm New Password
                 </Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="mt-1.5 border-slate-200 bg-slate-50 font-medium focus:border-slate-900 focus:ring-slate-900"
-                />
+                <div className="relative mt-1.5">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="border-slate-200 bg-slate-50 pr-10 font-medium focus:border-slate-900 focus:ring-slate-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600 focus:outline-none"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               <Button

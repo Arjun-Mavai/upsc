@@ -51,16 +51,18 @@ export const SUBJECTS: SubjectConfig[] = [
   { name: 'GS', nameHi: 'सामान्य अध्ययन', icon: GraduationCap, color: 'slate' },
   
   // UPSC Specific / Shared Extended
-  { name: 'History & Culture', nameHi: 'इतिहास और संस्कृति', icon: Library, color: 'pink' },
-  { name: 'Polity & Governance', nameHi: 'शासन और राजव्यवस्था', icon: Scale, color: 'indigo' },
-  { name: 'Environment', nameHi: 'पर्यावरण', icon: Leaf, color: 'emerald' },
-  { name: 'Science & Tech', nameHi: 'विज्ञान और तकनीक', icon: Atom, color: 'cyan' },
-  { name: 'International Relations', nameHi: 'अंतरराष्ट्रीय संबंध', icon: Network, color: 'indigo' },
+  { name: 'History (Ancient, Medieval, Modern)', nameHi: 'इतिहास (प्राचीन, मध्यकालीन, आधुनिक)', icon: Library, color: 'pink' },
+  { name: 'Geography (India & World)', nameHi: 'भूगोल (भारत और विश्व)', icon: MapPin, color: 'blue' },
+  { name: 'Polity (Indian Constitution & Governance)', nameHi: 'राजव्यवस्था (संविधान और शासन)', icon: Scale, color: 'indigo' },
+  { name: 'Economy (Basic Economics & Indian Economy)', nameHi: 'अर्थव्यवस्था (भारतीय अर्थव्यवस्था)', icon: TrendingUp, color: 'amber' },
+  { name: 'Environment & Ecology', nameHi: 'पर्यावरण और पारिस्थितिकी', icon: Leaf, color: 'emerald' },
+  { name: 'Science & Technology', nameHi: 'विज्ञान और तकनीक', icon: Atom, color: 'cyan' },
+  { name: 'Art & Culture', nameHi: 'कला और संस्कृति', icon: Library, color: 'pink' },
   { name: 'Quantitative Aptitude', nameHi: 'अंकगणित', icon: TrendingUp, color: 'amber' },
   { name: 'Reasoning', nameHi: 'तर्कशक्ति', icon: Smartphone, color: 'blue' },
 
   // UPSC Specific DB Mappings
-  { name: 'Science & Technology', nameHi: 'विज्ञान और तकनीक', icon: Atom, color: 'cyan' },
+//  { name: 'Science & Technology', nameHi: 'विज्ञान और तकनीक', icon: Atom, color: 'cyan' },
   { name: 'Agriculture', nameHi: 'कृषि', icon: Leaf, color: 'emerald' },
   { name: 'Economy / Agriculture', nameHi: 'अर्थव्यवस्था / कृषि', icon: TrendingUp, color: 'cyan' },
   { name: 'Defence', nameHi: 'रक्षा', icon: Scale, color: 'rose' },

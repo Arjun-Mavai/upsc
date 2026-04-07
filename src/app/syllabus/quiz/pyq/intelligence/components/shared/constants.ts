@@ -13,7 +13,7 @@ export const UNIT_COLORS: Record<string, string> = {
   unit_9: 'bg-cyan-400',
   unit_10: 'bg-sky-400',
   unmapped: 'bg-slate-600',
-  // UPSC Subjects
+  // UPSC Legacy
   'History': 'bg-pink-500',
   'Polity': 'bg-emerald-500',
   'Geography': 'bg-blue-500',
@@ -32,6 +32,14 @@ export const UNIT_COLORS: Record<string, string> = {
   'Environment': 'bg-emerald-500',
   'Governance / Economy': 'bg-indigo-500',
   'Governance / Social Issues': 'bg-slate-500',
+
+  // UPSC Standardized Categories
+  'History (Ancient, Medieval, Modern)': 'bg-pink-500',
+  'Geography (India & World)': 'bg-blue-500',
+  'Polity (Indian Constitution & Governance)': 'bg-indigo-500',
+  'Economy (Basic Economics & Indian Economy)': 'bg-amber-500',
+  'Environment & Ecology': 'bg-emerald-500',
+  'Art & Culture': 'bg-pink-500',
 };
 
 export const SUBJECT_ICONS: Record<string, string> = {
@@ -53,6 +61,14 @@ export const SUBJECT_ICONS: Record<string, string> = {
   'Environment / IR': 'Leaf',
   'Governance / Economy': 'Scale',
   'Governance / Social Issues': 'Scale',
+
+  // UPSC Standardized Categories
+  'History (Ancient, Medieval, Modern)': 'Library',
+  'Geography (India & World)': 'MapPin',
+  'Polity (Indian Constitution & Governance)': 'Scale',
+  'Economy (Basic Economics & Indian Economy)': 'TrendingUp',
+  'Environment & Ecology': 'Leaf',
+  'Art & Culture': 'Library',
 };
 
 export const getUnitColor = (unitId: string): string => {

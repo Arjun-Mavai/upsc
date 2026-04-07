@@ -24,6 +24,7 @@ const ALLOWED_SUBJECTS = [
   'science',
   'ict',
   'current affairs',
+  'environment',
   'misc',
 ];
 

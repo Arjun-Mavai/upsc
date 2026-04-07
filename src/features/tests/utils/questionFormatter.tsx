@@ -1,6 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Question } from '@/types/quiz';
+import { UPSCQuestionRenderer } from '@/features/tests/components/UPSCQuestionRenderer';
 
 /**
  * Removes the raw "List-I ... List-II" text from the question description
@@ -35,10 +36,46 @@ export function cleanMatchingQuestionText(questionText: string, question: Questi
 interface FormattedQuestionTextProps {
   text: string;
   className?: string;
+  question?: Question;
+  isHindi?: boolean;
+  useEnhancedRenderer?: boolean;
+  theme?: 'light' | 'dark';
 }
 
-export function FormattedQuestionText({ text, className }: FormattedQuestionTextProps) {
+export function FormattedQuestionText({ 
+  text, 
+  className, 
+  question, 
+  isHindi = false, 
+  useEnhancedRenderer = false,
+  theme = 'light',
+}: FormattedQuestionTextProps) {
   if (!text) return null;
+
+  // Use enhanced UPSCQuestionRenderer when available and requested
+  if (useEnhancedRenderer && question) {
+    const questionData = {
+      id: question.id,
+      text: text,
+      textEn: question.questionEn || null,
+      type: question.type,
+      options: question.options,
+      correctAnswer: question.correctAnswer,
+      extendedData: (question as any).extended_data || (question as any).extendedData || null,
+      matchPairs: question.matchPairs,
+    };
+    
+    return (
+      <div className={className}>
+        <UPSCQuestionRenderer 
+          question={questionData} 
+          isHindi={isHindi} 
+          showOptions={false}
+          theme={theme}
+        />
+      </div>
+    );
+  }
 
   // 1. Check for "Match Column" / "List-I & List-II" pattern (English + Hindi)
   const hasListPattern =

@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { OverallWeightageSubjectData } from '@/actions/pyq-analytics';
+import { FREE_SUBJECTS, getCanonicalTestIds } from '@/lib/pyq-constants';
 import { SUBJECTS, SUBJECT_VARIANTS } from '@/lib/pyq-ui-constants';
 import { TransitionLink } from '@/components/ui/transition-link';
 import { QuestionList, QuestionData } from './QuestionItem';
@@ -24,8 +25,6 @@ interface OverallWeightageProps {
   isPro?: boolean;
 }
 
-const FREE_SUBJECT = 'History';
-
 export function OverallWeightage({
   examId,
   simpleSubjectStats,
@@ -37,9 +36,10 @@ export function OverallWeightage({
   const [isMainExpanded, setIsMainExpanded] = useState(false);
   const [expandedSubjects, setExpandedSubjects] = useState<string[]>([]);
   const [lockModalOpen, setLockModalOpen] = useState(false);
-  
+
   const { isSubscribed, user } = useSettingsStore();
-  const isPro = isProProp || isSubscribed || user?.role === 'admin';
+  // Ensure isPro is true if either Prop is true, OR user is subscribed, OR user is admin
+  const isPro = isProProp || isSubscribed || user?.role === 'admin' || user?.isSubscribed;
 
   const isUPSC = examId === 'upsc';
   const baseUrl = isUPSC ? '/upsc/intelligence' : '/syllabus/quiz/pyq/intelligence';
@@ -53,27 +53,29 @@ export function OverallWeightage({
   // 🔧 PERF FIX: Memoize expensive array operations (map/filter/sort)
   const subjectsWithCounts = useMemo(() => {
     const exam = getCurrentExam(examId);
-    
+
     if (isUPSC) {
       // For UPSC: Drive list directly from data (raw subjects from DB)
-      return Object.entries(simpleSubjectStats).map(([subName, count]) => {
-        // Find existing subject metadata if available (for icons/colors)
-        const existingMeta = SUBJECTS.find(s => s.name === subName || s.nameHi === subName);
-        
-        return {
-          name: subName,
-          nameHi: existingMeta?.nameHi || subName,
-          icon: existingMeta?.icon || SUBJECTS[0].icon, // Default to first icon if mismatch
-          color: existingMeta?.color || 'slate',
-          count,
-          percentage: totalQuestions > 0 ? Math.round((count / totalQuestions) * 100) : 0,
-        };
-      }).sort((a, b) => b.count - a.count);
+      return Object.entries(simpleSubjectStats)
+        .map(([subName, count]) => {
+          // Find existing subject metadata if available (for icons/colors)
+          const existingMeta = SUBJECTS.find((s) => s.name === subName || s.nameHi === subName);
+
+          return {
+            name: subName,
+            nameHi: existingMeta?.nameHi || subName,
+            icon: existingMeta?.icon || SUBJECTS[0].icon, // Default to first icon if mismatch
+            color: existingMeta?.color || 'slate',
+            count,
+            percentage: totalQuestions > 0 ? Math.round((count / totalQuestions) * 100) : 0,
+          };
+        })
+        .sort((a, b) => b.count - a.count);
     }
 
     // For non-UPSC mode or when exam context isn't fully established
     const examSubjects = exam.subjects;
-    
+
     // Deduplicate SUBJECTS by name to prevent multiple entries (e.g. History & History)
     const seenNames = new Set<string>();
     const uniqueSubjects = SUBJECTS.filter((sub) => {
@@ -101,7 +103,7 @@ export function OverallWeightage({
   };
 
   const toggleSubject = (subjectName: string) => {
-    const isUnlocked = isPro || subjectName === FREE_SUBJECT;
+    const isUnlocked = isPro || FREE_SUBJECTS.includes(subjectName);
     if (!isUnlocked) {
       setLockModalOpen(true);
       return;
@@ -117,10 +119,7 @@ export function OverallWeightage({
 
   return (
     <div className="space-y-6">
-      <SyllabusLockModal 
-        open={lockModalOpen}
-        onOpenChange={setLockModalOpen}
-      />
+      <SyllabusLockModal open={lockModalOpen} onOpenChange={setLockModalOpen} />
 
       <div className="flex items-center gap-3 px-1">
         <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
@@ -141,7 +140,13 @@ export function OverallWeightage({
             <div className="flex flex-col gap-1">
               <div className="mb-1 flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase">
                 <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                {examId === 'upsc' ? (isHindi ? 'UPSC सिविल सेवा' : 'UPSC Civil Services') : (isHindi ? 'UPSC सिविल सेवा' : 'UPSC Civil Services')}
+                {examId === 'upsc'
+                  ? isHindi
+                    ? 'UPSC सिविल सेवा'
+                    : 'UPSC Civil Services'
+                  : isHindi
+                    ? 'UPSC सिविल सेवा'
+                    : 'UPSC Civil Services'}
               </div>
               <h3 className="flex items-center gap-3 text-2xl font-black tracking-tight text-amber-500 sm:text-3xl">
                 {isHindi ? 'कुल वेटेज' : 'Overall Weightage'}
@@ -194,7 +199,8 @@ export function OverallWeightage({
                       const variant = SUBJECT_VARIANTS[sub.color];
                       const Icon = sub.icon;
                       const isSubjectExpanded = expandedSubjects.includes(sub.name);
-                      const isUnlocked = isPro || sub.name === FREE_SUBJECT;
+                      const isUnlocked = isPro || FREE_SUBJECTS.includes(sub.name);
+                      const isFree = FREE_SUBJECTS.includes(sub.name);
 
                       return (
                         <div
@@ -204,7 +210,10 @@ export function OverallWeightage({
                             isSubjectExpanded
                               ? 'border-white/10 bg-white/[0.05]'
                               : 'border-white/[0.03] bg-white/[0.02] hover:bg-white/[0.04]',
-                            !isUnlocked && 'opacity-75 grayscale-[0.5]'
+                            !isUnlocked && 'opacity-75 grayscale-[0.5]',
+                            isFree &&
+                              !isSubjectExpanded &&
+                              'border-emerald-500/40 bg-emerald-500/[0.02] shadow-[0_0_20px_rgba(16,185,129,0.08)]'
                           )}
                         >
                           <div
@@ -218,7 +227,12 @@ export function OverallWeightage({
                               )}
                             >
                               {isUnlocked ? (
-                                <Icon className={cn('h-5 w-5', variant.text.replace('indigo', 'violet'))} />
+                                <Icon
+                                  className={cn(
+                                    'h-5 w-5',
+                                    variant.text.replace('indigo', 'violet')
+                                  )}
+                                />
                               ) : (
                                 <Lock className="h-4 w-4 text-slate-400" />
                               )}
@@ -255,8 +269,8 @@ export function OverallWeightage({
                               )}
 
                               {!isUnlocked && (
-                                <div 
-                                  className="flex h-8 items-center gap-1.5 rounded-xl bg-white/5 px-4 text-[10px] font-black tracking-widest text-slate-500 uppercase cursor-pointer hover:bg-white/10"
+                                <div
+                                  className="flex h-8 cursor-pointer items-center gap-1.5 rounded-xl bg-white/5 px-4 text-[10px] font-black tracking-widest text-slate-500 uppercase hover:bg-white/10"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     toggleSubject(sub.name);
@@ -300,20 +314,22 @@ export function OverallWeightage({
                                         data.subject === sub.name || data.subject === sub.nameHi
                                     );
                                     const subjectQuestions = subjectData?.questions || [];
-                                    const mappedQuestions: QuestionData[] = subjectQuestions.map(q => ({
-                                      id: q.id, 
-                                      text: q.text, 
-                                      textEn: q.textEn, 
-                                      year: q.year, 
-                                      qNo: q.qNo,
-                                      testTitle: q.testTitle, 
-                                      subject: q.subject,
-                                      options: q.options,
-                                      correctAnswer: q.correctAnswer,
-                                      extendedData: q.extendedData,
-                                      explanation: q.explanation,
-                                      explanationEn: q.explanationEn,
-                                    }));
+                                    const mappedQuestions: QuestionData[] = subjectQuestions.map(
+                                      (q) => ({
+                                        id: q.id,
+                                        text: q.text,
+                                        textEn: q.textEn,
+                                        year: q.year,
+                                        qNo: q.qNo,
+                                        testTitle: q.testTitle,
+                                        subject: q.subject,
+                                        options: q.options,
+                                        correctAnswer: q.correctAnswer,
+                                        extendedData: q.extendedData,
+                                        explanation: q.explanation,
+                                        explanationEn: q.explanationEn,
+                                      })
+                                    );
 
                                     return mappedQuestions.length > 0 ? (
                                       <QuestionList
@@ -343,20 +359,33 @@ export function OverallWeightage({
       </div>
 
       <div className="flex justify-center pt-8">
-        <TransitionLink
-          href={`${baseUrl}/questions?subject=All&source=subject`}
-          transitionTypes={['slide']}
-        >
+        {isPro ? (
+          <TransitionLink
+            href={`${baseUrl}/questions?subject=All&source=subject`}
+            transitionTypes={['slide']}
+          >
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-14 w-full rounded-2xl border-emerald-500/20 bg-emerald-500/10 px-10 text-xs font-black tracking-[0.1em] text-emerald-500 uppercase transition-all hover:bg-emerald-500/20 hover:text-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)] active:scale-95 sm:w-fit sm:min-w-[360px]"
+            >
+              <Eye className="mr-3 h-4 w-4" />
+              {isHindi ? 'सभी विषय प्रश्न देखें' : 'View All Subject Questions'}
+              <ExternalLink className="ml-3 h-4 w-4 opacity-50" />
+            </Button>
+          </TransitionLink>
+        ) : (
           <Button
             variant="outline"
             size="lg"
+            onClick={() => setLockModalOpen(true)}
             className="h-14 w-full rounded-2xl border-emerald-500/20 bg-emerald-500/10 px-10 text-xs font-black tracking-[0.1em] text-emerald-500 uppercase transition-all hover:bg-emerald-500/20 hover:text-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)] active:scale-95 sm:w-fit sm:min-w-[360px]"
           >
             <Eye className="mr-3 h-4 w-4" />
             {isHindi ? 'सभी विषय प्रश्न देखें' : 'View All Subject Questions'}
-            {isPro ? <ExternalLink className="ml-3 h-4 w-4 opacity-50" /> : <Lock className="ml-3 h-4 w-4 opacity-50" />}
+            <Lock className="ml-3 h-4 w-4 opacity-50" />
           </Button>
-        </TransitionLink>
+        )}
       </div>
     </div>
   );

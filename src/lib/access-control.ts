@@ -140,9 +140,8 @@ export function getUserTier(user: AccessControlUser | null): PlanTier | 'guest' 
   // ───────────────────────────────────────────────────────────────
   const isSubscribed = !!(user.isSubscribed ?? user.is_subscribed);
   if (isSubscribed) {
-    const plan = getPlanTierFromUser(user);
-    if (plan === 'free') return 'lite'; // legacy: subscribed but plan free
-    return plan || 'lite';
+    // 🎯 USER REQUEST: Treat all subscribed users as PRO (Only one model exists now)
+    return 'pro';
   }
 
   // ───────────────────────────────────────────────────────────────

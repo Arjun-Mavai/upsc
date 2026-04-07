@@ -28,6 +28,7 @@ export function QuizExplanation({ question, language, translations: t }: QuizExp
           explanation={question.explanation || 'No explanation available.'}
           explanationEn={question.explanationEn}
           language={language as 'hi' | 'en'}
+          darkMode={false}
         />
       </div>
     </div>

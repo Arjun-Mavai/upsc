@@ -82,10 +82,14 @@ export function QuizQuestion({
         </Button>
       </div>
 
-      {/* Question Text - Smart Formatted */}
+      {/* Question Text - Enhanced Smart Formatted */}
       <FormattedQuestionText
         text={questionText}
         className="text-lg leading-relaxed font-semibold text-slate-900 sm:text-xl md:text-2xl"
+        question={question}
+        isHindi={language === 'hi'}
+        useEnhancedRenderer={true}
+        theme="light"
       />
 
       {/* Matching Questions */}

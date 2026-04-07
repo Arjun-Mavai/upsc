@@ -1,150 +1,135 @@
 import { logger } from '@/lib/logger';
 
-// Matches 300+ variations in DB to canonical categories.
-export function normalizeSubject(rawSubject: string | null): string {
-  if (!rawSubject) return 'Misc';
+/**
+ * 🎓 UPSC PROFESSIONAL BUCKETING LOGIC
+ * Standardizing 600+ Questions into UPSC Pillars:
+ * 1. History (Ancient, Medieval, Modern, Art & Culture)
+ * 2. Geography (Physical, Indian, World)
+ * 3. Polity & Governance
+ * 4. Economy (Agriculture, Budget, Infrastructure)
+ * 5. Environment & Ecology (Climate, Biodiversity)
+ * 6. Science & Technology
+ * 7. International Relations
+ * 8. Current Affairs
+ */
+export function normalizeSubject(rawSubject: string | null, isUPSC: boolean = false): string {
+  if (!rawSubject) return isUPSC ? 'Current Affairs' : 'General Studies';
   const lower = rawSubject.toLowerCase().trim();
 
+  // 1. Environment & Ecology (UPSC)
   if (
-    lower.includes('mp ') ||
-    lower.includes('madhya pradesh') ||
-    lower.includes('unit 1') ||
-    lower.includes('unit 3') ||
-    lower.includes('unit 5') ||
-    lower.includes('tribes') ||
-    lower.includes('folk') ||
-    lower.includes('tourism') ||
-    lower.includes('dynasties') ||
-    lower.includes('literature') ||
-    lower.includes('personalities')
+    lower.includes('environment') || 
+    lower.includes('ecology') || 
+    lower.includes('biodiversity') || 
+    lower.includes('climate') || 
+    lower.includes('forest') || 
+    lower.includes('pollution') ||
+    lower.includes('wildlife') ||
+    lower.includes('climatology')
   ) {
-    return 'MP GK';
+    return 'Environment & Ecology';
   }
 
+  // 2. Science & Technology
   if (
-    lower.includes('current') ||
-    lower.includes('समसामयिकी') ||
-    lower.includes('करेंट') ||
-    lower.includes('करंट') ||
-    lower.includes('वर्तमान') ||
-    lower.includes('समसामयिक') ||
-    lower.includes('sports') ||
-    lower.includes('award') ||
-    lower.includes('unit 8') ||
+    lower.includes('science') || 
+    lower.includes('technology') || 
+    lower.includes('tech') || 
+    /\bit\b/.test(lower) || 
+    lower.includes('computer') || 
+    lower.includes('space') || 
+    lower.includes('defense') ||
     lower.includes('defence') ||
+    lower.includes('biotech')
+  ) {
+    return 'Science & Technology';
+  }
+
+  // 3. Economy
+  if (
+    lower.includes('economy') || 
+    lower.includes('economic') || 
+    lower.includes('agriculture') || 
+    lower.includes('budget') || 
+    lower.includes('infrastructure') || 
+    lower.includes('trade') ||
+    lower.includes('banking') ||
+    lower.includes('finance')
+  ) {
+    return 'Economy (Basic Economics & Indian Economy)';
+  }
+
+  // 4. Polity & Governance
+  if (
+    lower.includes('polity') || 
+    lower.includes('governance') || 
+    lower.includes('constitution') || 
+    /\bact\b/.test(lower) || 
+    lower.includes('bill') || 
+    lower.includes('commission') ||
+    lower.includes('panchayat') ||
+    lower.includes('rights') ||
+    lower.includes('amendment')
+  ) {
+    return 'Polity (Indian Constitution & Governance)';
+  }
+
+  // 5. Art & Culture
+  if (
+    lower.includes('culture') || 
+    /\bart\b/.test(lower)
+  ) {
+    return 'Art & Culture';
+  }
+
+  // 6. History
+  if (
+    lower.includes('history') || 
+    lower.includes('ancient') || 
+    lower.includes('medieval') || 
+    lower.includes('modern') || 
+    lower.includes('freedom struggle') ||
+    lower.includes('national movement')
+  ) {
+    return 'History (Ancient, Medieval, Modern)';
+  }
+
+  // 7. Geography
+  if (
+    lower.includes('geography') || 
+    lower.includes('physical') || 
+    lower.includes('indian geo') || 
+    lower.includes('world geo') || 
+    lower.includes('mapping') || 
+    lower.includes('resource')
+  ) {
+    return 'Geography (India & World)';
+  }
+
+  // 8. Current Affairs (Mapping International Relations here or directly as Current Affairs)
+  if (
+    lower.includes('current') || 
+    lower.includes('news') || 
+    lower.includes('daily') || 
+    lower.includes('award') || 
     lower.includes('summit') ||
-    lower.includes('international') ||
-    lower.includes('relations') ||
-    lower.includes('report') ||
-    lower.includes('index') ||
-    lower.includes('indices') ||
+    lower.includes('international') || 
+    /\bir\b/.test(lower) || 
+    lower.includes('relation') ||
     lower.includes('organization') ||
-    lower.includes('awareness') ||
-    lower.includes('general knowledge')
+    lower.includes('institution')
   ) {
     return 'Current Affairs';
   }
 
-  if (
-    lower.includes('history') ||
-    lower.includes('इतिहास') ||
-    lower.includes('freedom') ||
-    lower.includes('ancient') ||
-    lower.includes('medieval') ||
-    lower.includes('modern') ||
-    lower.includes('unit 2') ||
-    lower.includes('culture') ||
-    lower.includes('archaeology')
-  ) {
-    return 'History';
+  // 9. Strict UPSC Fallback
+  // The user requested NO stray strings like "Subject" or "Misc" in UPSC views.
+  if (isUPSC) {
+    return 'Current Affairs';
   }
 
-  if (
-    lower.includes('geography') ||
-    lower.includes('भूगोल') ||
-    lower.includes('climate') ||
-    lower.includes('monsoon') ||
-    lower.includes('resource') ||
-    lower.includes('agriculture') ||
-    lower.includes('unit 4') ||
-    lower.includes('disaster') ||
-    lower.includes('environment') ||
-    lower.includes('census') ||
-    lower.includes('demography') ||
-    lower.includes('population') ||
-    lower.includes('energy')
-  ) {
-    if (lower.includes('mp') || lower.includes('madhya')) {
-        return 'MP GK';
-    }
-    return 'Geography';
-  }
-
-  if (
-    lower.includes('polity') ||
-    lower.includes('राजव्यवस्था') ||
-    lower.includes('constitution') ||
-    lower.includes('commission') ||
-    lower.includes('act') ||
-    lower.includes('governance') ||
-    lower.includes('panchat') ||
-    lower.includes('unit 10') ||
-    lower.includes('unit 6')
-  ) {
-    return 'Polity';
-  }
-
-  if (
-    lower.includes('economy') ||
-    lower.includes('अर्थव्यवस्था') ||
-    lower.includes('economic') ||
-    lower.includes('budget') ||
-    lower.includes('financial') ||
-    lower.includes('trade') ||
-    lower.includes('bank') ||
-    lower.includes('sebi') ||
-    lower.includes('rbi')
-  ) {
-    return 'Economy';
-  }
-
-  if (
-    lower.includes('science') ||
-    lower.includes('विज्ञान') ||
-    lower.includes('bio') ||
-    lower.includes('physics') ||
-    lower.includes('chem') ||
-    lower.includes('nutrition') ||
-    lower.includes('health') ||
-    lower.includes('disease') ||
-    lower.includes('unit 7') ||
-    lower.includes('institute')
-  ) {
-    return 'Science';
-  }
-
-  if (
-    lower.includes('computer') ||
-    lower.includes('ict') ||
-    lower.includes('internet') ||
-    lower.includes('cyber') ||
-    lower.includes('robotics') ||
-    lower.includes('ai') ||
-    lower.includes('electronics') ||
-    lower.includes('unit 9') ||
-    lower.includes('information') ||
-    lower.includes('technology') ||
-    lower.includes('communication') ||
-    lower.includes('e-commerce') ||
-    lower.includes('networking') ||
-    /\b(it|i\.t\.|information technology)\b/i.test(lower)
-  ) {
-    return 'ICT';
-  }
-
-  logger.warn(`normalizeSubject: Unmatched subject category for '${rawSubject}'`, {
-    rawSubject,
-    category: 'system',
-  });
-  return 'Misc';
+  // 10. General Catch-all (Capitalized) for MPPSC
+  if (lower === 'subject' || lower === 'general studies') return 'General Studies';
+  const capitalized = rawSubject.charAt(0).toUpperCase() + rawSubject.slice(1);
+  return capitalized;
 }

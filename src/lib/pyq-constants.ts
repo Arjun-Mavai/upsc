@@ -14,6 +14,15 @@ export const CANONICAL_TEST_IDS: Record<number, string> = {
   2025: 'D0gf6bklgl3RT-sTnue2n',
 };
 
+export const FREE_SUBJECTS = [
+  // UPSC (Canonical)
+  'History (Ancient, Medieval, Modern)', 
+  'Geography (India & World)',
+  // MPPSC (Legacy/Fallback)
+  'History',
+  'Geography'
+];
+
 // Helper to get canonical test IDs as array
 export function getCanonicalTestIds(examId?: string): string[] {
   const examConfig = getCurrentExam(examId);

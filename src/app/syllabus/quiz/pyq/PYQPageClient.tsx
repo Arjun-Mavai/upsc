@@ -18,6 +18,7 @@ import { ViewTransition } from 'react';
 import { TransitionLink } from '@/components/ui/transition-link';
 import { useQueryClient } from '@tanstack/react-query';
 import { getSubjectPartAccess } from './actions';
+import { SUBJECTS as SUBJECT_META } from '@/lib/pyq-ui-constants';
 
 // --- Types ---
 interface Test {
@@ -42,71 +43,43 @@ interface PYQPageClientProps {
   subjectStats: Record<string, number>;
   isLoggedIn?: boolean;
   mode?: string;
+  isPro?: boolean;
 }
-
-// --- Constants ---
-const SUBJECTS = [
-  {
-    name: 'Geography',
-    icon: LayoutGrid,
-    color: 'emerald' as const,
-    description: 'Physical, Indian & World Geography',
-  },
-  {
-    name: 'History',
-    icon: Calendar,
-    color: 'pink' as const,
-    description: 'Ancient, Medieval & Modern India',
-  },
-  {
-    name: 'Polity',
-    icon: Layers,
-    color: 'blue' as const,
-    description: 'Constitution, Governance & Systems',
-  },
-  {
-    name: 'Economy',
-    icon: Layers,
-    color: 'amber' as const,
-    description: 'Indian Economy & Planning',
-  },
-  {
-    name: 'Environment',
-    icon: Layers,
-    color: 'emerald' as const,
-    description: 'Ecology, Biodiversity & Climate Change',
-  },
-  {
-    name: 'Science & Tech',
-    icon: Layers,
-    color: 'pink' as const,
-    description: 'Physics, Chemistry, Biology & Latest Tech',
-  },
-  {
-    name: 'International Relations',
-    icon: BookOpen,
-    color: 'indigo' as const,
-    description: 'Global Affairs & India\'s Foreign Policy',
-  },
-  {
-    name: 'Current Affairs',
-    icon: Calendar,
-    color: 'blue' as const,
-    description: 'National & International Events',
-  },
-];
 
 export default function PYQPageClient({
   initialTests,
   subjectStats,
   isLoggedIn,
   mode,
+  isPro = false,
 }: PYQPageClientProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { language } = useSettingsStore();
   const exam = getCurrentExam();
   const [, startTransition] = useTransition();
+
+  // Dynamic subjects based on available stats
+  const availableSubjects = useMemo(() => {
+    return Object.entries(subjectStats)
+      .filter(([_, count]) => count > 0)
+      .map(([name, count]) => {
+        // Flexible metadata lookup: exact match first, then partial case-insensitive match
+        const meta = SUBJECT_META.find(s => s.name === name) || 
+                     SUBJECT_META.find(s => s.name.toLowerCase() === name.toLowerCase()) ||
+                     SUBJECT_META.find(s => name.toLowerCase().includes(s.name.toLowerCase())) ||
+                     SUBJECT_META.find(s => s.name.toLowerCase().includes(name.toLowerCase()));
+        
+        return {
+          name,
+          count,
+          icon: meta?.icon || LayoutGrid,
+          color: meta?.color || 'slate',
+          description: meta?.nameHi || name,
+        };
+      })
+      .sort((a, b) => b.count - a.count);
+  }, [subjectStats]);
 
   // --- State ---
   const [viewMode, setViewMode] = useState<'year' | 'subject' | 'all-subjects'>(
@@ -161,16 +134,15 @@ export default function PYQPageClient({
     router.prefetch('/syllabus/quiz/pyq/analysis');
 
     // 🚀 Prefetch Subject Access Data for ALL subjects to make modals instant
-    SUBJECTS.forEach((sub) => {
-      if ((subjectStats[sub.name] || 0) > 0) {
-        queryClient.prefetchQuery({
-          queryKey: ['subject-access', sub.name],
-          queryFn: () => getSubjectPartAccess(sub.name),
-          staleTime: 10 * 60 * 1000,
-        });
-      }
+    availableSubjects.forEach((sub) => {
+      queryClient.prefetchQuery({
+        queryKey: ['subject-access', sub.name],
+        queryFn: () => getSubjectPartAccess(sub.name),
+        staleTime: 10 * 60 * 1000,
+      });
     });
-  }, [router, isLoggedIn, subjectStats, queryClient]);
+  }, [router, isLoggedIn, availableSubjects, queryClient]);
+
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
@@ -286,17 +258,17 @@ export default function PYQPageClient({
               </Button>
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {SUBJECTS.filter((sub) => (subjectStats[sub.name] || 0) > 0).map((sub) => (
+              {availableSubjects.map((sub) => (
                 <div key={sub.name} className="group">
                   <PYQCard
                     title={sub.name}
-                    count={subjectStats[sub.name] || 0}
+                    count={sub.count}
                     icon={sub.icon}
                     color={sub.color}
                     onClick={() => handleSubjectClick(sub.name)}
                     delay={0}
                     description={sub.description}
-                    subtitle={`${subjectStats[sub.name] || 0} ${language === 'hi' ? 'प्रश्न' : 'Questions'}`}
+                    subtitle={`${sub.count} ${language === 'hi' ? 'प्रश्न' : 'Questions'}`}
                   />
                 </div>
               ))}
@@ -347,11 +319,11 @@ export default function PYQPageClient({
 
         {/* Topic Wise View */}
         <div className={viewMode !== 'subject' ? 'hidden' : 'grid gap-6 sm:grid-cols-2 lg:grid-cols-3'}>
-          {SUBJECTS.map((sub) => (
+          {availableSubjects.map((sub) => (
             <PYQCard
               key={sub.name}
               title={sub.name}
-              count={subjectStats[sub.name] || 0}
+              count={sub.count}
               icon={sub.icon}
               color={sub.color}
               onClick={() => handleSubjectClick(sub.name)}
@@ -371,6 +343,7 @@ export default function PYQPageClient({
           subject={selectedSubject}
           totalQuestions={subjectStats[selectedSubject] || 0}
           onSelectSeries={handleSeriesSelect}
+          isPro={isPro}
         />
       )}
 

@@ -124,14 +124,180 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
                   {ai.label}
                 </h4>
               </div>
-              <p
+              <div
                 className={cn(
                   'text-[14px] leading-relaxed font-semibold tracking-tight sm:text-[15.5px]',
                   darkMode ? 'text-slate-200' : 'text-slate-800'
                 )}
               >
-                {ai.content}
-              </p>
+                {ai.key === 'elimination_wisdom' ? (
+                  // Logic Path - Smart pattern detection for better readability
+                  <div className={cn(
+                    'text-[14px] leading-[1.8] font-medium space-y-2',
+                    darkMode ? 'text-slate-200' : 'text-slate-800'
+                  )}>
+                    {(() => {
+                      const content = ai.content;
+                      
+                      // Pattern 1: Numbered lists (1. 2. 3. etc.) - English & Hindi
+                      const numberedPattern = /(\d+\.\s*)/g;
+                      const numberedMatches = [...content.matchAll(numberedPattern)];
+                      
+                      if (numberedMatches.length >= 2) {
+                        const parts = content.split(numberedPattern).filter(Boolean);
+                        const renderedParts = [];
+                        
+                        for (let i = 0; i < parts.length; i++) {
+                          if (/^\d+\.\s*$/.test(parts[i])) {
+                            // This is a number marker, combine with next part
+                            const marker = parts[i].trim();
+                            const text = parts[i + 1] || '';
+                            if (text.trim()) {
+                              // Remove ending dot if it's followed by next number
+                              let cleanText = text.trim();
+                              if (i + 2 < parts.length && /^\d+\.\s*$/.test(parts[i + 2])) {
+                                cleanText = cleanText.replace(/\.\s*$/, '');
+                              }
+                              
+                              renderedParts.push(
+                                <div key={i} className="flex items-start gap-2 py-1">
+                                  <span className={cn(
+                                    'shrink-0 text-xs font-bold px-2 py-1 rounded',
+                                    darkMode ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-100 text-indigo-700'
+                                  )}>
+                                    {marker}
+                                  </span>
+                                  <span className="flex-1">{cleanText}</span>
+                                </div>
+                              );
+                              i++; // Skip the text part as we've processed it
+                            }
+                          }
+                        }
+                        
+                        if (renderedParts.length > 0) {
+                          return <div className="space-y-1">{renderedParts}</div>;
+                        }
+                      }
+                      
+                      // Pattern 2: Letter patterns (A. B. C. or (A) (B) (C))
+                      const letterPattern = /([A-Z][\.\)]\s*)/g;
+                      const letterMatches = [...content.matchAll(letterPattern)];
+                      
+                      if (letterMatches.length >= 2) {
+                        const parts = content.split(letterPattern).filter(Boolean);
+                        const renderedParts = [];
+                        
+                        for (let i = 0; i < parts.length; i++) {
+                          if (/^[A-Z][\.\)]\s*$/.test(parts[i])) {
+                            const marker = parts[i].trim();
+                            const text = parts[i + 1] || '';
+                            if (text.trim()) {
+                              let cleanText = text.trim();
+                              if (i + 2 < parts.length && /^[A-Z][\.\)]\s*$/.test(parts[i + 2])) {
+                                cleanText = cleanText.replace(/\.\s*$/, '');
+                              }
+                              
+                              renderedParts.push(
+                                <div key={i} className="flex items-start gap-2 py-1">
+                                  <span className={cn(
+                                    'shrink-0 text-xs font-bold px-2 py-1 rounded',
+                                    darkMode ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-100 text-indigo-700'
+                                  )}>
+                                    {marker}
+                                  </span>
+                                  <span className="flex-1">{cleanText}</span>
+                                </div>
+                              );
+                              i++;
+                            }
+                          }
+                        }
+                        
+                        if (renderedParts.length > 0) {
+                          return <div className="space-y-1">{renderedParts}</div>;
+                        }
+                      }
+                      
+                      // Pattern 3: Pipe-separated points (Hindi/English)
+                      if (content.includes('|') && content.split('|').length >= 2) {
+                        const parts = content.split('|').map(part => part.trim()).filter(Boolean);
+                        if (parts.length >= 2) {
+                          return (
+                            <div className="space-y-2">
+                              {parts.map((part, idx) => (
+                                <div key={idx} className="flex items-start gap-2 py-1">
+                                  <span className={cn(
+                                    'shrink-0 text-xs font-bold px-2 py-1 rounded',
+                                    darkMode ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-100 text-indigo-700'
+                                  )}>
+                                    {idx + 1}
+                                  </span>
+                                  <span className="flex-1">{part}</span>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        }
+                      }
+                      
+                      // Pattern 4: Arrow flow (→)
+                      if (content.includes('→')) {
+                        const steps = content.split('→').map(step => step.trim()).filter(Boolean);
+                        if (steps.length >= 2) {
+                          return (
+                            <div className="flex flex-wrap gap-2 items-center">
+                              {steps.map((step, idx) => (
+                                <div key={idx} className="flex items-center">
+                                  <span className={cn(
+                                    'px-3 py-2 rounded-lg text-sm font-medium border',
+                                    darkMode 
+                                      ? 'bg-indigo-500/20 text-indigo-200 border-indigo-500/30'
+                                      : 'bg-indigo-100 text-indigo-800 border-indigo-200'
+                                  )}>
+                                    {step}
+                                  </span>
+                                  {idx < steps.length - 1 && (
+                                    <span className={cn(
+                                      'mx-2 text-lg font-bold',
+                                      darkMode ? 'text-indigo-400' : 'text-indigo-600'
+                                    )}>→</span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        }
+                      }
+                      
+                      // Pattern 5: Sentence-based breakdown (detect multiple sentences)
+                      const sentences = content.split(/(?<=[.।!?])\s+/).filter(s => s.trim().length > 10);
+                      if (sentences.length >= 3) {
+                        return (
+                          <div className="space-y-2">
+                            {sentences.map((sentence, idx) => (
+                              <div key={idx} className="flex items-start gap-2 py-1">
+                                <span className={cn(
+                                  'shrink-0 w-5 h-5 flex items-center justify-center rounded-full text-xs font-bold',
+                                  darkMode ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-100 text-indigo-700'
+                                )}>
+                                  {idx + 1}
+                                </span>
+                                <span className="flex-1">{sentence.trim()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
+                      
+                      // Default: Just return content as-is
+                      return content;
+                    })()}
+                  </div>
+                ) : (
+                  ai.content
+                )}
+              </div>
             </div>
           ))}
         </div>

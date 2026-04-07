@@ -540,6 +540,7 @@ export function QuizResult({
                 <PremiumExplanation
                   explanation={q.explanation || 'No explanation available.'}
                   explanationEn={q.explanationEn}
+                  darkMode={false}
                 />
               </div>
             </motion.div>

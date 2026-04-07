@@ -66,6 +66,17 @@ async function PYQPageData({ mode }: { mode?: string }) {
   const tier = getUserTier(user);
   const maxRetries = attemptLimits['PYQ'] ?? null;
 
+  const hasProAccess =
+    user?.role === 'admin' ||
+    hasAccessToContent(
+      {
+        isFreeAccess: false,
+        isLiteAccess: false,
+        isProAccess: true,
+      },
+      tier
+    );
+
   const enrichedTests = tests.map((test) => {
     const hasAccess =
       user?.role === 'admin' ||
@@ -93,5 +104,5 @@ async function PYQPageData({ mode }: { mode?: string }) {
     };
   });
 
-  return <PYQPageClient initialTests={enrichedTests} subjectStats={subjectStats} isLoggedIn={!!user} mode={mode} />;
+  return <PYQPageClient initialTests={enrichedTests} subjectStats={subjectStats} isLoggedIn={!!user} mode={mode} isPro={hasProAccess} />;
 }

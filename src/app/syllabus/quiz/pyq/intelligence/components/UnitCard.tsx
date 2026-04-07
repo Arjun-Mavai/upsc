@@ -14,6 +14,7 @@ import { TransitionLink } from '@/components/ui/transition-link';
 import { getCurrentExam } from '@/config/exams';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
+import { FREE_SUBJECTS } from '@/lib/pyq-constants';
 
 interface UnitCardProps {
   examId?: string;
@@ -30,8 +31,6 @@ interface UnitCardProps {
   groupQuestionsByYear?: boolean;
   year?: number;
 }
-
-const FREE_SUBJECT = 'History';
 
 export function UnitCard({
   examId,
@@ -54,8 +53,9 @@ export function UnitCard({
 
   const { isSubscribed, user } = useSettingsStore();
   const isPro = isSubscribed || user?.role === 'admin';
-  const isUnlocked = isPro || unitId === FREE_SUBJECT;
-  const isFreeSubjectNotPro = !isPro && unitId === FREE_SUBJECT;
+  const isFreeUnit = FREE_SUBJECTS.includes(unitId);
+  const isUnlocked = isPro || isFreeUnit;
+  const isFreeSubjectNotPro = !isPro && isFreeUnit;
 
   const percentage = totalQuestions > 0 ? Math.round((questionCount / totalQuestions) * 100) : 0;
   const colorClass = getUnitColor(unitId);

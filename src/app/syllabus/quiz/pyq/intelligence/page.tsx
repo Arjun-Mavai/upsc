@@ -24,32 +24,32 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-// ISR: Revalidate every 6 hours — data is fixed for 2020–2025 period
-export const revalidate = 21600;
+// Focus dynamic rendering because page determines access based on cookies (getUserAccess)
+export const dynamic = 'force-dynamic';
 
 // ── Cached analytics functions (unique stable keys) ─────────────────────────
 // Note: getRepeatedQuestions is already wrapped with unstable_cache internally,
 // but we use a page-level wrapper for an extra stable route-scoped layer.
 const getCachedSubjectStats = unstable_cache(
   async (examId?: string) => getSubjectDistributionStats(examId),
-  ['intelligence-subject-stats-v6'],
+  ['intelligence-subject-stats-v7'],
   { revalidate: 21600 }
 );
 const getCachedUnitStats = unstable_cache(
   async (limit?: number, examId?: string, isPro: boolean = false) =>
     getUnitDistributionStats(limit, examId, isPro),
-  ['intelligence-unit-stats-v6'],
+  ['intelligence-unit-stats-v7'],
   { revalidate: 21600 }
 );
 const getCachedTopicStats = unstable_cache(
   async (examId?: string) => getMostRepeatedTopics(examId),
-  ['intelligence-topics-v6'],
+  ['intelligence-topics-v7'],
   { revalidate: 21600 }
 );
 const getCachedSubjectQuestionsData = unstable_cache(
   async (limit?: number, examId?: string, isPro: boolean = false) =>
     getOverallWeightageSubjectData(limit, examId, isPro),
-  ['intelligence-subject-questions-v6'],
+  ['intelligence-subject-questions-v7'],
   { revalidate: 21600 }
 );
 

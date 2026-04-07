@@ -59,7 +59,7 @@ const getQuestionsWithDetails = unstable_cache(
         options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
         type: q.type || 'standard',
         matchPairs: typeof q.matchPairs === 'string' ? JSON.parse(q.matchPairs) : q.matchPairs,
-        correctAnswer: q.correctAnswer !== null ? Number(q.correctAnswer) : undefined,
+        correctAnswer: q.correctAnswer,
         explanation: q.explanation,
         explanationEn: q.explanationEn,
         year,
@@ -68,7 +68,7 @@ const getQuestionsWithDetails = unstable_cache(
       };
     });
   },
-  ['pyq-questions-details-v3'],
+  ['pyq-questions-details-v4'],
   { revalidate: 3600, tags: ['pyq-questions'] }
 );
 
@@ -100,7 +100,7 @@ const getQuestionsByTopic = unstable_cache(
       questions: questionList,
     };
   },
-  ['pyq-topic-questions'],
+  ['pyq-topic-questions-v4'],
   { revalidate: 3600, tags: ['pyq-questions', 'pyq-topics'] }
 );
 

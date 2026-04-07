@@ -10,7 +10,7 @@ interface PYQCardProps {
   subtitle?: string;
   count: number;
   icon: LucideIcon;
-  color: 'blue' | 'pink' | 'emerald' | 'amber' | 'indigo'; // Added indigo
+  color: 'blue' | 'pink' | 'emerald' | 'amber' | 'indigo' | 'cyan' | 'purple' | 'rose' | 'slate';
   onClick: () => void;
   isLocked?: boolean;
   delay?: number;
@@ -58,6 +58,38 @@ const VARIANTS = {
     shadow: 'shadow-indigo-200/40',
     gradient: 'from-indigo-500 to-indigo-600',
   },
+  cyan: {
+    bg: 'bg-cyan-50',
+    text: 'text-cyan-600',
+    icon: 'text-cyan-400',
+    border: 'border-cyan-100',
+    shadow: 'shadow-cyan-200/40',
+    gradient: 'from-cyan-500 to-cyan-600',
+  },
+  purple: {
+    bg: 'bg-purple-50',
+    text: 'text-purple-600',
+    icon: 'text-purple-400',
+    border: 'border-purple-100',
+    shadow: 'shadow-purple-200/40',
+    gradient: 'from-purple-500 to-purple-600',
+  },
+  rose: {
+    bg: 'bg-rose-50',
+    text: 'text-rose-600',
+    icon: 'text-rose-400',
+    border: 'border-rose-100',
+    shadow: 'shadow-rose-200/40',
+    gradient: 'from-rose-500 to-rose-600',
+  },
+  slate: {
+    bg: 'bg-slate-100',
+    text: 'text-slate-600',
+    icon: 'text-slate-400',
+    border: 'border-slate-200',
+    shadow: 'shadow-slate-300/40',
+    gradient: 'from-slate-500 to-slate-600',
+  },
 };
 
 export function PYQCard({
@@ -73,7 +105,7 @@ export function PYQCard({
 }: PYQCardProps) {
   const { language } = useSettingsStore();
   const hi = language === 'hi';
-  const style = VARIANTS[color];
+  const style = VARIANTS[color as keyof typeof VARIANTS] || VARIANTS.blue;
 
   return (
     <motion.div

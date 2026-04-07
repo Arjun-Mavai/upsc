@@ -6,7 +6,7 @@ import { questions, pyqQuestionTopics, pyqTopics, tests } from '@/db/schema';
 import { unstable_cache } from 'next/cache';
 import { syllabusData } from '@/data/syllabusData';
 import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
-import { getCanonicalTestIds, getYearFromTestId } from '@/lib/pyq-constants';
+import { getCanonicalTestIds, getYearFromTestId, FREE_SUBJECTS } from '@/lib/pyq-constants';
 import { getCurrentExam } from '@/config/exams';
 import { getCurrentUser } from './auth-actions';
 import { logger } from '@/lib/logger';
@@ -49,12 +49,12 @@ export interface UnitDistributionStats {
   unitId: string;
   unitTitle: string;
   count: number;
-  questions: { 
-    id: string; 
-    text: string; 
-    textEn?: string | null; 
-    year: number; 
-    qNo: number; 
+  questions: {
+    id: string;
+    text: string;
+    textEn?: string | null;
+    year: number;
+    qNo: number;
     subject?: string;
     options?: any;
     correctAnswer?: string;
@@ -72,12 +72,12 @@ export interface TopicStat {
   topicTitleEn?: string | null;
   count: number;
   years: number[];
-  questions: { 
-    id: string; 
-    text: string; 
-    textEn?: string | null; 
-    year: number; 
-    qNo: number; 
+  questions: {
+    id: string;
+    text: string;
+    textEn?: string | null;
+    year: number;
+    qNo: number;
     subject?: string;
     explanation?: string | null;
     explanationEn?: string | null;
@@ -86,16 +86,21 @@ export interface TopicStat {
 
 // ── LOCKING CONSTANTS ──────────────────────────────────────────
 const FREE_YEAR = 2025;
-const FREE_SUBJECT = 'History';
-const FREE_QUESTION_LIMIT = 5;
+const FREE_SUBJECT = 'History & Culture';
+const FREE_QUESTION_LIMIT = 5; // Reduced from 10 to 5 as requested
+// FREE_SUBJECTS is now imported from @/lib/pyq-constants
 
 // Helper to check access
 export async function getUserAccess() {
   const me = await getCurrentUser();
-  const isPro = !!(me?.user?.isSubscribed || me?.user?.planTier === 'pro' || me?.user?.role === 'admin');
+  const isPro = !!(
+    me?.user?.isSubscribed ||
+    me?.user?.planTier === 'pro' ||
+    me?.user?.role === 'admin'
+  );
   return {
     isPro,
-    isAdmin: me?.user?.role === 'admin'
+    isAdmin: me?.user?.role === 'admin',
   };
 }
 
@@ -104,14 +109,116 @@ export async function getUserAccess() {
 // ============================================
 
 const STOP_WORDS = new Set([
-  'the', 'is', 'at', 'of', 'on', 'and', 'a', 'an', 'in', 'to', 'for', 'with', 'by', 'from', 'which', 'correct', 'incorrect', 'following', 'statements', 'regarding', 'consider', 'match', 'option', 'question', 'answer', 'not', 'none', 'all', 'above', 'below', 'true', 'false', 'ka', 'ki', 'ke', 'hai', 'tha', 'thi', 'the', 'ko', 'se', 'me', 'mein', 'par', 'aur', 'evam', 'tatha', 'kya', 'kaun', 'kis', 'nimn', 'likhit', 'nimnalikhit', 'kathan', 'sahi', 'galat', 'h', 'nahi', 'है', 'हैं', 'था', 'थी', 'थे', 'का', 'की', 'के', 'को', 'से', 'में', 'पर', 'और', 'एवं', 'तथा', 'क्या', 'कौन', 'किस', 'निम्नलिखित', 'कथनों', 'कथन', 'विचार', 'कीजिए', 'सही', 'गलत', 'उत्तर', 'दी दीजिए', 'विकल्प', 'सुमेलित', 'कौनसा', 'नहीं', 'एक', 'यह', 'वह', 'वे', 'करते', 'होता', 'होती', 'होते', 'दिया', 'गया',
+  'the',
+  'is',
+  'at',
+  'of',
+  'on',
+  'and',
+  'a',
+  'an',
+  'in',
+  'to',
+  'for',
+  'with',
+  'by',
+  'from',
+  'which',
+  'correct',
+  'incorrect',
+  'following',
+  'statements',
+  'regarding',
+  'consider',
+  'match',
+  'option',
+  'question',
+  'answer',
+  'not',
+  'none',
+  'all',
+  'above',
+  'below',
+  'true',
+  'false',
+  'ka',
+  'ki',
+  'ke',
+  'hai',
+  'tha',
+  'thi',
+  'the',
+  'ko',
+  'se',
+  'me',
+  'mein',
+  'par',
+  'aur',
+  'evam',
+  'tatha',
+  'kya',
+  'kaun',
+  'kis',
+  'nimn',
+  'likhit',
+  'nimnalikhit',
+  'kathan',
+  'sahi',
+  'galat',
+  'h',
+  'nahi',
+  'है',
+  'हैं',
+  'था',
+  'थी',
+  'थे',
+  'का',
+  'की',
+  'के',
+  'को',
+  'से',
+  'में',
+  'पर',
+  'और',
+  'एवं',
+  'तथा',
+  'क्या',
+  'कौन',
+  'किस',
+  'निम्नलिखित',
+  'कथनों',
+  'कथन',
+  'विचार',
+  'कीजिए',
+  'सही',
+  'गलत',
+  'उत्तर',
+  'दी दीजिए',
+  'विकल्प',
+  'सुमेलित',
+  'कौनसा',
+  'नहीं',
+  'एक',
+  'यह',
+  'वह',
+  'वे',
+  'करते',
+  'होता',
+  'होती',
+  'होते',
+  'दिया',
+  'गया',
 ]);
 
 // ============================================
 // Analytical Functions
 // ============================================
 
-export async function getOverallWeightageSubjectData(limit?: number, examId?: string, isPro: boolean = false): Promise<OverallWeightageSubjectData[]> {
+export async function getOverallWeightageSubjectData(
+  limit?: number,
+  examId?: string,
+  isPro: boolean = false
+): Promise<OverallWeightageSubjectData[]> {
   const cacheKey = `overall-weightage-subject-data-${examId || 'mppsc'}-${limit || 'all'}-pro-${isPro}`;
 
   return unstable_cache(
@@ -120,12 +227,16 @@ export async function getOverallWeightageSubjectData(limit?: number, examId?: st
       const testYearMap: Record<string, number> = {};
 
       if (examId === 'upsc') {
-        const upscTests = await db.select({ id: tests.id, title: tests.title }).from(tests).where(and(eq(tests.type, 'UPSC_PYQ'), eq(tests.isHidden, false)));
-        testIdsToQuery = upscTests.map(t => t.id);
-        upscTests.forEach(t => {
+        const upscTests = await db
+          .select({ id: tests.id, title: tests.title })
+          .from(tests)
+          .where(and(eq(tests.type, 'UPSC_PYQ'), eq(tests.isHidden, false)));
+        testIdsToQuery = upscTests.map((t) => t.id);
+        upscTests.forEach((t) => {
           const match = t.title.match(/\b(20\d{2}|1[5-9]|2[0-5])\b/);
           const yearStr = match ? match[1] : '2020';
-          testYearMap[t.id] = yearStr.length === 2 ? 2000 + parseInt(yearStr, 10) : parseInt(yearStr, 10);
+          testYearMap[t.id] =
+            yearStr.length === 2 ? 2000 + parseInt(yearStr, 10) : parseInt(yearStr, 10);
         });
       } else {
         testIdsToQuery = getCanonicalTestIds(examId);
@@ -152,53 +263,79 @@ export async function getOverallWeightageSubjectData(limit?: number, examId?: st
 
       const subjectGroups: Record<string, any[]> = {};
       const exam = getCurrentExam(examId);
-      
+
       for (const q of allQuestions) {
         const rawSubject = q.subject || 'General Studies';
-        const groupKey = normalizeSubject(rawSubject);
+        const groupKey = normalizeSubject(rawSubject, examId === 'upsc');
         if (!subjectGroups[groupKey]) subjectGroups[groupKey] = [];
         subjectGroups[groupKey].push(q);
       }
 
-      return Object.entries(subjectGroups).map(([subject, questions]) => {
-        let resultQuestions = questions
-          .map(q => {
-            const year = examId === 'upsc' ? testYearMap[q.testId] : getYearFromTestId(q.testId, examId);
-            return {
-              id: q.id,
-              text: q.text || '',
-              textEn: q.textEn,
-              year,
-              qNo: q.order,
-              testTitle: `${exam.id.toUpperCase()} Prelims ${year}`,
-              testId: q.testId,
-              options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
-              correctAnswer: q.correctAnswer,
-              extendedData: typeof q.extendedData === 'string' ? JSON.parse(q.extendedData) : q.extendedData,
-              explanation: q.explanation,
-              explanationEn: q.explanationEn,
-              subject: q.subject || undefined,
-            };
-          })
-          .sort((a, b) => b.year - a.year || a.qNo - b.qNo);
+      return Object.entries(subjectGroups)
+        .map(([subject, questions]) => {
+          let resultQuestions = questions
+            .map((q) => {
+              const year =
+                examId === 'upsc' ? testYearMap[q.testId] : getYearFromTestId(q.testId, examId);
+              return {
+                id: q.id,
+                text: q.text || '',
+                textEn: q.textEn,
+                year,
+                qNo: q.order,
+                testTitle: `${exam.id.toUpperCase()} Prelims ${year}`,
+                testId: q.testId,
+                options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
+                correctAnswer: q.correctAnswer,
+                extendedData:
+                  typeof q.extendedData === 'string' ? JSON.parse(q.extendedData) : q.extendedData,
+                explanation: q.explanation,
+                explanationEn: q.explanationEn,
+                subject: q.subject || undefined,
+              };
+            })
+            .sort((a, b) => {
+              // 🎯 FEATURED SORT: Put manually chose 'free' questions first
+              const aIsFree = a.extendedData?.isFree === true || a.extendedData?.featured === true;
+              const bIsFree = b.extendedData?.isFree === true || b.extendedData?.featured === true;
+              if (aIsFree && !bIsFree) return -1;
+              if (!aIsFree && bIsFree) return 1;
 
-        // 🔒 LOCKING LOGIC
-        if (!isPro) {
-          const isFreeSubject = subject === FREE_SUBJECT;
-          resultQuestions = isFreeSubject ? resultQuestions.slice(0, FREE_QUESTION_LIMIT) : [];
-        } else if (limit) {
-          resultQuestions = resultQuestions.slice(0, limit);
-        }
+              // Traditional sort: Year DESC, Order ASC
+              if (b.year !== a.year) return b.year - a.year;
+              return a.qNo - b.qNo;
+            });
 
-        return { subject, questions: resultQuestions };
-      }).sort((a, b) => b.questions.length - a.questions.length || a.subject.localeCompare(b.subject));
+          // 🔒 LOCKING LOGIC - Restrict to exactly 5 questions for free users
+          if (!isPro) {
+            const isFreeSubject = FREE_SUBJECTS.includes(subject);
+            if (isFreeSubject) {
+              // Allow 5 choice questions from free subjects
+              resultQuestions = resultQuestions.slice(0, 5);
+            } else {
+              // Allow 3 sample questions from paid subjects for preview
+              resultQuestions = resultQuestions.slice(0, 3);
+            }
+          } else if (limit) {
+            resultQuestions = resultQuestions.slice(0, limit);
+          }
+
+          return { subject, questions: resultQuestions };
+        })
+        .sort(
+          (a, b) => b.questions.length - a.questions.length || a.subject.localeCompare(b.subject)
+        );
     },
-    [cacheKey, 'v4'],
+    [cacheKey, 'v7'],
     { revalidate: 3600, tags: ['pyq-stats'] }
   )();
 }
 
-export async function getUnitDistributionStats(limit?: number, examId?: string, isPro: boolean = false): Promise<UnitDistributionStats[]> {
+export async function getUnitDistributionStats(
+  limit?: number,
+  examId?: string,
+  isPro: boolean = false
+): Promise<UnitDistributionStats[]> {
   const cacheKey = `unit-distribution-stats-${examId || 'mppsc'}-${limit || 'all'}-pro-${isPro}`;
 
   return unstable_cache(
@@ -208,12 +345,16 @@ export async function getUnitDistributionStats(limit?: number, examId?: string, 
         const testYearMap: Record<string, number> = {};
 
         if (examId === 'upsc') {
-          const upscTests = await db.select({ id: tests.id, title: tests.title }).from(tests).where(and(eq(tests.type, 'UPSC_PYQ'), eq(tests.isHidden, false)));
-          testIdsToQuery = upscTests.map(t => t.id);
-          upscTests.forEach(t => {
+          const upscTests = await db
+            .select({ id: tests.id, title: tests.title })
+            .from(tests)
+            .where(and(eq(tests.type, 'UPSC_PYQ'), eq(tests.isHidden, false)));
+          testIdsToQuery = upscTests.map((t) => t.id);
+          upscTests.forEach((t) => {
             const match = t.title.match(/\b(20\d{2}|1[5-9]|2[0-5])\b/);
             const yearStr = match ? match[1] : '2020';
-            testYearMap[t.id] = yearStr.length === 2 ? 2000 + parseInt(yearStr, 10) : parseInt(yearStr, 10);
+            testYearMap[t.id] =
+              yearStr.length === 2 ? 2000 + parseInt(yearStr, 10) : parseInt(yearStr, 10);
           });
         } else {
           testIdsToQuery = getCanonicalTestIds(examId);
@@ -239,24 +380,25 @@ export async function getUnitDistributionStats(limit?: number, examId?: string, 
           .where(inArray(questions.testId, testIdsToQuery));
 
         const stats: Record<string, UnitDistributionStats> = {};
-        
+
         for (const q of allQuestions) {
-          const year = examId === 'upsc' ? testYearMap[q.testId] : getYearFromTestId(q.testId, examId);
-          const unitId = normalizeSubject(q.subject || 'General Studies');
+          const year =
+            examId === 'upsc' ? testYearMap[q.testId] : getYearFromTestId(q.testId, examId);
+          const unitId = normalizeSubject(q.subject || 'General Studies', examId === 'upsc');
           const unitTitle = unitId;
           const key = `${year}-${unitId}`;
 
-          // 🔒 LOCKING LOGIC
+          // 🔒 LOCKING LOGIC - More permissive for question viewing
           const isYearFree = year === FREE_YEAR;
-          const isSubjectFree = unitId === FREE_SUBJECT;
-          const hasAccess = isPro || (isYearFree && isSubjectFree);
+          const isSubjectFree = FREE_SUBJECTS.includes(unitId);
+          const hasAccess = isPro || isYearFree || isSubjectFree;
 
           if (!stats[key]) {
             stats[key] = { year, unitId, unitTitle, count: 0, questions: [] };
           }
           stats[key].count++;
-          
-          const currentLimit = isPro ? (limit || 9999) : (hasAccess ? FREE_QUESTION_LIMIT : 0);
+
+          const currentLimit = isPro ? limit || 9999 : isSubjectFree ? FREE_QUESTION_LIMIT : 3; // 3 preview questions for paid subjects
           if (stats[key].questions.length < currentLimit) {
             stats[key].questions.push({
               id: q.id,
@@ -267,7 +409,8 @@ export async function getUnitDistributionStats(limit?: number, examId?: string, 
               subject: q.subject || undefined,
               options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
               correctAnswer: q.correctAnswer,
-              extendedData: typeof q.extendedData === 'string' ? JSON.parse(q.extendedData) : q.extendedData,
+              extendedData:
+                typeof q.extendedData === 'string' ? JSON.parse(q.extendedData) : q.extendedData,
               explanation: q.explanation,
               explanationEn: q.explanationEn,
             });
@@ -280,7 +423,7 @@ export async function getUnitDistributionStats(limit?: number, examId?: string, 
         return [];
       }
     },
-    [cacheKey, 'v4'],
+    [cacheKey, 'v7'],
     { revalidate: 3600, tags: ['pyq-stats'] }
   )();
 }
@@ -290,10 +433,12 @@ export interface SubjectDistributionStats {
   subjectId: string;
   subjectTitle: string;
   count: number;
-  questions: Array<{ id: string; text: string; textEn?: string | null; order: number; }>;
+  questions: Array<{ id: string; text: string; textEn?: string | null; order: number }>;
 }
 
-export async function getSubjectDistributionStats(examId?: string): Promise<SubjectDistributionStats[]> {
+export async function getSubjectDistributionStats(
+  examId?: string
+): Promise<SubjectDistributionStats[]> {
   try {
     const unifiedStats = await getUnifiedSubjectStats(examId);
     const subjectDistributionStats: SubjectDistributionStats[] = [];
@@ -308,7 +453,9 @@ export async function getSubjectDistributionStats(examId?: string): Promise<Subj
         });
       }
     }
-    return subjectDistributionStats.sort((a, b) => a.year !== b.year ? a.year - b.year : a.subjectTitle.localeCompare(b.subjectTitle));
+    return subjectDistributionStats.sort((a, b) =>
+      a.year !== b.year ? a.year - b.year : a.subjectTitle.localeCompare(b.subjectTitle)
+    );
   } catch (error) {
     console.error('Error in Subject Distribution Analysis:', error);
     return [];
@@ -319,7 +466,10 @@ export interface UnifiedSubjectStats {
   subject: string;
   totalQuestions: number;
   yearBreakdown: Record<number, number>;
-  questionsByYear: Record<number, Array<{ id: string; text: string; textEn?: string | null; order: number; }>>;
+  questionsByYear: Record<
+    number,
+    Array<{ id: string; text: string; textEn?: string | null; order: number }>
+  >;
 }
 
 export async function getUnifiedSubjectStats(examId?: string): Promise<UnifiedSubjectStats[]> {
@@ -346,15 +496,25 @@ export async function getUnifiedSubjectStats(examId?: string): Promise<UnifiedSu
       if (!mapping.testId || !mapping.topicTitle) continue;
       const year = getYearFromTestId(mapping.testId, examId);
       if (!year) continue;
-      const normalizedSubject = normalizeSubject(mapping.topicTitle);
+      const normalizedSubject = normalizeSubject(mapping.topicTitle, examId === 'upsc');
       if (!subjectGroups[normalizedSubject]) {
-        subjectGroups[normalizedSubject] = { subject: normalizedSubject, totalQuestions: 0, yearBreakdown: {}, questionsByYear: {} };
+        subjectGroups[normalizedSubject] = {
+          subject: normalizedSubject,
+          totalQuestions: 0,
+          yearBreakdown: {},
+          questionsByYear: {},
+        };
       }
       const stats = subjectGroups[normalizedSubject];
       stats.totalQuestions += 1;
       stats.yearBreakdown[year] = (stats.yearBreakdown[year] || 0) + 1;
       if (!stats.questionsByYear[year]) stats.questionsByYear[year] = [];
-      stats.questionsByYear[year].push({ id: mapping.questionId, text: mapping.questionText || '', textEn: mapping.questionTextEn, order: mapping.questionOrder || 0 });
+      stats.questionsByYear[year].push({
+        id: mapping.questionId,
+        text: mapping.questionText || '',
+        textEn: mapping.questionTextEn,
+        order: mapping.questionOrder || 0,
+      });
     }
     for (const stats of Object.values(subjectGroups)) {
       for (const year of Object.keys(stats.questionsByYear)) {
@@ -400,21 +560,41 @@ export async function getMostRepeatedTopics(examId?: string): Promise<Record<str
         const unitTopics: Record<string, Map<string, TopicStat>> = {};
         for (const row of topicData) {
           const year = getYearFromTestId(row.testId, examId);
-          const unitId = normalizeSubject(row.questionSubject || 'General Studies');
+          const unitId = normalizeSubject(row.questionSubject || 'General Studies', examId === 'upsc');
           if (!unitTopics[unitId]) unitTopics[unitId] = new Map();
           if (!unitTopics[unitId].has(row.topicId)) {
-            unitTopics[unitId].set(row.topicId, { unitId, topicId: row.topicId, topicSlug: row.topicSlug, topicTitle: row.topicTitle, topicTitleEn: row.topicTitleEn, count: 0, years: [], questions: [] });
+            unitTopics[unitId].set(row.topicId, {
+              unitId,
+              topicId: row.topicId,
+              topicSlug: row.topicSlug,
+              topicTitle: row.topicTitle,
+              topicTitleEn: row.topicTitleEn,
+              count: 0,
+              years: [],
+              questions: [],
+            });
           }
           const stat = unitTopics[unitId].get(row.topicId)!;
           stat.count++;
           if (!stat.years.includes(year)) stat.years.push(year);
           if (!stat.questions.some((q) => q.id === row.questionId)) {
-            stat.questions.push({ id: row.questionId, text: row.questionText || '', textEn: row.questionTextEn, year, qNo: row.questionOrder, subject: row.questionSubject || undefined, explanation: row.explanation, explanationEn: row.explanationEn });
+            stat.questions.push({
+              id: row.questionId,
+              text: row.questionText || '',
+              textEn: row.questionTextEn,
+              year,
+              qNo: row.questionOrder,
+              subject: row.questionSubject || undefined,
+              explanation: row.explanation,
+              explanationEn: row.explanationEn,
+            });
           }
         }
         const result: Record<string, TopicStat[]> = {};
         for (const [unitId, map] of Object.entries(unitTopics)) {
-          result[unitId] = Array.from(map.values()).sort((a, b) => b.count - a.count).slice(0, 10);
+          result[unitId] = Array.from(map.values())
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 10);
         }
         return result;
       } catch (error) {
@@ -422,7 +602,7 @@ export async function getMostRepeatedTopics(examId?: string): Promise<Record<str
         return {};
       }
     },
-    [cacheKey, 'v2'],
+    [cacheKey, 'v3'],
     { revalidate: 3600, tags: ['pyq-stats'] }
   )();
 }
@@ -430,17 +610,31 @@ export async function getMostRepeatedTopics(examId?: string): Promise<Record<str
 export async function getQuestionsBySubjectUnified(subject: string, examId?: string) {
   try {
     const unifiedStats = await getUnifiedSubjectStats(examId);
-    const subjectData = unifiedStats.find(s => s.subject === subject);
+    const subjectData = unifiedStats.find((s) => s.subject === subject);
     if (!subjectData) return [];
     const allQuestions: any[] = [];
     for (const [year, questionsList] of Object.entries(subjectData.questionsByYear)) {
-      questionsList.forEach(q => {
-        allQuestions.push({ id: q.id, questionText: q.text, questionTextEn: q.textEn, order: q.order, year: Number(year) });
+      questionsList.forEach((q) => {
+        allQuestions.push({
+          id: q.id,
+          questionText: q.text,
+          questionTextEn: q.textEn,
+          order: q.order,
+          year: Number(year),
+        });
       });
     }
     if (allQuestions.length === 0) return [];
-    const fullQuestions = await db.select().from(questions).where(inArray(questions.id, allQuestions.map(q => q.id)));
-    const yearMap = new Map(allQuestions.map(q => [q.id, q.year]));
+    const fullQuestions = await db
+      .select()
+      .from(questions)
+      .where(
+        inArray(
+          questions.id,
+          allQuestions.map((q) => q.id)
+        )
+      );
+    const yearMap = new Map(allQuestions.map((q) => [q.id, q.year]));
     return fullQuestions.sort((a, b) => {
       const yearA = yearMap.get(a.id) || 0;
       const yearB = yearMap.get(b.id) || 0;
@@ -472,10 +666,17 @@ export async function getRepeatedQuestions(examId?: string): Promise<RepeatedQue
         .from(questions)
         .where(inArray(questions.testId, testIds));
 
-      const processedQuestions = rawQuestions.map((q) => ({
-        ...q,
-        normalizedText: (q.text || '').toLowerCase().replace(/[^\w\s]/g, '').split(' ').filter((w) => w.length > 2 && !STOP_WORDS.has(w)).join(' '),
-      })).filter((q) => q.normalizedText.length > 20);
+      const processedQuestions = rawQuestions
+        .map((q) => ({
+          ...q,
+          normalizedText: (q.text || '')
+            .toLowerCase()
+            .replace(/[^\w\s]/g, '')
+            .split(' ')
+            .filter((w) => w.length > 2 && !STOP_WORDS.has(w))
+            .join(' '),
+        }))
+        .filter((q) => q.normalizedText.length > 20);
 
       const groups: Record<string, typeof processedQuestions> = {};
       processedQuestions.forEach((q) => {
@@ -484,26 +685,31 @@ export async function getRepeatedQuestions(examId?: string): Promise<RepeatedQue
         groups[key].push(q);
       });
 
-      const repeated = Object.values(groups).filter((g) => g.length > 1).map((g) => {
-        const first = g[0];
-        const occurrences = g.map((q) => ({
-          year: getYearFromTestId(q.testId, examId),
-          qNo: q.order || 0,
-        })).sort((a, b) => b.year - a.year);
+      const repeated = Object.values(groups)
+        .filter((g) => g.length > 1)
+        .map((g) => {
+          const first = g[0];
+          const occurrences = g
+            .map((q) => ({
+              year: getYearFromTestId(q.testId, examId),
+              qNo: q.order || 0,
+            }))
+            .sort((a, b) => b.year - a.year);
 
-        return {
-          questionId: first.id,
-          text: first.text || '',
-          textEn: first.textEn,
-          occurrences,
-          count: g.length,
-          topics: [],
-        };
-      }).sort((a, b) => b.count - a.count);
+          return {
+            questionId: first.id,
+            text: first.text || '',
+            textEn: first.textEn,
+            occurrences,
+            count: g.length,
+            topics: [],
+          };
+        })
+        .sort((a, b) => b.count - a.count);
 
       return repeated;
     },
-    [cacheKey, 'v2'],
+    [cacheKey, 'v3'],
     { revalidate: 3600, tags: ['pyq-stats'] }
   )();
 }

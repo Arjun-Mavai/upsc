@@ -12,6 +12,10 @@ import {
   LucideIcon,
   Lock,
   Loader2,
+  Leaf,
+  Atom,
+  Network,
+  Library,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -19,6 +23,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { getSubjectPartAccess } from './actions';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { FREE_SUBJECTS } from '@/lib/pyq-constants';
 
 interface SubjectSeriesDialogProps {
   isOpen: boolean;
@@ -26,6 +31,7 @@ interface SubjectSeriesDialogProps {
   subject: string;
   totalQuestions: number;
   onSelectSeries: (limit: number, offset: number) => void;
+  isPro?: boolean;
 }
 
 const VARIANTS = {
@@ -66,9 +72,16 @@ const SUBJECT_CONFIG: Record<string, { color: keyof typeof VARIANTS; icon: Lucid
   Geography: { color: 'emerald', icon: LayoutGrid },
   Polity: { color: 'blue', icon: Layers },
   Economy: { color: 'amber', icon: Layers },
-  Science: { color: 'pink', icon: Layers },
-  ICT: { color: 'emerald', icon: Layers },
+  Science: { color: 'pink', icon: Atom },
+  ICT: { color: 'emerald', icon: LayoutGrid },
   'Current Affairs': { color: 'blue', icon: Calendar },
+  'Environment & Ecology': { color: 'emerald', icon: Leaf },
+  'Science & Technology': { color: 'pink', icon: Atom },
+  'Art & Culture': { color: 'pink', icon: Library },
+  'History (Ancient, Medieval, Modern)': { color: 'pink', icon: Calendar },
+  'Polity (Indian Constitution & Governance)': { color: 'blue', icon: Layers },
+  'Economy (Basic Economics & Indian Economy)': { color: 'amber', icon: Layers },
+  'Geography (India & World)': { color: 'emerald', icon: LayoutGrid },
 };
 
 export function SubjectSeriesDialog({
@@ -77,6 +90,7 @@ export function SubjectSeriesDialog({
   subject,
   totalQuestions,
   onSelectSeries,
+  isPro = false,
 }: SubjectSeriesDialogProps) {
   const router = useRouter();
   const { language } = useSettingsStore();
@@ -189,10 +203,10 @@ export function SubjectSeriesDialog({
 
                       const hasStatus = Object.prototype.hasOwnProperty.call(accessMap, item.part);
                       const userHasAccess = hasStatus && !status?.isLocked;
-                      const isFree = status?.isFree;
+                      const isFree = status?.isFree || FREE_SUBJECTS.includes(subject);
                       // Default to LOCKED if status is missing or explicitly locked
                       // Also wait for loading to complete
-                      const locked = !loading && (!hasStatus || !userHasAccess);
+                      const locked = !isPro && !isFree && (!loading && (!hasStatus || !userHasAccess));
 
                       const isItemLoading = loadingPart === item.part;
 
