@@ -109,7 +109,7 @@ export function ModernUnitCard({
       <div 
         className={cn(
           "flex cursor-pointer items-center gap-4 transition-all",
-          isFlat ? "p-4 sm:p-5" : "p-4 sm:p-5",
+          isFlat ? "p-3.5 sm:px-6 sm:py-4" : "p-4 sm:p-5",
           !isUnlocked && 'opacity-60 grayscale-[0.8]'
         )} 
         onClick={toggleSection}
@@ -160,7 +160,7 @@ export function ModernUnitCard({
         <div className={cn(
           "shrink-0 flex items-center justify-center rounded-full transition-all duration-300",
           isFlat 
-            ? cn("h-7 w-7", isExpanded ? "bg-[#1D1D1F] text-white" : "bg-white/60") 
+            ? cn("h-7 w-7", isExpanded ? "bg-[#1D1D1F] text-white" : "bg-black/[0.05]") 
             : "h-8 w-8 bg-[#F5F5F7] text-[#86868B]"
         )}>
           {isUnlocked ? (
@@ -183,7 +183,7 @@ export function ModernUnitCard({
           >
             <div className={cn(
               "border-t border-black/[0.04]",
-              isFlat ? "" : "bg-[#FAFAFB]"
+              isFlat ? "bg-white/50" : "bg-[#FAFAFB]"
             )}>
               {/* Toolbar */}
               <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-[#F5F5F7]/60">
@@ -216,7 +216,7 @@ export function ModernUnitCard({
               </div>
 
               {/* Questions List */}
-              <div className={cn("overflow-y-auto px-4 sm:px-6 py-4", showAllQuestions ? 'max-h-none' : 'max-h-[60vh]')}>
+              <div className={cn("overflow-y-auto", isFlat ? "px-0 pb-2" : "px-4 sm:px-6 py-4", showAllQuestions ? 'max-h-none' : 'max-h-[60vh]')}>
                 <ModernQuestionList
                   questions={questions}
                   isHindi={isHindi}
