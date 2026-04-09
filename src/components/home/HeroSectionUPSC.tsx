@@ -34,7 +34,7 @@ export function HeroSectionUPSC() {
           </div>
 
           <p className="mx-auto max-w-4xl px-2 text-lg leading-relaxed font-bold text-slate-700 md:text-3xl">
-            Master 6 Years of Organized PYQs (2020-2025) with Verdict, Logic Path & Trap Watch. The smartest way to decode the UPSC CSE pattern.
+            Master 6 Years of Organized PYQs (2020-2025 <span className="text-xs font-medium opacity-60 ml-1 md:text-base">(More years coming...)</span>) with Verdict, Logic Path & Trap Watch. The smartest way to decode the UPSC CSE pattern.
           </p>
         </div>
 
