@@ -28,6 +28,7 @@ interface ModernUnitCardProps {
   showPercentage?: boolean;
   groupQuestionsByYear?: boolean;
   year?: number;
+  isFlat?: boolean;
 }
 
 export function ModernUnitCard({
@@ -44,6 +45,7 @@ export function ModernUnitCard({
   showPercentage = true,
   groupQuestionsByYear = false,
   year,
+  isFlat = false,
 }: ModernUnitCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [showAllQuestions, setShowAllQuestions] = useState(false);
@@ -82,7 +84,12 @@ export function ModernUnitCard({
   };
 
   return (
-    <div className="relative rounded-2xl border border-[#E5E5EA] bg-white text-[#1D1D1F] overflow-hidden transition-all hover:border-[#D1D1D6] hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+    <div className={cn(
+      "relative overflow-hidden transition-all",
+      isFlat 
+        ? "bg-transparent border-b last:border-0" 
+        : "rounded-2xl border border-[#E5E5EA] bg-white text-[#1D1D1F] hover:border-[#D1D1D6] hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)]"
+    )}>
       <SyllabusLockModal open={lockModalOpen} onOpenChange={setLockModalOpen} />
 
       {isFreeSubjectNotPro && (
@@ -96,7 +103,11 @@ export function ModernUnitCard({
 
       {/* Header */}
       <div 
-        className={cn("flex cursor-pointer items-center gap-4 p-4 sm:p-5", !isUnlocked && 'opacity-60 grayscale-[0.8]')} 
+        className={cn(
+          "flex cursor-pointer items-center gap-4 transition-all",
+          isFlat ? "p-3 sm:p-5" : "p-4 sm:p-5",
+          !isUnlocked && 'opacity-60 grayscale-[0.8]'
+        )} 
         onClick={toggleSection}
       >
         <div className="relative">
@@ -110,7 +121,10 @@ export function ModernUnitCard({
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h4 className="truncate text-[15px] font-semibold text-[#1D1D1F] tracking-tight">
+            <h4 className={cn(
+              "truncate tracking-tight",
+              isFlat ? "text-[14px] font-bold text-[#1D1D1F]" : "text-[15px] font-semibold text-[#1D1D1F]"
+            )}>
               {formatUnitTitle(unitId, isHindi)}
             </h4>
             <span className="inline-flex items-center justify-center rounded-full bg-[#F5F5F7] px-2 py-0.5 text-[10px] font-medium text-[#86868B]">
@@ -139,7 +153,12 @@ export function ModernUnitCard({
           )}
         </div>
 
-        <div className="shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-[#F5F5F7] text-[#86868B]">
+        <div className={cn(
+          "shrink-0 flex items-center justify-center rounded-full transition-all duration-300",
+          isFlat 
+            ? cn("h-7 w-7", isExpanded ? "bg-[#1D1D1F] text-white" : "bg-white/60") 
+            : "h-8 w-8 bg-[#F5F5F7] text-[#86868B]"
+        )}>
           {isUnlocked ? (
             <ChevronDown className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-180")} />
           ) : (
@@ -155,9 +174,13 @@ export function ModernUnitCard({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden bg-[#FAFAFB]"
+            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+            className="overflow-hidden"
           >
-            <div className="border-t border-[#F5F5F7]">
+            <div className={cn(
+              "border-t border-[#F5F5F7]/20",
+              isFlat ? "" : "bg-[#FAFAFB]"
+            )}>
               {/* Toolbar */}
               <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-[#F5F5F7]/60">
                 <span className="text-[11px] font-bold tracking-widest text-[#86868B] uppercase">
@@ -200,6 +223,7 @@ export function ModernUnitCard({
                   examId={examId}
                   isPro={isPro}
                   onLockedClick={() => setLockModalOpen(true)}
+                  variant="flat"
                 />
 
                 {!isPro && questionCount > questions.length && (
