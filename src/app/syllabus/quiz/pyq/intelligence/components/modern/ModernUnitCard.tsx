@@ -105,7 +105,7 @@ export function ModernUnitCard({
       <div 
         className={cn(
           "flex cursor-pointer items-center gap-4 transition-all",
-          isFlat ? "p-3 sm:p-5" : "p-4 sm:p-5",
+          isFlat ? "p-4 sm:p-5" : "p-4 sm:p-5",
           !isUnlocked && 'opacity-60 grayscale-[0.8]'
         )} 
         onClick={toggleSection}

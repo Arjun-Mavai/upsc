@@ -44,7 +44,7 @@ export default function PYQIntelligenceModernClient({
       />
 
       {/* Main Content */}
-      <div className="mx-auto max-w-5xl space-y-12 px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl space-y-12 px-1.5 py-10 sm:px-6 lg:px-8">
         
         {/* Intro Section */}
         <div className="text-center sm:text-left pt-4 pb-2">

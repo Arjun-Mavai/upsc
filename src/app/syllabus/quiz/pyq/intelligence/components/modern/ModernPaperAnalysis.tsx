@@ -111,7 +111,7 @@ export function ModernPaperAnalysis({
               >
                 {/* Year Header */}
                 <div
-                  className="flex cursor-pointer items-center justify-between px-5 py-6 sm:p-7"
+                  className="flex cursor-pointer items-center justify-between p-4 sm:p-7 sm:gap-6"
                   onClick={() => toggleYear(year)}
                 >
                   <div className="flex flex-col gap-1.5">
