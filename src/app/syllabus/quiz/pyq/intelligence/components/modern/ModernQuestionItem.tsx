@@ -162,12 +162,22 @@ export function ModernQuestionItem({
 
               <motion.div layout="position" className="mt-2.5 flex flex-wrap items-center gap-2 sm:mt-4 sm:gap-3">
                 {showYear && question.year && (
-                  <span className={cn(
-                    "inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-semibold border",
-                    variant === 'card' ? "bg-white/60 backdrop-blur-sm border-white/50" : "bg-white/20 border-black/5"
-                  )}>
-                    {question.year}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className={cn(
+                      "inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-semibold border",
+                      variant === 'card' ? "bg-white/60 backdrop-blur-sm border-white/50" : "bg-white/20 border-black/5"
+                    )}>
+                      {question.year}
+                    </span>
+                    {question.qNo && (
+                      <span className={cn(
+                        "inline-flex items-center rounded-full px-1.5 py-0.5 text-[8px] font-black border uppercase tracking-tighter opacity-70",
+                        variant === 'card' ? "bg-white/40 border-white/30" : "bg-black/[0.03] border-black/5"
+                      )}>
+                        Q. {question.qNo}
+                      </span>
+                    )}
+                  </div>
                 )}
 
                 {question.subject && (
@@ -176,12 +186,6 @@ export function ModernQuestionItem({
                     variant === 'card' ? "bg-white/60 backdrop-blur-sm border-white/50" : "bg-white/20 border-black/5"
                   )}>
                     {question.subject}
-                  </span>
-                )}
-
-                {question.qNo && (
-                  <span className="text-[10px] font-semibold tracking-widest text-[#86868B] uppercase">
-                    Q{question.qNo}
                   </span>
                 )}
 
