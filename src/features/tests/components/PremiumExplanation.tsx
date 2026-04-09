@@ -221,11 +221,11 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
                       
                       // Pattern 3: Pipe-separated points (Hindi/English)
                       if (content.includes('|') && content.split('|').length >= 2) {
-                        const parts = content.split('|').map(part => part.trim()).filter(Boolean);
+                        const parts = content.split('|').map((part: string) => part.trim()).filter(Boolean);
                         if (parts.length >= 2) {
                           return (
                             <div className="space-y-2">
-                              {parts.map((part, idx) => (
+                              {parts.map((part: string, idx: number) => (
                                 <div key={idx} className="flex items-start gap-2 py-1">
                                   <span className={cn(
                                     'shrink-0 text-xs font-bold px-2 py-1 rounded',
@@ -243,11 +243,11 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
                       
                       // Pattern 4: Arrow flow (→)
                       if (content.includes('→')) {
-                        const steps = content.split('→').map(step => step.trim()).filter(Boolean);
+                        const steps = content.split('→').map((step: string) => step.trim()).filter(Boolean);
                         if (steps.length >= 2) {
                           return (
                             <div className="flex flex-wrap gap-2 items-center">
-                              {steps.map((step, idx) => (
+                              {steps.map((step: string, idx: number) => (
                                 <div key={idx} className="flex items-center">
                                   <span className={cn(
                                     'px-3 py-2 rounded-lg text-sm font-medium border',
@@ -271,11 +271,11 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
                       }
                       
                       // Pattern 5: Sentence-based breakdown (detect multiple sentences)
-                      const sentences = content.split(/(?<=[.।!?])\s+/).filter(s => s.trim().length > 10);
+                      const sentences = content.split(/(?<=[.।!?])\s+/).filter((s: string) => s.trim().length > 10);
                       if (sentences.length >= 3) {
                         return (
                           <div className="space-y-2">
-                            {sentences.map((sentence, idx) => (
+                            {sentences.map((sentence: string, idx: number) => (
                               <div key={idx} className="flex items-start gap-2 py-1">
                                 <span className={cn(
                                   'shrink-0 w-5 h-5 flex items-center justify-center rounded-full text-xs font-bold',

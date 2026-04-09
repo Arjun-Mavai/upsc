@@ -96,6 +96,7 @@ export default function BlogsClient({
     refetch,
   } = useInfiniteQuery({
     queryKey: ['blogs-upsc', activeCategory, fetchIsFreeAccess, debouncedSearch],
+    initialPageParam: 1,
     queryFn: async ({ pageParam = 1 }) => {
       return await getBlogs({
         page: pageParam as number,
@@ -422,7 +423,7 @@ export default function BlogsClient({
 
           {/* Sidebar */}
           <div className="space-y-6">
-            <PromoCard />
+            <PromoCard user={user} />
 
             {/* Quick Stats */}
             <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
