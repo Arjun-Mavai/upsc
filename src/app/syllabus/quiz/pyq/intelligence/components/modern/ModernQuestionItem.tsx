@@ -51,6 +51,7 @@ interface ModernQuestionItemProps {
   onLockedClick?: () => void;
   variant?: 'card' | 'flat';
   isAlternating?: boolean;
+  themeBg?: string;
 }
 
 export function ModernQuestionItem({
@@ -65,6 +66,7 @@ export function ModernQuestionItem({
   onLockedClick,
   variant = 'card',
   isAlternating = false,
+  themeBg = 'bg-transparent',
 }: ModernQuestionItemProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const { user, isSubscribed } = useSettingsStore();
@@ -97,8 +99,8 @@ export function ModernQuestionItem({
                 : cn("shadow-[0_4px_16px_rgba(0,0,0,0.02)] border", themeAccent.bg, themeAccent.border, themeAccent.hover, "hover:shadow-[0_4px_24px_rgba(0,0,0,0.05)]")
             )
           : cn(
-              "bg-transparent border-b last:border-0",
-              isAlternating ? "bg-black/[0.015]" : "bg-transparent",
+              "bg-transparent border-b border-black/[0.04] last:border-0",
+              themeBg !== 'bg-transparent' ? themeBg : (isAlternating ? "bg-black/[0.015]" : "bg-transparent"),
               isExpanded ? "pb-4" : "pb-2"
             ),
         !isUnlocked && "opacity-80 grayscale-[0.3]"

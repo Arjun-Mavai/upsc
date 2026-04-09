@@ -170,7 +170,8 @@ export function ModernPaperAnalysis({
                     >
                       <div className={cn("border-t p-1 sm:p-8 sm:pt-4", theme.border)}>
                         <div className="p-0.5 sm:p-2 space-y-1">
-                          {sortedSections.map((unitStat) => {
+                          {sortedSections.map((unitStat, unitIdx) => {
+                            const unitTheme = PASTEL_THEMES[unitIdx % PASTEL_THEMES.length];
                             const questions: QuestionData[] = unitStat.questions.map((q) => ({
                               id: q.id,
                               text: q.text,
@@ -201,6 +202,8 @@ export function ModernPaperAnalysis({
                                 groupQuestionsByYear={false}
                                 year={year}
                                 isFlat={true}
+                                themeBg={unitTheme.bg}
+                                themeBorder={unitTheme.border}
                               />
                             );
                           })}

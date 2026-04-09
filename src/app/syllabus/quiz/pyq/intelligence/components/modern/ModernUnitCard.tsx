@@ -29,6 +29,8 @@ interface ModernUnitCardProps {
   groupQuestionsByYear?: boolean;
   year?: number;
   isFlat?: boolean;
+  themeBg?: string;
+  themeBorder?: string;
 }
 
 export function ModernUnitCard({
@@ -46,6 +48,8 @@ export function ModernUnitCard({
   groupQuestionsByYear = false,
   year,
   isFlat = false,
+  themeBg = 'bg-white',
+  themeBorder = 'border-[#E5E5EA]',
 }: ModernUnitCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [showAllQuestions, setShowAllQuestions] = useState(false);
@@ -87,7 +91,7 @@ export function ModernUnitCard({
     <div className={cn(
       "relative overflow-hidden transition-all",
       isFlat 
-        ? "bg-transparent border-b last:border-0" 
+        ? cn("bg-transparent border-b border-black/[0.03] last:border-0", themeBg) 
         : "rounded-2xl border border-[#E5E5EA] bg-white text-[#1D1D1F] hover:border-[#D1D1D6] hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)]"
     )}>
       <SyllabusLockModal open={lockModalOpen} onOpenChange={setLockModalOpen} />
@@ -178,7 +182,7 @@ export function ModernUnitCard({
             className="overflow-hidden"
           >
             <div className={cn(
-              "border-t border-[#F5F5F7]/20",
+              "border-t border-black/[0.04]",
               isFlat ? "" : "bg-[#FAFAFB]"
             )}>
               {/* Toolbar */}

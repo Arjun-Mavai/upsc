@@ -6,6 +6,15 @@ import { cn } from '@/lib/utils';
 import { ModernQuestionItem, QuestionData } from './ModernQuestionItem';
 import { YearBadge } from '../shared/UnitBadge';
 
+const PASTEL_THEMES = [
+  { bg: 'bg-[#F2F8FF]', border: 'border-[#D9EAFE]' }, // Blue
+  { bg: 'bg-[#FFF6E9]', border: 'border-[#FFE4C4]' }, // Orange
+  { bg: 'bg-[#F1FAEE]', border: 'border-[#D1EED1]' }, // Green
+  { bg: 'bg-[#FEF1F2]', border: 'border-[#FDD1D4]' }, // Red
+  { bg: 'bg-[#FFFBED]', border: 'border-[#FFF0B3]' }, // Yellow
+  { bg: 'bg-[#F6F0FD]', border: 'border-[#E6D4F9]' }, // Purple
+];
+
 interface ModernQuestionListProps {
   questions: QuestionData[];
   isHindi: boolean;
@@ -85,6 +94,7 @@ export function ModernQuestionList({
                     onLockedClick={onLockedClick}
                     variant={variant}
                     isAlternating={idx % 2 !== 0}
+                    themeBg={variant === 'flat' ? PASTEL_THEMES[idx % PASTEL_THEMES.length].bg : 'bg-transparent'}
                   />
                 );
               })}
@@ -118,6 +128,7 @@ export function ModernQuestionList({
             onLockedClick={onLockedClick}
             variant={variant}
             isAlternating={idx % 2 !== 0}
+            themeBg={variant === 'flat' ? PASTEL_THEMES[idx % PASTEL_THEMES.length].bg : 'bg-transparent'}
           />
         );
       })}
