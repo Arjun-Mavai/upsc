@@ -33,6 +33,7 @@ export async function getCurrentUser() {
       isSubscribed: !!user.isSubscribed,
       planTier: (user.planTier as any) || 'free',
       role: user.role ?? undefined,
+      examType: user.examType ?? 'mppsc', // Added examType
       accessExpiresAt: user.accessExpiresAt ?? undefined,
     },
   };
@@ -166,6 +167,7 @@ export async function loginUserAction(formData: LoginParams) {
         isSubscribed: currentIsSubscribed,
         planTier: currentPlanTier,
         role: user.role ?? undefined,
+        examType: user.examType ?? 'mppsc', // Added examType
         accessExpiresAt: user.accessExpiresAt ?? undefined,
       },
     };

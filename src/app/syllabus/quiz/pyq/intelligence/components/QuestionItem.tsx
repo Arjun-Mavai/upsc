@@ -116,10 +116,13 @@ export function QuestionItem({
     if (ans.length === 1 && charCode >= 65 && charCode <= 68) return charCode - 65;
 
     // Fallback: try to find by ID or text in normalized options
-    return normalizedOptions.findIndex((opt) => 
-      String(opt.id).toUpperCase() === ans || 
-      String(opt.text).trim().toLowerCase() === String(question.correctAnswer).trim().toLowerCase() ||
-      String(opt.textEn).trim().toLowerCase() === String(question.correctAnswer).trim().toLowerCase()
+    return normalizedOptions.findIndex(
+      (opt) =>
+        String(opt.id).toUpperCase() === ans ||
+        String(opt.text).trim().toLowerCase() ===
+          String(question.correctAnswer).trim().toLowerCase() ||
+        String(opt.textEn).trim().toLowerCase() ===
+          String(question.correctAnswer).trim().toLowerCase()
     );
   }, [question.correctAnswer, normalizedOptions]);
 
@@ -141,8 +144,8 @@ export function QuestionItem({
             <div className="absolute top-0 right-4 sm:right-10">
               <div className="relative">
                 <div className="absolute inset-0 bg-amber-500 opacity-20 blur-md" />
-                <div className="relative flex items-center gap-1.5 rounded-b-xl bg-amber-500 px-3 py-1 sm:px-4 sm:py-1.5 text-[8px] sm:text-[9px] font-black tracking-[0.1em] sm:tracking-[0.2em] text-black uppercase shadow-lg">
-                  <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3 fill-black" />
+                <div className="relative flex items-center gap-1.5 rounded-b-xl bg-amber-500 px-3 py-1 text-[8px] font-black tracking-[0.1em] text-black uppercase shadow-lg sm:px-4 sm:py-1.5 sm:text-[9px] sm:tracking-[0.2em]">
+                  <Sparkles className="h-2.5 w-2.5 fill-black sm:h-3 sm:w-3" />
                   {isHindi ? 'फ्री एक्सेस' : 'FREE ACCESS'}
                 </div>
               </div>
@@ -151,14 +154,14 @@ export function QuestionItem({
 
           {/* Question Header Area */}
           <div
-            className="flex cursor-pointer items-start gap-3 sm:gap-5 p-4 sm:p-7"
+            className="flex cursor-pointer items-start gap-3 p-4 sm:gap-5 sm:p-7"
             onClick={() => setIsExpanded(!isExpanded)}
           >
             {/* Styled Numbering */}
-            <div className="relative flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center">
+            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center sm:h-10 sm:w-10">
               <div
                 className={cn(
-                  'absolute inset-0 rotate-45 rounded-lg sm:rounded-xl transition-colors',
+                  'absolute inset-0 rotate-45 rounded-lg transition-colors sm:rounded-xl',
                   isFreeAccess
                     ? 'bg-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.2)] group-hover:bg-amber-500/40'
                     : 'bg-amber-500/10 group-hover:bg-amber-500/20'
@@ -166,7 +169,7 @@ export function QuestionItem({
               />
               <span
                 className={cn(
-                  'relative text-xs sm:text-sm font-black',
+                  'relative text-xs font-black sm:text-sm',
                   isFreeAccess ? 'text-amber-400' : 'text-amber-500'
                 )}
               >
@@ -175,28 +178,28 @@ export function QuestionItem({
             </div>
 
             <div className="min-w-0 flex-1 pt-0.5 sm:pt-1">
-              <div
+              {/* <div
                 className={cn(
-                  'text-[14px] leading-[1.5] sm:text-[15px] sm:leading-[1.6] font-medium tracking-tight text-slate-100 sm:text-[17px]',
+                  'text-[14px] leading-[1.5] font-medium tracking-tight text-slate-100 sm:text-[15px] sm:text-[17px] sm:leading-[1.6]',
                   !isExpanded && 'line-clamp-2'
                 )}
                 dangerouslySetInnerHTML={{
                   __html: isExpanded
-                    ? displayText
+                    ? displayText.slice(0, 180) + (displayText.length > 180 ? '...' : '')
                     : displayText.slice(0, 180) + (displayText.length > 180 ? '...' : ''),
                 }}
-              />
+              /> */}
 
               <div className="mt-3 flex flex-wrap items-center gap-2 sm:gap-3">
                 <YearBadge
                   year={question.year ?? 2020}
                   variant="amber"
-                  className="border-amber-500/20 bg-amber-500/10 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-black text-amber-500 uppercase"
+                  className="border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[9px] font-black text-amber-500 uppercase sm:px-2.5 sm:py-1 sm:text-[10px]"
                 />
                 {question.subject && (
                   <Badge
                     className={cn(
-                      'border px-2 sm:px-3 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-black tracking-widest uppercase transition-all',
+                      'border px-2 py-0.5 text-[9px] font-black tracking-widest uppercase transition-all sm:px-3 sm:py-1 sm:text-[10px]',
                       (() => {
                         const subMeta = SUBJECTS.find(
                           (s) => s.name === question.subject || s.nameHi === question.subject
@@ -224,12 +227,12 @@ export function QuestionItem({
                 )}
 
                 {question.qNo && (
-                  <span className="text-[9px] sm:text-[10px] font-black tracking-widest text-slate-500 uppercase text-nowrap">
+                  <span className="text-[9px] font-black tracking-widest text-nowrap text-slate-500 uppercase sm:text-[10px]">
                     SET-Q{question.qNo}
                   </span>
                 )}
                 {repeatCount > 1 && (
-                  <Badge className="h-5 border-none bg-rose-500/20 px-1.5 text-[9px] sm:text-[10px] text-rose-400">
+                  <Badge className="h-5 border-none bg-rose-500/20 px-1.5 text-[9px] text-rose-400 sm:text-[10px]">
                     <Repeat className="mr-0.5 h-3 w-3" />
                     {isHindi ? `${repeatCount}x रिपीट` : `Repeated ${repeatCount}x`}
                   </Badge>
@@ -240,7 +243,7 @@ export function QuestionItem({
             <div className="mt-1 flex shrink-0 items-center">
               <div
                 className={cn(
-                  'flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/5 text-slate-500 transition-all',
+                  'flex h-7 w-7 items-center justify-center rounded-full bg-white/5 text-slate-500 transition-all sm:h-8 sm:w-8',
                   isExpanded
                     ? 'rotate-180 bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.5)]'
                     : 'group-hover:text-slate-300',
@@ -267,16 +270,16 @@ export function QuestionItem({
                 <div className="space-y-6 border-t border-white/[0.05] bg-slate-950/40 p-5 sm:p-7">
                   {examId === 'upsc' || variant === 'card' ? (
                     <div className="space-y-6">
-                      <UPSCQuestionRenderer 
-                        question={question as any} 
-                        isHindi={isHindi} 
-                        showOptions={isFreeAccess} 
+                      <UPSCQuestionRenderer
+                        question={question as any}
+                        isHindi={isHindi}
+                        showOptions={isFreeAccess}
                       />
                       {isFreeAccess && (question.explanation || question.explanationEn) && (
-                        <div className="pt-4 border-t border-white/5">
-                          <PremiumExplanation 
-                            explanation={question.explanation || ''} 
-                            explanationEn={question.explanationEn} 
+                        <div className="border-t border-white/5 pt-4">
+                          <PremiumExplanation
+                            explanation={question.explanation || ''}
+                            explanationEn={question.explanationEn}
                             language={isHindi ? 'hi' : 'en'}
                             darkMode={true}
                           />
@@ -289,7 +292,7 @@ export function QuestionItem({
                       {question.type === 'matching' &&
                         question.matchPairs &&
                         question.matchPairs.length > 0 && (
-                          <div className="rounded-2xl border border-white/5 bg-slate-900/50 p-4 shadow-inner mb-4">
+                          <div className="mb-4 rounded-2xl border border-white/5 bg-slate-900/50 p-4 shadow-inner">
                             <RenderTableQuestion
                               matchPairs={question.matchPairs}
                               language={isHindi ? 'hi' : 'en'}
@@ -300,7 +303,7 @@ export function QuestionItem({
 
                       {/* 2. Translation Alternative Fallback */}
                       {altText && altText !== displayText && (
-                        <div className="relative rounded-2xl border-l-[3px] border-amber-500/30 bg-amber-500/[0.03] p-4 text-[13px] leading-relaxed text-slate-400 italic mb-4">
+                        <div className="relative mb-4 rounded-2xl border-l-[3px] border-amber-500/30 bg-amber-500/[0.03] p-4 text-[13px] leading-relaxed text-slate-400 italic">
                           <div className="mb-1 text-[9px] font-black tracking-tighter text-amber-400/60 uppercase opacity-50">
                             Translated Reference
                           </div>
@@ -312,9 +315,12 @@ export function QuestionItem({
 
                   {(() => {
                     const isUPSC = examId === 'upsc';
-                    const baseUrl = isUPSC ? '/upsc/intelligence' : '/syllabus/quiz/pyq/intelligence';
-                    const subjectName = isHindi 
-                      ? SUBJECTS.find((s) => s.name === question.subject)?.nameHi || question.subject
+                    const baseUrl = isUPSC
+                      ? '/upsc/intelligence'
+                      : '/syllabus/quiz/pyq/intelligence';
+                    const subjectName = isHindi
+                      ? SUBJECTS.find((s) => s.name === question.subject)?.nameHi ||
+                        question.subject
                       : question.subject;
 
                     return (
@@ -323,8 +329,8 @@ export function QuestionItem({
                           href={`${baseUrl}/questions?subject=${encodeURIComponent(question.subject || 'All')}&source=subject`}
                           className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-500 transition-colors hover:text-amber-400"
                         >
-                          {isHindi 
-                            ? `${subjectName} के सभी प्रश्न देखें` 
+                          {isHindi
+                            ? `${subjectName} के सभी प्रश्न देखें`
                             : `See all ${subjectName} questions`}
                           <ArrowRight className="h-4 w-4" />
                         </Link>

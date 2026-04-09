@@ -22,6 +22,7 @@ const startPaymentSchema = z.object({
   phone: z.string().min(10, 'Phone must be at least 10 digits').max(20),
   source: z.string().optional(),
   planType: z.enum(['pro', 'upgrade']),
+  examId: z.string().default('upsc'), // Added examId
 });
 
 interface StartPaymentInput extends z.infer<typeof startPaymentSchema> {}
@@ -42,7 +43,7 @@ export async function startPayment(input: StartPaymentInput) {
       };
     }
 
-    const { name, email, phone, source, planType } = validatedInput.data;
+    const { name, email, phone, source, planType, examId } = validatedInput.data;
     const normalizedEmail = email.toLowerCase().trim();
 
     // ── PHASE 1: Find existing user by email
@@ -105,6 +106,7 @@ export async function startPayment(input: StartPaymentInput) {
         role: 'user',
         metadata: JSON.stringify({ source }),
         planTier: 'free',
+        examType: examId as 'upsc' | 'mppsc' | 'all',
       });
     }
 
@@ -116,7 +118,7 @@ export async function startPayment(input: StartPaymentInput) {
     const rows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'upsc'))
+      .where(eq(pricingConfig.id, examId))
       .limit(1);
     const p = rows[0] || PRICING_DEFAULTS;
 
@@ -138,7 +140,7 @@ export async function startPayment(input: StartPaymentInput) {
     const order = await instance.orders.create({
       amount,
       currency: 'INR',
-      notes: { planType, userId },
+      notes: { planType, userId, examId }, // Added examId to notes
     });
 
     return {
@@ -219,6 +221,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
 
     const order = await instance.orders.fetch(razorpay_order_id);
     const orderUserId = order.notes?.userId;
+    const purchasedExamId = (order.notes?.examId as string) || 'upsc'; // Extract examId
 
     if (orderUserId && orderUserId !== userId) {
       return { error: 'Order does not belong to this user' };
@@ -228,7 +231,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
     const rows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'upsc'))
+      .where(eq(pricingConfig.id, purchasedExamId))
       .limit(1);
     const p = rows[0] || PRICING_DEFAULTS;
 
@@ -242,6 +245,22 @@ export async function verifyPayment(input: VerifyPaymentInput) {
       return { error: 'Payment amount does not match any valid plan' };
     }
 
+    // 🔄 Logical ExamType Calculation
+    // If user is already subscribed and buying a DIFFERENT exam -> set to 'all'
+    const currentUser = await db.query.mppscUsers.findFirst({
+      where: eq(mppscUsers.id, userId),
+    });
+
+    let nextExamType: 'upsc' | 'mppsc' | 'all' = purchasedExamId as any;
+    if (currentUser?.isSubscribed) {
+      const currentType = currentUser.examType;
+      if (currentType !== purchasedExamId && currentType !== 'all') {
+        nextExamType = 'all';
+      } else {
+        nextExamType = currentType as any;
+      }
+    }
+
     await db.transaction(async (tx) => {
       await tx.insert(payments).values({
         id: uuidv4(),
@@ -252,6 +271,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         amount: amountInPaise,
         planTier,
         status: 'captured',
+        examType: purchasedExamId as any,
       });
 
       await tx
@@ -260,6 +280,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
           planTier,
           isSubscribed: true,
           isActive: true,
+          examType: nextExamType,
         })
         .where(eq(mppscUsers.id, userId));
     });

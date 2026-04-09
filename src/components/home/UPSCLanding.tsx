@@ -41,8 +41,7 @@ export function UPSCLanding({ exam }: UPSCLandingProps) {
       {/* 5. Instant Mode Feature (Logic Behind Every Option) */}
       <InstantModeSection />
 
-      {/* 5.5. Testimonials */}
-      <Testimonials />
+
 
       {/* 6. Why UPSC Intelligence? (4 Pillars) */}
       <section className="relative overflow-hidden bg-slate-50 py-32 md:py-48">
@@ -118,6 +117,9 @@ export function UPSCLanding({ exam }: UPSCLandingProps) {
 
       {/* 8. Pricing Section */}
       <PricingSection />
+
+      {/* 9. Testimonials */}
+      <Testimonials />
     </main>
   );
 }

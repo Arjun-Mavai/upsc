@@ -103,7 +103,10 @@ export function ModernQuestionItem({
 
       {/* Header Area */}
       <div
-        className="flex cursor-pointer items-start gap-4 p-5 sm:gap-6 sm:p-7 relative z-0"
+        className={cn(
+          "flex cursor-pointer items-start gap-4 p-4 sm:gap-6 sm:p-7 relative z-0",
+          isExpanded && "pb-2 sm:pb-4"
+        )}
         onClick={handleToggle}
       >
         {/* Apple Style Sleek Numbering */}
@@ -117,46 +120,57 @@ export function ModernQuestionItem({
         </div>
 
         <div className="min-w-0 flex-1">
-          <motion.div
-            layout="position"
-            className={cn(
-              "text-[16px] leading-[1.6] sm:text-[18px] font-medium tracking-tight text-[#1D1D1F]",
-              !isExpanded && "line-clamp-2"
-            )}
-            style={{ WebkitFontSmoothing: 'antialiased' }}
-            dangerouslySetInnerHTML={{
-              __html: isExpanded
-                ? displayText
-                : displayText.slice(0, 180) + (displayText.length > 180 ? '...' : ''),
-            }}
-          />
-
-          <motion.div layout="position" className="mt-4 flex flex-wrap items-center gap-2.5 sm:gap-3">
-            {showYear && question.year && (
-              <span className="inline-flex items-center rounded-full bg-white/60 backdrop-blur-sm px-3 py-1 text-[11px] font-semibold text-[#1D1D1F] shadow-[0_2px_8px_rgba(0,0,0,0.03)] border border-white/50">
-                {question.year}
+          {isExpanded ? (
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-black tracking-[0.2em] text-[#86868B] uppercase">
+                {isHindi ? 'यूपीएससी प्रश्न विश्लेषण' : 'UPSC Question Analysis'}
               </span>
-            )}
+              <h3 className="text-base font-bold tracking-tight text-[#1D1D1F] sm:text-lg">
+                {isHindi ? `प्रश्न #${index + 1}` : `Question #${index + 1}`}
+              </h3>
+            </div>
+          ) : (
+            <motion.div
+              layout="position"
+              className={cn(
+                "text-[15px] leading-[1.6] sm:text-[18px] font-medium tracking-tight text-[#1D1D1F]",
+                "line-clamp-2"
+              )}
+              style={{ WebkitFontSmoothing: 'antialiased' }}
+              dangerouslySetInnerHTML={{
+                __html: displayText.slice(0, 180) + (displayText.length > 180 ? '...' : ''),
+              }}
+            />
+          )}
 
-            {question.subject && (
-              <span className="inline-flex items-center rounded-full bg-white/60 backdrop-blur-sm px-3 py-1 text-[11px] font-semibold text-[#1D1D1F] uppercase tracking-wide shadow-[0_2px_8px_rgba(0,0,0,0.03)] border border-white/50">
-                {question.subject}
-              </span>
-            )}
+          {!isExpanded && (
+            <motion.div layout="position" className="mt-3 flex flex-wrap items-center gap-2 sm:mt-4 sm:gap-3">
+              {showYear && question.year && (
+                <span className="inline-flex items-center rounded-full bg-white/60 backdrop-blur-sm px-2.5 py-0.5 text-[10px] font-semibold text-[#1D1D1F] border border-white/50">
+                  {question.year}
+                </span>
+              )}
 
-            {question.qNo && (
-              <span className="text-[11px] font-semibold tracking-widest text-[#86868B] uppercase">
-                SET-Q{question.qNo}
-              </span>
-            )}
+              {question.subject && (
+                <span className="inline-flex items-center rounded-full bg-white/60 backdrop-blur-sm px-2.5 py-0.5 text-[10px] font-semibold text-[#1D1D1F] uppercase tracking-wide border border-white/50">
+                  {question.subject}
+                </span>
+              )}
 
-            {repeatCount > 1 && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600">
-                <Repeat className="h-3 w-3" />
-                {isHindi ? `${repeatCount}x रिपीट` : `Repeated ${repeatCount}x`}
-              </span>
-            )}
-          </motion.div>
+              {question.qNo && (
+                <span className="text-[10px] font-semibold tracking-widest text-[#86868B] uppercase">
+                  Q{question.qNo}
+                </span>
+              )}
+
+              {repeatCount > 1 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-600">
+                  <Repeat className="h-3 w-3" />
+                  {isHindi ? `${repeatCount}x रिपीट` : `Repeated ${repeatCount}x`}
+                </span>
+              )}
+            </motion.div>
+          )}
         </div>
 
         {/* Chevron / Lock Icon */}
@@ -186,7 +200,7 @@ export function ModernQuestionItem({
             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
             className={cn("overflow-hidden border-t", themeAccent.border)}
           >
-            <div className="px-5 pb-5 pt-2 sm:px-8 sm:pb-8 bg-white/60 backdrop-blur-md">
+            <div className="px-4 pb-4 pt-1 sm:px-8 sm:pb-8 bg-white/60 backdrop-blur-md">
               
               {/* Force theme="light" to get the crisp dark text */}
               <UPSCQuestionRenderer 

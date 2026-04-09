@@ -221,7 +221,7 @@ export function PaymentModal({
       }
 
       // 🚀 Server Action: Register + Create Order in ONE call
-      const startRes = await startPayment({ ...values, planType });
+      const startRes = await startPayment({ ...values, planType, examId });
 
       // Server-side block: existing lite/pro must be same logged-in user
       if (!startRes.success || !startRes.data) {

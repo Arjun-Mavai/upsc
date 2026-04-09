@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, Lock, ChevronRight, ArrowRight } from 'lucide-react';
+import { ChevronDown, Lock, ChevronRight, ArrowRight, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { OverallWeightageSubjectData } from '@/actions/pyq-analytics';
@@ -157,9 +157,17 @@ export function ModernOverallWeightage({
                       )}
                     </div>
                     <div className="min-w-0">
-                      <h4 className="truncate text-base font-bold tracking-tight text-[#1D1D1F] sm:text-lg">
-                        {isHindi ? sub.nameHi : sub.name}
-                      </h4>
+                      <div className="flex items-center gap-3">
+                        <h4 className="truncate text-base font-bold tracking-tight text-[#1D1D1F] sm:text-lg">
+                          {isHindi ? sub.nameHi : sub.name}
+                        </h4>
+                        {!isPro && FREE_SUBJECTS.includes(sub.name) && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[#1D1D1F] px-2 py-0.5 text-[9px] font-black tracking-widest text-white uppercase sm:px-2.5 sm:py-1">
+                            <Sparkles className="h-2.5 w-2.5" />
+                            {isHindi ? 'फ्री' : 'FREE'}
+                          </span>
+                        )}
+                      </div>
                       <div className="mt-1 flex items-center gap-2">
                         <span className="text-[13px] font-semibold text-[#86868B]">
                           {sub.count} {isHindi ? 'प्रश्न' : 'Questions'}
@@ -174,7 +182,7 @@ export function ModernOverallWeightage({
 
                   <div className="flex items-center justify-between sm:justify-end gap-3 pl-16 sm:gap-4 sm:pl-0">
                     <div className="flex-1 sm:flex-none">
-                      {isUnlocked && (
+                      {isUnlocked && isPro && (
                         <TransitionLink
                           href={`${baseUrl}/questions?subject=${encodeURIComponent(sub.name)}&source=subject`}
                           onClick={(e) => e.stopPropagation()}

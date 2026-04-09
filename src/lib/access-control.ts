@@ -69,6 +69,8 @@ export interface AccessControlUser {
   is_subscribed?: boolean | null; // DB variant
   planTier?: PlanTier | string | null;
   plan_tier?: PlanTier | string | null; // DB/Store variant
+  examType?: string | null; // 'upsc' | 'mppsc' | 'all'
+  exam_type?: string | null; // DB/Store variant
 }
 
 /**
@@ -96,25 +98,9 @@ export interface AccessResult {
  * 2. Admin hai? → 'pro' (full access)
  * 3. Subscribed hai? → uska plan check karo
  * 4. Warna → 'free'
- *
- * Edge Case Handled:
- * - DB me kabhi plan='free' par isSubscribed=true (legacy bug)
- * - Aise cases me 'lite' return karte hain (safe side)
- *
- * @param user - User object (can be null for guests)
- * @returns 'guest' | 'free' | 'lite' | 'pro'
- *
- * @example
- * const tier = getUserTier(user);
- * if (tier === 'pro') {
- *   // Show everything
- * }
  */
-/** Client API returns plan_tier (snake_case); server DB has planTier (camelCase). Support both. */
 function getPlanTierFromUser(user: AccessControlUser): PlanTier | null {
   if (!user) return null;
-  // Handle string cast to allow planTier/plan_tier flexibility
-  // Cast needed because types are loosely defined as string | null but we want stricter PlanTier where possible
   const u = user as { planTier?: string | null; plan_tier?: string | null };
   const rawTier = u.planTier ?? u.plan_tier ?? null;
 
@@ -125,28 +111,14 @@ function getPlanTierFromUser(user: AccessControlUser): PlanTier | null {
 }
 
 export function getUserTier(user: AccessControlUser | null): PlanTier | 'guest' {
-  // ───────────────────────────────────────────────────────────────
-  // CASE 1: No user (Guest)
-  // ───────────────────────────────────────────────────────────────
   if (!user) return 'guest';
-
-  // ───────────────────────────────────────────────────────────────
-  // CASE 2: Admin (Boss Mode!)
-  // ───────────────────────────────────────────────────────────────
   if (user.role === 'admin') return 'pro';
 
-  // ───────────────────────────────────────────────────────────────
-  // CASE 3: Subscribed User (isSubscribed / is_subscribed)
-  // ───────────────────────────────────────────────────────────────
   const isSubscribed = !!(user.isSubscribed ?? user.is_subscribed);
   if (isSubscribed) {
-    // 🎯 USER REQUEST: Treat all subscribed users as PRO (Only one model exists now)
     return 'pro';
   }
 
-  // ───────────────────────────────────────────────────────────────
-  // CASE 4: Non-Subscribed User (Free Plan)
-  // ───────────────────────────────────────────────────────────────
   return 'free';
 }
 
@@ -161,24 +133,53 @@ export interface ContentAccessFlags {
   isFreeAccess?: boolean | null;
   isLiteAccess?: boolean | null;
   isProAccess?: boolean | null;
+  examType?: string | null; // Added examType here
 }
 
 /**
  * hasAccessToContent — Single source of truth for "can this user access this item?"
  *
- * Use for: tests, syllabus topics (test flags), blogs.
- * - Free/Guest: sirf isFreeAccess === true
- * - Lite: isFreeAccess OR isLiteAccess
- * - Pro: isFreeAccess OR isLiteAccess OR isProAccess (Pro gets sab jo kisi bhi tier ke liye open hai)
- * - Admin: always true (caller should pass user; we don't have user here — so use canAccessTest/canAccessBlog etc for admin)
+ * Exam Separation Logic:
+ * 1. Free content (isFreeAccess) -> Everyone can see.
+ * 2. Content with examType='all' -> Anyone with a subscription can see.
+ * 3. User with examType='all' -> Can see everything (pro/lite based on tier).
+ * 4. User examType must match Content examType for Pro/Lite access.
  */
-export function hasAccessToContent(flags: ContentAccessFlags, tier: PlanTier | 'guest'): boolean {
-  const free = !!flags.isFreeAccess;
+export function hasAccessToContent(
+  flags: ContentAccessFlags,
+  user: AccessControlUser | null
+): boolean {
+  // 1. Admin bypass
+  if (user?.role === 'admin') return true;
+
+  // 2. Free content bypass
+  const isFree = !!flags.isFreeAccess;
+  if (isFree) return true;
+
+  // 3. User tier check
+  const tier = getUserTier(user);
+  if (tier === 'guest' || tier === 'free') return false; // Guest/Free only get isFreeAccess content
+
+  // 4. Exam Type Validation
+  const userExamType = user?.examType ?? user?.exam_type ?? 'mppsc'; // Default to mppsc for safety
+  const contentExamType = flags.examType ?? 'all';
+
+  // Logic:
+  // - If user has 'all' access -> OK
+  // - If content is for 'all' exams -> OK
+  // - Otherwise, they must match exactly.
+  if (userExamType !== 'all' && contentExamType !== 'all' && userExamType !== contentExamType) {
+    return false; // Wrong exam subscription!
+  }
+
+  // 5. Tier-specific flags check
   const lite = !!flags.isLiteAccess;
   const pro = flags.isProAccess !== false; // default true
-  if (tier === 'pro') return pro || lite || free; // Pro gets everything that's open to any tier
-  if (tier === 'lite') return lite || free;
-  return free; // guest / free
+
+  if (tier === 'pro') return pro || lite;
+  if (tier === 'lite') return lite;
+
+  return false;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -205,15 +206,14 @@ export function hasAccessToContent(flags: ContentAccessFlags, tier: PlanTier | '
  */
 export function canAccessTopic(topic: Topic, user: User): boolean {
   if ((user as any)?.role === 'admin') return true;
-  if (topic.isFree) return true;
-  const tier = getUserTier(user);
   return hasAccessToContent(
     {
       isFreeAccess: topic.isFree,
       isLiteAccess: topic.isLiteAccess,
       isProAccess: topic.isProAccess,
+      examType: topic.examType,
     },
-    tier
+    user
   );
 }
 
@@ -234,18 +234,19 @@ export function canAccessBlog(
     isLiteAccess: boolean | null;
     isProAccess: boolean | null;
     isPremium?: boolean | null;
+    examType?: string | null;
   },
   user: User
 ): boolean {
   if ((user as any)?.role === 'admin') return true;
-  const tier = getUserTier(user);
   return hasAccessToContent(
     {
       isFreeAccess: blog.isFreeAccess,
       isLiteAccess: blog.isLiteAccess,
       isProAccess: blog.isProAccess,
+      examType: blog.examType,
     },
-    tier
+    user
   );
 }
 
@@ -288,20 +289,16 @@ export function canAccessTest(test: Test, user: User): boolean {
   if (user?.role === 'admin') return true;
 
   // ───────────────────────────────────────────────────────────────
-  // CHECK 2: User ki tier nikalo
-  // ───────────────────────────────────────────────────────────────
-  const tier = getUserTier(user);
-
-  // ───────────────────────────────────────────────────────────────
-  // CHECK 3: Central rule — Pro gets everything open to any tier
+  // CHECK 2: Central rule — Combined Tier + Exam check
   // ───────────────────────────────────────────────────────────────
   return hasAccessToContent(
     {
       isFreeAccess: test.isFreeAccess,
       isLiteAccess: test.isLiteAccess,
       isProAccess: test.isProAccess,
+      examType: test.examType,
     },
-    tier
+    user
   );
 }
 
