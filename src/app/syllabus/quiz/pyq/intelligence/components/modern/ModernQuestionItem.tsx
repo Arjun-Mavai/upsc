@@ -123,8 +123,8 @@ export function ModernQuestionItem({
         {/* Apple Style Sleek Numbering */}
         <div className="flex shrink-0 flex-col items-center gap-1">
           <div className={cn(
-            "flex h-9 w-9 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-[18px] text-[14px] sm:text-[17px] font-semibold transition-colors backdrop-blur-sm border shadow-sm",
-            variant === 'card' ? "bg-white/60" : "bg-white",
+            "flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-xl text-[13px] sm:text-[17px] font-bold transition-colors backdrop-blur-sm border shadow-sm",
+            variant === 'card' ? "bg-white/60" : "bg-white/80 border-black/5",
             themeAccent.border
           )}>
             {index + 1}

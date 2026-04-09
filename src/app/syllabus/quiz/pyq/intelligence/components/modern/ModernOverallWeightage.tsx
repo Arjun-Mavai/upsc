@@ -16,12 +16,12 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 
 const PASTEL_THEMES = [
-  { bg: 'bg-[#F2F8FF]', border: 'border-[#D9EAFE]', hover: 'hover:bg-[#EAF4FF]', iconBg: 'bg-[#D9EAFE]' }, // Blue
-  { bg: 'bg-[#FFF6E9]', border: 'border-[#FFE4C4]', hover: 'hover:bg-[#FFF1DE]', iconBg: 'bg-[#FFE4C4]' }, // Orange
-  { bg: 'bg-[#F1FAEE]', border: 'border-[#D1EED1]', hover: 'hover:bg-[#E8F6E8]', iconBg: 'bg-[#D1EED1]' }, // Green
-  { bg: 'bg-[#FEF1F2]', border: 'border-[#FDD1D4]', hover: 'hover:bg-[#FEE7E9]', iconBg: 'bg-[#FDD1D4]' }, // Red
-  { bg: 'bg-[#FFFBED]', border: 'border-[#FFF0B3]', hover: 'hover:bg-[#FFF8D6]', iconBg: 'bg-[#FFF0B3]' }, // Yellow
-  { bg: 'bg-[#F6F0FD]', border: 'border-[#E6D4F9]', hover: 'hover:bg-[#F0E5FC]', iconBg: 'bg-[#E6D4F9]' }, // Purple
+  { bg: 'bg-[#F5F9FF]', border: 'border-[#E1EBFD]', hover: 'hover:bg-[#EAF4FF]', iconBg: 'bg-[#E1EBFD]' }, // Blue
+  { bg: 'bg-[#FFF9F2]', border: 'border-[#F9EAD9]', hover: 'hover:bg-[#FFF1DE]', iconBg: 'bg-[#F9EAD9]' }, // Ivory/Orange
+  { bg: 'bg-[#F3FAF3]', border: 'border-[#E2F0E2]', hover: 'hover:bg-[#E8F6E8]', iconBg: 'bg-[#E2F0E2]' }, // Green
+  { bg: 'bg-[#FFF5F6]', border: 'border-[#F9E4E6]', hover: 'hover:bg-[#FEE7E9]', iconBg: 'bg-[#F9E4E6]' }, // Red
+  { bg: 'bg-[#FFFCF0]', border: 'border-[#F8F1D5]', hover: 'hover:bg-[#FFF8D6]', iconBg: 'bg-[#F8F1D5]' }, // Yellow
+  { bg: 'bg-[#F9F6FF]', border: 'border-[#EDE8F9]', hover: 'hover:bg-[#F0E5FC]', iconBg: 'bg-[#EDE8F9]' }, // Purple
 ];
 
 interface ModernOverallWeightageProps {
@@ -140,7 +140,7 @@ export function ModernOverallWeightage({
               >
                 <div
                   className={cn(
-                    'flex cursor-pointer flex-col gap-4 p-5 sm:flex-row sm:items-center sm:p-6 sm:gap-6',
+                    'flex cursor-pointer flex-col gap-3 p-4 sm:flex-row sm:items-center sm:p-6 sm:gap-6',
                     !isUnlocked && 'opacity-60 grayscale-[0.8]'
                   )}
                   onClick={() => toggleSubject(sub.name)}
@@ -217,8 +217,8 @@ export function ModernOverallWeightage({
                       transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                       className="overflow-hidden"
                     >
-                      <div className={cn("border-t p-2 sm:p-8 sm:pt-4", theme.border)}>
-                        <div className="p-1 sm:p-2">
+                      <div className={cn("border-t p-1 sm:p-8 sm:pt-4", theme.border)}>
+                        <div className="p-0.5 sm:p-2">
                           {(() => {
                             const subjectData = subjectQuestionsData.find(
                               (data) => data.subject === sub.name || data.subject === sub.nameHi
