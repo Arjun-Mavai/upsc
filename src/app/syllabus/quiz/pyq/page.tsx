@@ -74,7 +74,7 @@ async function PYQPageData({ mode }: { mode?: string }) {
         isLiteAccess: false,
         isProAccess: true,
       },
-      tier
+      user
     );
 
   const enrichedTests = tests.map((test) => {
@@ -86,7 +86,7 @@ async function PYQPageData({ mode }: { mode?: string }) {
           isLiteAccess: test.isLiteAccess,
           isProAccess: test.isProAccess,
         },
-        tier
+        user
       );
     const attemptsCount = attempts[test.id] || 0;
     const attemptsLeft = maxRetries != null ? Math.max(0, maxRetries - attemptsCount) : null;

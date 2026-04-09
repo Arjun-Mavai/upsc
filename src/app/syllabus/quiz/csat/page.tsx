@@ -41,7 +41,7 @@ async function CSATPageData() {
           isLiteAccess: test.isLiteAccess,
           isProAccess: test.isProAccess,
         },
-        tier
+        user
       );
     const attemptsCount = attempts[test.id] || 0;
     const attemptsLeft = maxRetries != null ? Math.max(0, maxRetries - attemptsCount) : null;

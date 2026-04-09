@@ -41,7 +41,7 @@ async function FLTPageData() {
           isLiteAccess: test.isLiteAccess,
           isProAccess: test.isProAccess,
         },
-        tier
+        user
       );
     const isLocked = !hasAccess;
     const attemptsCount = attempts[test.id] || 0;
