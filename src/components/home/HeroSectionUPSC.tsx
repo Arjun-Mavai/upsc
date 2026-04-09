@@ -43,10 +43,10 @@ export function HeroSectionUPSC() {
           <button
             onClick={() => {
               startTransition(() => {
-                router.push('/syllabus/quiz/pyq');
+                router.push('/upsc/intelligence');
               });
             }}
-            onMouseEnter={() => router.prefetch('/syllabus/quiz/pyq')}
+            onMouseEnter={() => router.prefetch('/upsc/intelligence')}
             className="group relative w-full focus:outline-none"
           >
             <div className="relative flex h-14 w-full transform items-center justify-center overflow-hidden rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.2)] transition-all duration-500 group-hover:-translate-y-1 group-hover:scale-[1.03] group-hover:shadow-[0_40px_80px_rgba(245,158,11,0.2)] group-active:scale-[0.96] md:h-24">
@@ -63,7 +63,7 @@ export function HeroSectionUPSC() {
                 </div>
 
                 <span className="text-xs font-black tracking-widest whitespace-nowrap text-white uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] sm:text-sm md:text-xl md:tracking-[0.15em] lg:text-2xl">
-                  Analyze PYQs For Free
+                  Explore UPSC Intelligence
                 </span>
 
                 <ChevronRight
@@ -77,11 +77,11 @@ export function HeroSectionUPSC() {
           {/* Secondary Action */}
           <div className="flex w-full items-center justify-center gap-4 text-sm text-slate-600 md:text-lg">
             <Link
-              href="/syllabus/quiz/pyq"
+              href="/upsc/intelligence"
               className="group flex items-center gap-2 font-bold transition-colors hover:text-amber-700"
             >
               <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-1 md:h-5 md:w-5" />
-              <span>Explore UPSC PYQs</span>
+              <span>Dashboard Analysis</span>
             </Link>
             <span className="text-slate-400">•</span>
             <span className="font-bold">6 Years Data</span>
