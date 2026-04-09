@@ -110,7 +110,7 @@ export function ModernOverallWeightage({
   }, [router, baseUrl]);
 
   return (
-    <div className="space-y-8 pt-6">
+    <div className="space-y-6 pt-4 px-1.5 sm:px-4">
       <SyllabusLockModal open={lockModalOpen} onOpenChange={setLockModalOpen} />
 
       <div className="flex items-center justify-between px-1">
@@ -122,7 +122,7 @@ export function ModernOverallWeightage({
         </span>
       </div>
 
-      <div className="overflow-hidden rounded-[32px] border border-[#E5E5EA] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+      <div className="overflow-hidden rounded-[24px] sm:rounded-[32px] border border-[#E5E5EA] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
         <div className="flex flex-col">
           {subjectsWithCounts.map((sub, idx) => {
             const Icon = sub.icon;
@@ -135,7 +135,9 @@ export function ModernOverallWeightage({
                 key={sub.name} 
                 className={cn(
                   "border-b border-[#F5F5F7] last:border-0 transition-colors",
-                  isSubjectExpanded ? theme.bg : "bg-white hover:bg-[#FAFAFB]"
+                  isSubjectExpanded 
+                    ? theme.bg 
+                    : (idx % 2 === 0 ? theme.bg : "bg-white hover:bg-[#FAFAFB]")
                 )}
               >
                 <div

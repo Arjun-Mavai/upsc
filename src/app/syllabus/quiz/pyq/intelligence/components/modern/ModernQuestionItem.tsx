@@ -50,6 +50,7 @@ interface ModernQuestionItemProps {
   isFreeAccess?: boolean;
   onLockedClick?: () => void;
   variant?: 'card' | 'flat';
+  isAlternating?: boolean;
 }
 
 export function ModernQuestionItem({
@@ -63,6 +64,7 @@ export function ModernQuestionItem({
   isFreeAccess = false,
   onLockedClick,
   variant = 'card',
+  isAlternating = false,
 }: ModernQuestionItemProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const { user, isSubscribed } = useSettingsStore();
@@ -96,6 +98,7 @@ export function ModernQuestionItem({
             )
           : cn(
               "bg-transparent border-b last:border-0",
+              isAlternating ? "bg-black/[0.015]" : "bg-transparent",
               isExpanded ? "pb-4" : "pb-2"
             ),
         !isUnlocked && "opacity-80 grayscale-[0.3]"
@@ -224,7 +227,9 @@ export function ModernQuestionItem({
           >
             <div className={cn(
               "pb-4 pt-1",
-              variant === 'card' ? "px-3.5 sm:px-8 sm:pb-8" : "px-1 sm:px-4 sm:pb-6"
+              variant === 'card' 
+                ? "px-3.5 sm:px-8 sm:pb-8" 
+                : "px-1.5 sm:px-4 sm:pb-6 bg-white/70 backdrop-blur-md rounded-[18px] mx-1 sm:mx-2 mt-1 mb-2 shadow-sm border border-white/40"
             )}>
               
               {/* Force theme="light" to get the crisp dark text */}

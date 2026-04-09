@@ -84,6 +84,7 @@ export function ModernQuestionList({
                     isFreeAccess={isFreeAccess}
                     onLockedClick={onLockedClick}
                     variant={variant}
+                    isAlternating={idx % 2 !== 0}
                   />
                 );
               })}
@@ -116,6 +117,7 @@ export function ModernQuestionList({
             isFreeAccess={isFreeAccess}
             onLockedClick={onLockedClick}
             variant={variant}
+            isAlternating={idx % 2 !== 0}
           />
         );
       })}
