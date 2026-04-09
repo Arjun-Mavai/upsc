@@ -56,7 +56,8 @@ export default function BlogsClient({
   initialCounts,
   user,
 }: BlogsClientProps) {
-  const { isAccessible: hasAccess } = useSettingsStore();
+  const { isSubscribed, user: storeUser } = useSettingsStore();
+  const hasAccess = isSubscribed || storeUser?.role === 'admin';
   const isGuest = !isDatabaseUser(user);
 
   // 3. State Hooks - Simplified for UPSC (subject-wise only)
@@ -387,13 +388,11 @@ export default function BlogsClient({
                   <BlogCard
                     key={blog.id}
                     blog={blog}
-                    user={user}
+                    index={index}
+                    isLocked={!canAccessBlog(blog, user)}
                     returnToQuery={returnToQuery}
-                    hasAccess={hasAccess}
-                    canAccess={canAccessBlog(blog, user)}
                     isNavigating={navigatingId === blog.id}
                     onNavigate={handleNavigate}
-                    showPromo={index === 2}
                   />
                 ))}
 
