@@ -17,6 +17,7 @@ interface ModernQuestionListProps {
   examId?: string;
   isPro?: boolean;
   onLockedClick?: () => void;
+  variant?: 'card' | 'flat';
 }
 
 const FREE_SUBJECT = 'History';
@@ -33,6 +34,7 @@ export function ModernQuestionList({
   examId,
   isPro = false,
   onLockedClick,
+  variant = 'card',
 }: ModernQuestionListProps) {
   const [showAll, setShowAll] = useState(false);
 
@@ -81,6 +83,7 @@ export function ModernQuestionList({
                     examId={examId}
                     isFreeAccess={isFreeAccess}
                     onLockedClick={onLockedClick}
+                    variant={variant}
                   />
                 );
               })}
@@ -112,6 +115,7 @@ export function ModernQuestionList({
             examId={examId}
             isFreeAccess={isFreeAccess}
             onLockedClick={onLockedClick}
+            variant={variant}
           />
         );
       })}

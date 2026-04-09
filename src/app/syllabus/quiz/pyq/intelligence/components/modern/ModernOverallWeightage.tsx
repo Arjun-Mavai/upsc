@@ -217,8 +217,8 @@ export function ModernOverallWeightage({
                       transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                       className="overflow-hidden"
                     >
-                      <div className={cn("border-t p-4 sm:p-8 sm:pt-4", theme.border)}>
-                        <div className="rounded-[24px] bg-white/40 backdrop-blur-md p-4 sm:p-6 border border-white/50 shadow-sm">
+                      <div className={cn("border-t p-2 sm:p-8 sm:pt-4", theme.border)}>
+                        <div className="p-1 sm:p-2">
                           {(() => {
                             const subjectData = subjectQuestionsData.find(
                               (data) => data.subject === sub.name || data.subject === sub.nameHi
@@ -249,6 +249,7 @@ export function ModernOverallWeightage({
                                   examId={examId}
                                   isPro={isPro}
                                   onLockedClick={() => setLockModalOpen(true)}
+                                  variant="flat"
                                 />
                               </div>
                             ) : (

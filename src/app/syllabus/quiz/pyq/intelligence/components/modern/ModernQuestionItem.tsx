@@ -49,6 +49,7 @@ interface ModernQuestionItemProps {
   examId?: string;
   isFreeAccess?: boolean;
   onLockedClick?: () => void;
+  variant?: 'card' | 'flat';
 }
 
 export function ModernQuestionItem({
@@ -61,6 +62,7 @@ export function ModernQuestionItem({
   examId,
   isFreeAccess = false,
   onLockedClick,
+  variant = 'card',
 }: ModernQuestionItemProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const { user, isSubscribed } = useSettingsStore();
@@ -84,10 +86,18 @@ export function ModernQuestionItem({
       layout
       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
       className={cn(
-        "group relative overflow-hidden rounded-[24px] sm:rounded-[32px] transition-all duration-500",
-        isExpanded 
-          ? cn("shadow-[0_8px_30px_rgba(0,0,0,0.06)]", themeAccent.bg, themeAccent.border, "border-b-0") 
-          : cn("shadow-[0_4px_16px_rgba(0,0,0,0.02)] border", themeAccent.bg, themeAccent.border, themeAccent.hover, "hover:shadow-[0_4px_24px_rgba(0,0,0,0.05)]"),
+        "group relative overflow-hidden transition-all duration-500",
+        variant === 'card' 
+          ? cn(
+              "rounded-[24px] sm:rounded-[32px]",
+              isExpanded 
+                ? cn("shadow-[0_8px_30px_rgba(0,0,0,0.06)]", themeAccent.bg, themeAccent.border, "border-b-0") 
+                : cn("shadow-[0_4px_16px_rgba(0,0,0,0.02)] border", themeAccent.bg, themeAccent.border, themeAccent.hover, "hover:shadow-[0_4px_24px_rgba(0,0,0,0.05)]")
+            )
+          : cn(
+              "bg-transparent border-b last:border-0",
+              isExpanded ? "pb-4" : "pb-2"
+            ),
         !isUnlocked && "opacity-80 grayscale-[0.3]"
       )}
     >
@@ -104,15 +114,17 @@ export function ModernQuestionItem({
       {/* Header Area */}
       <div
         className={cn(
-          "flex cursor-pointer items-start gap-4 p-3.5 sm:gap-6 sm:p-7 relative z-0",
-          isExpanded && "pb-1 sm:pb-3"
+          "flex cursor-pointer items-start gap-3 sm:gap-6 relative z-0",
+          variant === 'card' ? "p-3.5 sm:p-7" : "py-4 px-1 sm:px-4",
+          isExpanded && (variant === 'card' ? "pb-1 sm:pb-3" : "pb-2 sm:pb-4")
         )}
         onClick={handleToggle}
       >
         {/* Apple Style Sleek Numbering */}
         <div className="flex shrink-0 flex-col items-center gap-1">
           <div className={cn(
-            "flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl sm:rounded-[18px] text-[15px] sm:text-[17px] font-semibold transition-colors bg-white/60 text-[#1D1D1F] backdrop-blur-sm border shadow-sm",
+            "flex h-9 w-9 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-[18px] text-[14px] sm:text-[17px] font-semibold transition-colors backdrop-blur-sm border shadow-sm",
+            variant === 'card' ? "bg-white/60" : "bg-white",
             themeAccent.border
           )}>
             {index + 1}
@@ -130,54 +142,61 @@ export function ModernQuestionItem({
               </h3>
             </div>
           ) : (
-            <motion.div
-              layout="position"
-              className={cn(
-                "text-[15px] leading-[1.6] sm:text-[18px] font-medium tracking-tight text-[#1D1D1F]",
-                "line-clamp-2"
-              )}
-              style={{ WebkitFontSmoothing: 'antialiased' }}
-              dangerouslySetInnerHTML={{
-                __html: displayText.slice(0, 180) + (displayText.length > 180 ? '...' : ''),
-              }}
-            />
-          )}
+            <>
+              <motion.div
+                layout="position"
+                className={cn(
+                  "text-[15px] leading-[1.6] sm:text-[18px] font-medium tracking-tight text-[#1D1D1F]",
+                  "line-clamp-2"
+                )}
+                style={{ WebkitFontSmoothing: 'antialiased' }}
+                dangerouslySetInnerHTML={{
+                  __html: displayText.slice(0, 180) + (displayText.length > 180 ? '...' : ''),
+                }}
+              />
 
-          {!isExpanded && (
-            <motion.div layout="position" className="mt-3 flex flex-wrap items-center gap-2 sm:mt-4 sm:gap-3">
-              {showYear && question.year && (
-                <span className="inline-flex items-center rounded-full bg-white/60 backdrop-blur-sm px-2.5 py-0.5 text-[10px] font-semibold text-[#1D1D1F] border border-white/50">
-                  {question.year}
-                </span>
-              )}
+              <motion.div layout="position" className="mt-2.5 flex flex-wrap items-center gap-2 sm:mt-4 sm:gap-3">
+                {showYear && question.year && (
+                  <span className={cn(
+                    "inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-semibold border",
+                    variant === 'card' ? "bg-white/60 backdrop-blur-sm border-white/50" : "bg-white/20 border-black/5"
+                  )}>
+                    {question.year}
+                  </span>
+                )}
 
-              {question.subject && (
-                <span className="inline-flex items-center rounded-full bg-white/60 backdrop-blur-sm px-2.5 py-0.5 text-[10px] font-semibold text-[#1D1D1F] uppercase tracking-wide border border-white/50">
-                  {question.subject}
-                </span>
-              )}
+                {question.subject && (
+                  <span className={cn(
+                    "inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide border",
+                    variant === 'card' ? "bg-white/60 backdrop-blur-sm border-white/50" : "bg-white/20 border-black/5"
+                  )}>
+                    {question.subject}
+                  </span>
+                )}
 
-              {question.qNo && (
-                <span className="text-[10px] font-semibold tracking-widest text-[#86868B] uppercase">
-                  Q{question.qNo}
-                </span>
-              )}
+                {question.qNo && (
+                  <span className="text-[10px] font-semibold tracking-widest text-[#86868B] uppercase">
+                    Q{question.qNo}
+                  </span>
+                )}
 
-              {repeatCount > 1 && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-600">
-                  <Repeat className="h-3 w-3" />
-                  {isHindi ? `${repeatCount}x रिपीट` : `Repeated ${repeatCount}x`}
-                </span>
-              )}
-            </motion.div>
+                {repeatCount > 1 && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-600">
+                    <Repeat className="h-3 w-3" />
+                    {isHindi ? `${repeatCount}x रिपीट` : `Repeated ${repeatCount}x`}
+                  </span>
+                )}
+              </motion.div>
+            </>
           )}
         </div>
 
         {/* Chevron / Lock Icon */}
-        <div className="mt-1 flex shrink-0 items-center pl-2">
+        <div className="mt-0.5 flex shrink-0 items-center pl-2">
           <div
             className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-full bg-white/60 text-[#1D1D1F] backdrop-blur-sm transition-transform duration-300 shadow-sm border border-white/50',
+              'flex h-7 w-7 items-center justify-center rounded-full transition-all duration-300 shadow-sm border border-white/50',
+              variant === 'card' ? "bg-white/60" : "bg-white/40",
               isExpanded && 'rotate-180 bg-[#1D1D1F] text-white'
             )}
           >
@@ -197,10 +216,16 @@ export function ModernQuestionItem({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-            className={cn("overflow-hidden border-t", themeAccent.border)}
+            className={cn(
+              "overflow-hidden", 
+              variant === 'card' && "border-t", 
+              themeAccent.border
+            )}
           >
-            <div className="px-3.5 pb-4 pt-1 sm:px-8 sm:pb-8">
+            <div className={cn(
+              "pb-4 pt-1",
+              variant === 'card' ? "px-3.5 sm:px-8 sm:pb-8" : "px-1 sm:px-4 sm:pb-6"
+            )}>
               
               {/* Force theme="light" to get the crisp dark text */}
               <UPSCQuestionRenderer 
@@ -220,7 +245,7 @@ export function ModernQuestionItem({
                         : question.explanationEn || question.explanation || ''
                     }
                     darkMode={false}
-                    compact={false}
+                    compact={true}
                     language={isHindi ? 'hi' : 'en'}
                   />
                 )}
