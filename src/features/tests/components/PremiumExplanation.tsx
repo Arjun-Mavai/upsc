@@ -95,22 +95,38 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
             <div
               key={ai.key}
               className={cn(
-                'group relative overflow-hidden rounded-2xl border p-4 transition-all duration-300',
-                ai.color === 'emerald' &&
-                  'border-emerald-500/20 bg-emerald-500/[0.03] hover:bg-emerald-500/[0.05]',
-                ai.color === 'amber' &&
-                  'border-amber-500/20 bg-amber-500/[0.03] hover:bg-amber-500/[0.05]',
-                ai.color === 'indigo' &&
-                  'border-indigo-500/20 bg-indigo-500/[0.03] hover:bg-indigo-500/[0.05]',
-                ai.color === 'rose' &&
-                  'border-rose-500/20 bg-rose-500/[0.03] hover:bg-rose-500/[0.05]'
+                'group relative overflow-hidden transition-all duration-300',
+                compact
+                  ? 'mb-6 last:mb-0 px-0.5'
+                  : cn(
+                      'rounded-2xl border p-4',
+                      ai.color === 'emerald' &&
+                        'border-emerald-500/20 bg-emerald-500/[0.03] hover:bg-emerald-500/[0.05]',
+                      ai.color === 'amber' &&
+                        'border-amber-500/20 bg-amber-500/[0.03] hover:bg-amber-500/[0.05]',
+                      ai.color === 'indigo' &&
+                        'border-indigo-500/20 bg-indigo-500/[0.03] hover:bg-indigo-500/[0.05]',
+                      ai.color === 'rose' &&
+                        'border-rose-500/20 bg-rose-500/[0.03] hover:bg-rose-500/[0.05]'
+                    )
               )}
             >
+              {compact && (
+                <div 
+                  className={cn(
+                    "absolute top-0 bottom-0 left-0 w-1 rounded-full",
+                    ai.color === 'emerald' && 'bg-emerald-500/40',
+                    ai.color === 'amber' && 'bg-amber-500/40',
+                    ai.color === 'indigo' && 'bg-indigo-500/40',
+                    ai.color === 'rose' && 'bg-rose-500/40'
+                  )} 
+                />
+              )}
               <div className="mb-2 flex items-center gap-2.5">
                 <div
                   className={cn(
-                    'flex h-8 w-8 items-center justify-center rounded-xl',
-                    `bg-${ai.color}-500/10`
+                    'flex h-7 w-7 items-center justify-center rounded-lg sm:h-8 sm:w-8',
+                    compact ? 'bg-transparent' : `bg-${ai.color}-500/10`
                   )}
                 >
                   {ai.icon}
@@ -127,6 +143,7 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
               <div
                 className={cn(
                   'text-[14px] leading-relaxed font-semibold tracking-tight sm:text-[15.5px]',
+                  compact ? 'pl-4' : '',
                   darkMode ? 'text-slate-200' : 'text-slate-800'
                 )}
               >

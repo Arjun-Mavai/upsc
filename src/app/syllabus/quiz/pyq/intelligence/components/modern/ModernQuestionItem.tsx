@@ -104,8 +104,8 @@ export function ModernQuestionItem({
       {/* Header Area */}
       <div
         className={cn(
-          "flex cursor-pointer items-start gap-4 p-4 sm:gap-6 sm:p-7 relative z-0",
-          isExpanded && "pb-2 sm:pb-4"
+          "flex cursor-pointer items-start gap-4 p-3.5 sm:gap-6 sm:p-7 relative z-0",
+          isExpanded && "pb-1 sm:pb-3"
         )}
         onClick={handleToggle}
       >
@@ -200,7 +200,7 @@ export function ModernQuestionItem({
             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
             className={cn("overflow-hidden border-t", themeAccent.border)}
           >
-            <div className="px-4 pb-4 pt-1 sm:px-8 sm:pb-8 bg-white/60 backdrop-blur-md">
+            <div className="px-3.5 pb-4 pt-1 sm:px-8 sm:pb-8">
               
               {/* Force theme="light" to get the crisp dark text */}
               <UPSCQuestionRenderer 

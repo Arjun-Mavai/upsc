@@ -554,7 +554,7 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
   );
 
   return (
-    <div className={cn('space-y-5 font-serif selection:bg-emerald-500/30', styles.container)}>
+    <div className={cn('space-y-4 font-serif selection:bg-emerald-500/30', styles.container)}>
       {/* Context/Introduction */}
       {contextStr && (
         <div className={cn(
@@ -568,8 +568,8 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
       {/* List Items - UPSC Paper Style */}
       {displayItems.length > 0 && (
         <div className={cn(
-          'py-3',
-          isStatementType ? 'space-y-5' : 'space-y-3 pl-2 sm:pl-4'
+          'py-2',
+          isStatementType ? 'space-y-4' : 'space-y-2.5 pl-2 sm:pl-4'
         )}>
           {displayItems.map((item, idx) => (
             <div key={idx} className={cn(
@@ -602,7 +602,7 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
 
       {/* Assertion/Reason Layout */}
       {ext?.layoutType === 'assertion_reason' && (
-        <div className="space-y-6 py-3">
+        <div className="space-y-5 py-2">
           {[
             { label: isHindi ? 'कथन-I' : 'Statement-I', text: isHindi ? ext.statementI : ext.statementIEn || ext.statementI },
             { label: isHindi ? 'कथन-II' : 'Statement-II', text: isHindi ? ext.statementII : ext.statementIIEn || ext.statementII },
@@ -642,7 +642,7 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
       {questionLine && (
         <div className="mt-6">
           <div className={cn(
-            'border-l-4 px-5 py-4 rounded-r-xl',
+            'border-l-4 px-4 py-3 rounded-r-xl',
             styles.questionLine
           )}>
             <div className={cn(
@@ -657,7 +657,7 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
       {/* Options */}
       {showOptions && options.length > 0 && (
         <div className={cn(
-          'mt-8 pt-6',
+          'mt-6 pt-5',
           theme === 'dark' ? 'border-t border-white/5' : 'border-t border-slate-100'
         )}>
           <div className="mb-5 flex items-center gap-3">
