@@ -1,15 +1,9 @@
 'use client';
 
-import { useSettingsStore } from '@/store/useSettingsStore';
-import { UnitDistributionStats, RepeatedQuestion, TopicStat, SubjectDistributionStats, OverallWeightageSubjectData } from '@/actions/pyq-analytics';
-import { getCurrentExam } from '@/config/exams';
-import {
-  PYQHeader,
-  // PYQMenu, // Temporarily hidden
-  OverallWeightage,
-  PaperAnalysis,
-  // MostRepeatedTopics, // Temporarily hidden
-} from './components';
+import { useState } from 'react';
+import { SubjectDistributionStats, UnitDistributionStats, RepeatedQuestion, TopicStat, OverallWeightageSubjectData } from '@/actions/pyq-analytics';
+import PYQIntelligenceModernClient from './PYQIntelligenceModernClient';
+import PYQIntelligenceClassicClient from './PYQIntelligenceClassicClient';
 
 interface PYQIntelligenceClientProps {
   examId?: string;
@@ -17,83 +11,36 @@ interface PYQIntelligenceClientProps {
   stats: UnitDistributionStats[];
   repeatedQuestions: RepeatedQuestion[];
   topicStats: Record<string, TopicStat[]>;
-  simpleSubjectStats: Record<string, number>; // Same as PYQ page
+  simpleSubjectStats: Record<string, number>;
   subjectQuestionsData: OverallWeightageSubjectData[];
   isPro?: boolean;
 }
 
-export default function PYQIntelligenceClient({
-  examId,
-  subjectStats: _subjectStats,
-  stats,
-  repeatedQuestions,
-  topicStats: _topicStats,
-  simpleSubjectStats,
-  subjectQuestionsData,
-  isPro = false,
-}: PYQIntelligenceClientProps) {
-  const { language } = useSettingsStore();
-  const isHindi = language === 'hi';
-  const exam = getCurrentExam(examId);
+export default function PYQIntelligenceClient(props: PYQIntelligenceClientProps) {
+  const [isModern, setIsModern] = useState(true);
 
-  // Compute combined stats for MostRepeatedTopics - Temporarily disabled
-  /*
-  const combinedStats = stats.reduce((acc, curr) => {
-    if (!acc[curr.unitId]) {
-      acc[curr.unitId] = {
-        unitTitle: curr.unitTitle,
-      };
-    }
-    return acc;
-  }, {} as Record<string, { unitTitle: string }>);
-  */
+  if (isModern) {
+    return (
+      <PYQIntelligenceModernClient 
+        {...props} 
+        onToggleMode={() => setIsModern(false)} 
+      />
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-950 pb-20 text-white selection:bg-indigo-500/30">
-      {/* Background Effects */}
-      <div className="pointer-events-none fixed inset-0">
-        <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[100px]" />
-        <div className="absolute right-[-10%] bottom-[-10%] h-[500px] w-[500px] rounded-full bg-teal-500/10 blur-[100px]" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px] opacity-20" />
+    <div className="relative">
+      {/* Floating Toggle Button for Classic to Modern */}
+      <div className="fixed top-4 right-4 z-50 sm:top-6 sm:right-6">
+        <button
+          onClick={() => setIsModern(true)}
+          className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-900/80 px-4 py-2 text-xs font-black tracking-widest text-white shadow-xl backdrop-blur-xl transition hover:bg-slate-800"
+        >
+          <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+          MODERN VIEW
+        </button>
       </div>
-
-      {/* Header */}
-      <PYQHeader
-        title={isHindi ? exam.nameHi : exam.name}
-        subtitle={isHindi ? exam.subtitleHi : exam.subtitle}
-      />
-
-      {/* Main Content */}
-      <div className="relative mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
-        {/* PYQ Analysis Menu - Hidden per User Request */}
-        {/* <PYQMenu examId={examId} isHindi={isHindi} currentPage="intelligence" /> */}
-
-        {/* Overall Weightage (Subject-wise 2020-2025) */}
-        <OverallWeightage
-          examId={examId}
-          simpleSubjectStats={simpleSubjectStats}
-          subjectQuestionsData={subjectQuestionsData}
-          isHindi={isHindi}
-          isPro={isPro}
-        />
-
-        {/* Most Repeated Topics - Temporarily Hidden */}
-        {/* <MostRepeatedTopics
-          topicStats={topicStats}
-          combinedStats={combinedStats}
-          isHindi={isHindi}
-          isPro={isPro}
-        /> */}
-
-        {/* Paper-wise Analysis (Year by Year) */}
-        <PaperAnalysis
-          examId={examId}
-          stats={stats}
-          repeatedQuestions={repeatedQuestions}
-          isHindi={isHindi}
-          isPro={isPro}
-        />
-      </div>
+      <PYQIntelligenceClassicClient {...props} />
     </div>
   );
 }
