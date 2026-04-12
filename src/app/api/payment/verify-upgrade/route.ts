@@ -3,13 +3,13 @@ import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
 import { db } from '@/db';
-import { payments, mppscUsers, pricingConfig } from '@/db/schema';
+import { payments, mppscUsers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { Resend } from 'resend';
 import { v4 as uuidv4 } from 'uuid';
 import { checkRateLimit } from '@/lib/rate-limit';
-import { PRICING_DEFAULTS } from '@/config/pricing';
 import { notifyAdminOnPayment, notifyAdminOnEmailFailure } from '@/lib/admin-notify';
+import { getPricingConfigRow, pricingRowToData } from '@/lib/pricing-db';
 
 /**
  * Payment Verification API FOR UPGRADES 🚀
@@ -112,17 +112,11 @@ export async function POST(req: Request) {
     // 💡 Note: razorpay_key_id public hota h (safe to expose), secret server par safe h.
     const paidAmount = order.amount as number;
 
-    // 🏷️ Plan Verification - UPSC has only Pro plan
-    const pricingRows = await db
-      .select()
-      .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'upsc'))
-      .limit(1);
-    const p = pricingRows[0] || PRICING_DEFAULTS;
+    // 🏷️ Plan Verification — same DB row as /pricing & admin
+    const p = pricingRowToData(await getPricingConfigRow('upsc'));
 
-    // We expect user to pay pro price
-    const proAmountPaise = (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100;
-    const upgradeAmountPaise = ((p as any).upgradePrice ?? 99) * 100;
+    const proAmountPaise = p.proPrice * 100;
+    const upgradeAmountPaise = p.upgradePrice * 100;
 
     const isValidAmount = paidAmount >= upgradeAmountPaise || paidAmount >= proAmountPaise;
 
@@ -132,7 +126,7 @@ export async function POST(req: Request) {
     }
 
     // 📅 Calculate Expiry Date (Upgrades are always to Pro/Extended)
-    const months = p.proMonths ?? PRICING_DEFAULTS.proMonths;
+    const months = p.proMonths;
     const accessExpiresAt = new Date();
     accessExpiresAt.setMonth(accessExpiresAt.getMonth() + months);
 

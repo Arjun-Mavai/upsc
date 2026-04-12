@@ -28,9 +28,9 @@ import { logger } from '@/lib/logger';
 import Razorpay from 'razorpay';
 import { z } from 'zod';
 import { db } from '@/db';
-import { mppscUsers, pricingConfig } from '@/db/schema';
+import { mppscUsers } from '@/db/schema';
 import { eq, sql } from 'drizzle-orm';
-import { PRICING_DEFAULTS } from '@/config/pricing';
+import { getPricingConfigRow, pricingRowToData } from '@/lib/pricing-db';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { verifyAuth } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
@@ -120,16 +120,11 @@ export async function POST(req: Request) {
       throw new Error('Razorpay keys not configured');
     }
 
-    const rows = await db
-      .select()
-      .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
-      .limit(1);
-    const p = rows[0] || PRICING_DEFAULTS;
+    const p = pricingRowToData(await getPricingConfigRow('upsc'));
 
     const PLAN_AMOUNTS: Record<string, number> = {
-      pro: (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100,
-      upgrade: ((p as any).upgradePrice ?? 99) * 100, // Upgrade to pro
+      pro: p.proPrice * 100,
+      upgrade: p.upgradePrice * 100,
     };
 
     const amount = PLAN_AMOUNTS[planType];
