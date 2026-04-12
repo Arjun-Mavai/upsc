@@ -1,13 +1,12 @@
 import { redirect } from 'next/navigation';
 import { verifyAuth } from '@/lib/auth';
-import { getUserTier } from '@/lib/access-control';
 import { db } from '@/db';
-import { questions, tests, pyqQuestionTopics, pyqTopics } from '@/db/schema';
+import { questions, tests } from '@/db/schema';
 import { eq, inArray } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import ViewAllQuestionsClient from '@/app/syllabus/quiz/pyq/intelligence/questions/ViewAllQuestionsClient';
+import type { PyqQuestionListItem } from '@/app/syllabus/quiz/pyq/intelligence/questions/pyqQuestionListItem';
 import { getUnitDistributionStats, getUserAccess } from '@/actions/pyq-analytics';
-import { getYearFromTestId } from '@/lib/pyq-constants';
 
 // Cache for 1 hour
 export const revalidate = 3600;
@@ -92,7 +91,7 @@ export default async function UPSCViewAllQuestionsPage({ searchParams }: PagePro
   const topicSlug = params.topic;
   const source = (params.source as 'paper' | 'overall' | 'topic' | 'subject') || 'overall';
 
-  let questionList: any[] = [];
+  let questionList: PyqQuestionListItem[] = [];
   let unitTitle = unitId; // For UPSC, unitId is the subject name
   let topicTitle: string | undefined;
 

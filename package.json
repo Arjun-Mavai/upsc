@@ -12,7 +12,12 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "node scripts/safe-db-push.mjs",
     "db:studio": "drizzle-kit studio",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "list:upsc-extended": "tsx src/scripts/list-upsc-extended-layout-questions.ts",
+    "list:upsc-extended:table": "tsx src/scripts/list-upsc-extended-layout-questions.ts --table-only",
+    "pyq:dump-extended": "NODE_ENV=production tsx src/scripts/dump-extended-for-ids.ts",
+    "pyq:apply-table-en": "NODE_ENV=production tsx src/scripts/apply-table-rows-en-batch.ts",
+    "pyq:apply-table-en:dry": "NODE_ENV=production tsx src/scripts/apply-table-rows-en-batch.ts --dry-run"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

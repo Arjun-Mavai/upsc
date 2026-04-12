@@ -13,7 +13,8 @@ interface QuizHeaderProps {
   instantModeEnabled: boolean;
   isSubmitted: boolean;
   language: string;
-  onInstantModeToggle: () => void;
+  /** Omitted when `isSubmitted` (toggle is hidden). */
+  onInstantModeToggle?: () => void;
   onLanguageToggle: () => void;
   onExit: () => void;
   translations: {
@@ -31,7 +32,7 @@ export function QuizHeader({
   instantModeEnabled,
   isSubmitted,
   language,
-  onInstantModeToggle,
+  onInstantModeToggle = () => {},
   onLanguageToggle,
   onExit,
   translations: t,
@@ -142,14 +143,21 @@ export function QuizHeader({
           </span>
         </button>
 
-        {/* Timer */}
+        {/* Timer — color transitions based on time remaining */}
         <div
           className={cn(
-            'flex min-w-[100px] items-center justify-center gap-2 rounded-lg px-3 py-1.5 font-mono text-lg font-bold transition-colors',
-            timeLeft < 60 ? 'animate-pulse bg-red-50 text-red-600' : 'bg-slate-100 text-slate-900'
+            'flex min-w-[110px] items-center justify-center gap-2 rounded-xl px-3 py-1.5 font-mono text-lg font-black tracking-wide transition-all duration-500',
+            timeLeft < 60
+              ? 'animate-pulse border-2 border-red-200 bg-red-50 text-red-600 shadow-sm shadow-red-100'
+              : timeLeft < 300
+                ? 'border-2 border-amber-200 bg-amber-50 text-amber-700'
+                : 'border border-slate-200 bg-slate-100 text-slate-900'
           )}
         >
-          <Clock className="h-4 w-4 text-slate-400" />
+          <Clock className={cn(
+            'h-4 w-4 transition-colors',
+            timeLeft < 60 ? 'text-red-400' : timeLeft < 300 ? 'text-amber-400' : 'text-slate-400'
+          )} />
           {formatTime(timeLeft)}
         </div>
 

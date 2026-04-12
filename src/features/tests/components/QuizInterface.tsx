@@ -16,8 +16,10 @@ import { QuizQuestion } from './quiz/QuizQuestion';
 import { QuizNavigation } from './quiz/QuizNavigation';
 import { QuizPaletteMobile, QuizPaletteDesktop } from './quiz/QuizPalette';
 import { QuizExitDialog } from './quiz/QuizExitDialog';
+import { QuizSubmitDialog } from './quiz/QuizSubmitDialog';
 import { GuestEntryDialog } from './quiz/GuestEntryDialog';
 import { QuizExplanation } from './quiz/QuizExplanation';
+import { SmartQuizResult } from './SmartQuizResult';
 import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { getCorrectAnswerIndex } from '@/lib/quiz-scoring';
 import { PYQFactsLoader } from '@/components/ui/PYQFactsLoader';
@@ -72,6 +74,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
     isAnswered,
     totalQuestions,
     questionTimes,
+    activeQuestionTime,
   } = useQuizLogic(props);
 
   const { setLanguage } = useSettingsStore();
@@ -88,6 +91,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
   const [guestMobile, setGuestMobile] = useState('');
   const [showGuestEntryDialog, setShowGuestEntryDialog] = useState(false);
   const [isSubmittingGuest, setIsSubmittingGuest] = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   // No local facts state needed — PYQFactsLoader bundles facts internally
 
@@ -234,6 +238,11 @@ export function QuizInterface(props: QuizInterfaceProps) {
 
   // ── Submit handler (guest vs logged-in) ──
   const handleQuizSubmitAction = useCallback(() => {
+    setShowSubmitConfirm(true);
+  }, []);
+
+  const handleConfirmSubmit = useCallback(() => {
+    setShowSubmitConfirm(false);
     if (!userId) setShowGuestTeaser(true);
     else handleSubmit();
   }, [userId, handleSubmit]);
@@ -290,8 +299,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
   }
 
   if (isSubmitted && userId) {
-    // 🎯 Reverted Smart Result for now, back to standard ranking view
-    /* if (mode === 'pyq') {
+    if (mode === 'pyq') {
       return (
         <SmartQuizResult
           testId={testId}
@@ -301,7 +309,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
           onExit={onExit}
         />
       );
-    } */
+    }
 
     return (
       <QuizResult
@@ -337,6 +345,8 @@ export function QuizInterface(props: QuizInterfaceProps) {
       current: t.current,
       submitTest: t.submitTest,
     },
+    timeLeft,
+    language,
   };
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -383,6 +393,7 @@ export function QuizInterface(props: QuizInterfaceProps) {
               onToggleReview={toggleMarkForReview}
               getParsedOptions={getParsedOptions}
               translations={{ question: t.question, markReview: t.markReview, unmark: t.unmark }}
+              currentTimeSpent={activeQuestionTime}
             />
 
             {/* Explanation - no scroll limit, full content */}
@@ -437,6 +448,19 @@ export function QuizInterface(props: QuizInterfaceProps) {
         onMobileChange={setGuestMobile}
         onSubmit={handleGuestEntrySubmit}
         onExit={showExitModal}
+      />
+
+      <QuizSubmitDialog
+        open={showSubmitConfirm}
+        onOpenChange={setShowSubmitConfirm}
+        onConfirm={handleConfirmSubmit}
+        stats={{
+          attempted: Object.keys(answers).length,
+          skipped: totalQuestions - Object.keys(answers).length,
+          marked: markedforReview.length,
+          total: totalQuestions,
+        }}
+        language={language}
       />
 
       {/* Submission overlay */}

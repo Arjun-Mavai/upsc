@@ -1,13 +1,12 @@
 import { redirect } from 'next/navigation';
 import { verifyAuth } from '@/lib/auth';
-import { getUserTier } from '@/lib/access-control';
 import { db } from '@/db';
 import { questions, tests, pyqQuestionTopics, pyqTopics } from '@/db/schema';
-import { eq, inArray, sql } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import ViewAllQuestionsClient from './ViewAllQuestionsClient';
+import type { PyqQuestionListItem } from './pyqQuestionListItem';
 import { getUnitDistributionStats, getUserAccess } from '@/actions/pyq-analytics';
-import { getScopedStateServiceYear, PYQ_SCOPE_START_YEAR, PYQ_SCOPE_END_YEAR } from '@/features/tests/utils/pyq-scope';
 import { getYearFromTestId } from '@/lib/pyq-constants';
 
 // Cache for 1 hour
@@ -44,6 +43,7 @@ const getQuestionsWithDetails = unstable_cache(
         testTitle: tests.title,
         order: questions.order,
         subject: questions.subject,
+        extendedData: questions.extendedData,
       })
       .from(questions)
       .innerJoin(tests, eq(questions.testId, tests.id))
@@ -52,6 +52,19 @@ const getQuestionsWithDetails = unstable_cache(
     return questionData.map((q) => {
       // Use getYearFromTestId for accurate year extraction instead of regex on title
       const year = getYearFromTestId(q.testId);
+      const extendedData = (() => {
+        const raw = q.extendedData;
+        if (raw == null) return null;
+        if (typeof raw === 'string') {
+          try {
+            return JSON.parse(raw);
+          } catch {
+            return null;
+          }
+        }
+        return raw;
+      })();
+
       return {
         id: q.id,
         text: q.text,
@@ -65,10 +78,11 @@ const getQuestionsWithDetails = unstable_cache(
         year,
         qNo: q.order,
         subject: q.subject,
+        extendedData,
       };
     });
   },
-  ['pyq-questions-details-v4'],
+  ['pyq-questions-details-v5'],
   { revalidate: 3600, tags: ['pyq-questions'] }
 );
 
@@ -94,13 +108,14 @@ const getQuestionsByTopic = unstable_cache(
 
     const questionIds = mappings.map((m) => m.questionId);
     const questionList = await getQuestionsWithDetails(questionIds);
+    console.log('questionList by topic', questionList);
 
     return {
       topic: topic[0],
       questions: questionList,
     };
   },
-  ['pyq-topic-questions-v4'],
+  ['pyq-topic-questions-v5'],
   { revalidate: 3600, tags: ['pyq-questions', 'pyq-topics'] }
 );
 
@@ -138,7 +153,7 @@ export default async function ViewAllQuestionsPage({ searchParams }: PageProps) 
   const topicSlug = params.topic;
   const source = (params.source as 'paper' | 'overall' | 'topic' | 'subject') || 'overall';
 
-  let questionList: any[] = [];
+  let questionList: PyqQuestionListItem[] = [];
   let unitTitle = UNIT_TITLES[unitId] || unitId;
   let topicTitle: string | undefined;
 

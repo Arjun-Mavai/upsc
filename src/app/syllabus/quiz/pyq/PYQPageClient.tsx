@@ -14,11 +14,12 @@ import { QuizListItem } from '@/components/QuizListItem';
 import { getCurrentExam } from '@/config/exams';
 import { getExamScoring } from '@/lib/quiz-scoring';
 import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
-import { ViewTransition } from 'react';
 import { TransitionLink } from '@/components/ui/transition-link';
 import { useQueryClient } from '@tanstack/react-query';
 import { getSubjectPartAccess } from './actions';
 import { SUBJECTS as SUBJECT_META } from '@/lib/pyq-ui-constants';
+
+import { GlobalLoader } from '@/components/ui/GlobalLoader';
 
 // --- Types ---
 interface Test {
@@ -59,7 +60,55 @@ export default function PYQPageClient({
   const exam = getCurrentExam();
   const [, startTransition] = useTransition();
 
-  // Dynamic subjects based on available stats
+  // --- State ---
+  const [viewMode, setViewMode] = useState<'year' | 'subject' | 'all-subjects'>(
+    mode === 'all-subjects' ? 'all-subjects' : 'year'
+  );
+  const [loadingTestId, setLoadingTestId] = useState<string | null>(null);
+  const [isStarting, setIsStarting] = useState(false);
+  const [paywallOpen, setPaywallOpen] = useState(false);
+
+  // Dialog State
+  const [selectedSubject, setSelectedSubject] = useState<string|null>(null);
+  const [isNavigatingToIntelligence, setIsNavigatingToIntelligence] = useState(false);
+
+  // --- Handlers ---
+  const handleYearClick = (test: Test) => {
+    if (test.isLocked) {
+      setPaywallOpen(true);
+    } else {
+      setIsStarting(true);
+      setLoadingTestId(test.id);
+      trackFbCustomEvent('test_started', {
+        test_type: 'pyq_year',
+        test_name: test.titleEn || test.title,
+        test_id: test.id,
+      });
+      startTransition(() => {
+        router.push(`/syllabus/quiz/play?mode=pyq&testId=${test.id}`);
+      });
+    }
+  };
+
+  const handleSubjectClick = (subject: string) => {
+    setSelectedSubject(subject);
+  };
+
+  const handleSeriesSelect = (limit: number, offset: number) => {
+    if (!selectedSubject) return;
+    setIsStarting(true);
+    trackFbCustomEvent('test_started', {
+      test_type: 'pyq_subject',
+      test_name: `${selectedSubject} (Part ${offset / limit + 1})`,
+      subject: selectedSubject,
+    });
+    startTransition(() => {
+      router.push(
+        `/syllabus/quiz/play?mode=pyq-subject&subject=${encodeURIComponent(selectedSubject)}&limit=${limit}&offset=${offset}`
+      );
+    });
+  };
+
   const availableSubjects = useMemo(() => {
     return Object.entries(subjectStats)
       .filter(([_, count]) => count > 0)
@@ -80,52 +129,6 @@ export default function PYQPageClient({
       })
       .sort((a, b) => b.count - a.count);
   }, [subjectStats]);
-
-  // --- State ---
-  const [viewMode, setViewMode] = useState<'year' | 'subject' | 'all-subjects'>(
-    mode === 'all-subjects' ? 'all-subjects' : 'year'
-  );
-  const [loadingTestId, setLoadingTestId] = useState<string | null>(null);
-  const [paywallOpen, setPaywallOpen] = useState(false);
-
-  // Dialog State
-  const [selectedSubject, setSelectedSubject] = useState<string|null>(null);
-  const [isNavigatingToIntelligence, setIsNavigatingToIntelligence] = useState(false);
-
-  // --- Handlers ---
-  const handleYearClick = (test: Test) => {
-    if (test.isLocked) {
-      setPaywallOpen(true);
-    } else {
-      setLoadingTestId(test.id);
-      trackFbCustomEvent('test_started', {
-        test_type: 'pyq_year',
-        test_name: test.titleEn || test.title,
-        test_id: test.id,
-      });
-      startTransition(() => {
-        router.push(`/syllabus/quiz/play?mode=pyq&testId=${test.id}`);
-      });
-    }
-  };
-
-  const handleSubjectClick = (subject: string) => {
-    setSelectedSubject(subject);
-  };
-
-  const handleSeriesSelect = (limit: number, offset: number) => {
-    if (!selectedSubject) return;
-    trackFbCustomEvent('test_started', {
-      test_type: 'pyq_subject',
-      test_name: `${selectedSubject} (Part ${offset / limit + 1})`,
-      subject: selectedSubject,
-    });
-    startTransition(() => {
-      router.push(
-        `/syllabus/quiz/play?mode=pyq-subject&subject=${selectedSubject}&limit=${limit}&offset=${offset}`
-      );
-    });
-  };
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -344,6 +347,14 @@ export default function PYQPageClient({
           totalQuestions={subjectStats[selectedSubject] || 0}
           onSelectSeries={handleSeriesSelect}
           isPro={isPro}
+        />
+      )}
+
+      {/* Global Loader Overlay */}
+      {isStarting && (
+        <GlobalLoader
+          variant="overlay"
+          label={language === 'hi' ? 'आपका टेस्ट तैयार हो रहा है...' : 'Preparing your test...'}
         />
       )}
 

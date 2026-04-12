@@ -51,8 +51,10 @@ export function ModernQuestionList({
     // Group questions by year
     const byYear = questions.reduce(
       (acc, q) => {
-        if (!acc[q.year]) acc[q.year] = [];
-        acc[q.year].push(q);
+        const y = q.year;
+        if (y == null) return acc;
+        if (!acc[y]) acc[y] = [];
+        acc[y].push(q);
         return acc;
       },
       {} as Record<number, QuestionData[]>

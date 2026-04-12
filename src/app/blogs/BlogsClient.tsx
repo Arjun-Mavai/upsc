@@ -13,8 +13,6 @@ import { BlogSkeleton } from '@/components/skeletons/BlogSkeleton';
 import { BlogCard } from '@/components/blog/BlogCard';
 import { PromoCard } from '@/components/blog/PromoCard';
 import { SearchInput } from '@/components/blog/SearchInput';
-import { ViewTransition } from 'react';
-
 // 3. Internal Imports (Utils/Stores/Actions)
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
@@ -423,7 +421,7 @@ export default function BlogsClient({
 
           {/* Sidebar */}
           <div className="space-y-6">
-            <PromoCard user={user} />
+            <PromoCard user={isDatabaseUser(storeUser) ? storeUser : user} />
 
             {/* Quick Stats */}
             <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">

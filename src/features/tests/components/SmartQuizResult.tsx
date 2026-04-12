@@ -2,13 +2,29 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BrainCircuit, Trophy, Lightbulb, ShieldAlert, Repeat, Lock } from 'lucide-react';
+import {
+  BrainCircuit, Trophy, Lightbulb, ShieldAlert, Repeat, Lock, Clock, Target, Plus, Minus,
+  TrendingDown, ChevronRight, Zap, Landmark, Map, Compass, PieChart, FlaskConical,
+  Languages, Globe, BookOpen, Sparkles
+} from 'lucide-react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { calculateUPSCResult, SmartResultResponse } from '@/features/tests/actions/test-result';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { cn } from '@/lib/utils';
+import { ConnectSocials } from '@/components/ConnectSocials';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
 interface SmartQuizResultProps {
   testId?: string;
@@ -32,7 +48,7 @@ export function SmartQuizResult({
   const router = useRouter();
   const [result, setResult] = useState<SmartResultResponse | null>(initialResult || null);
   const [loading, setLoading] = useState(!initialResult);
-  const { language } = useSettingsStore();
+  const { language, setLanguage } = useSettingsStore();
   const isHi = language === 'hi';
 
   useEffect(() => {
@@ -59,8 +75,8 @@ export function SmartQuizResult({
   };
 
   const PremiumLock = ({ label }: { label: string }) => (
-    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg border border-slate-100 bg-white/60 backdrop-blur-[2px]">
-      <div className="max-w-[200px] rounded-2xl border border-slate-100 bg-white p-4 text-center shadow-xl">
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-[2rem] border border-slate-100 bg-white/60 backdrop-blur-[2px]">
+      <div className="max-w-[200px] rounded-[2rem] border-b-4 border-amber-500/20 bg-white p-6 text-center shadow-xl">
         <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
           <Lock className="h-5 w-5 text-amber-600" />
         </div>
@@ -92,297 +108,211 @@ export function SmartQuizResult({
     return <div className="p-8 text-center">Failed to load results. Please try again.</div>;
   }
 
+  const wrongCount = result.wrong;
+  const totalQuestions = result.total_questions || result.detailed_analysis?.length || 0;
+  const attemptedCount = result.correct + result.wrong;
+  const accuracy = attemptedCount > 0 ? (result.correct / attemptedCount) * 100 : 0;
+  
+  const isOverAttempting = wrongCount > totalQuestions * 0.15;
+
   return (
     <div className="min-h-screen bg-slate-50 pb-20 font-sans">
-      {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-white px-4 py-3 shadow-sm">
-        <div>
-          <h1 className="line-clamp-1 text-lg font-bold text-slate-900">
-            {title || 'Test Result'}
-          </h1>
-          <p className="text-xs text-slate-500">UPSC Prelims Analysis</p>
+      <div className="pt-6">
+        <div className="mx-auto max-w-3xl px-4">
+          <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 border border-amber-100 shadow-sm">
+                <Trophy className="h-5 w-5" />
+              </div>
+              <div>
+                <h1 className="text-lg font-black tracking-tight text-slate-900 leading-tight">
+                  {title || (isHi ? 'क्विज़ रिजल्ट' : 'Quiz Result')}
+                </h1>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Performance Intelligence Analysis
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+                <ConnectSocials minimal className="flex-1 sm:flex-none" />
+            </div>
+          </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={onExit}>
-          {isHi ? 'बाहर जाएं' : 'Exit'}
-        </Button>
       </div>
 
-      {/* Main Content */}
-      <div className="mx-auto max-w-3xl space-y-6 p-4">
-        {/* Score Card */}
-        <Card className="relative overflow-hidden border-none bg-white shadow-md">
-          <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
-          <CardContent className="p-6">
-            <div className="mb-6 flex items-start justify-between">
-              <div>
-                <p className="mb-1 text-sm font-medium text-slate-500">Net Score (New Pattern)</p>
-                <div className="flex items-baseline gap-2">
-                  <h2 className="text-4xl font-bold text-slate-900">{result.net_score}</h2>
-                  <span className="text-slate-400">/ {result.max_score}</span>
-                </div>
-                {result.qualification && (
-                  <Badge
-                    variant={
-                      result.qualification.status === 'Qualified' ? 'default' : 'destructive'
-                    }
-                    className="mt-2"
-                  >
-                    {result.qualification.status === 'Qualified' ? 'Qualified' : 'Missed Cutoff'}
-                  </Badge>
-                )}
-              </div>
-              <div className="text-right">
-                <div
-                  className={`text-2xl font-bold ${getGradeColor(result.attempt_intelligence.strategy_grade)}`}
-                >
-                  Grade {result.attempt_intelligence.strategy_grade}
-                </div>
-                <p className="text-xs text-slate-500">Strategy Score</p>
-              </div>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="mb-6 grid grid-cols-3 gap-4">
-              <div className="rounded-lg border border-green-100 bg-green-50 p-3 text-center">
-                <div className="text-2xl font-bold text-green-700">{result.correct}</div>
-                <div className="text-xs font-medium text-green-600">Correct (+3)</div>
-              </div>
-              <div className="rounded-lg border border-red-100 bg-red-50 p-3 text-center">
-                <div className="text-2xl font-bold text-red-700">{result.wrong}</div>
-                <div className="text-xs font-medium text-red-600">Wrong (-1)</div>
-              </div>
-              <div className="rounded-lg border border-slate-100 bg-slate-50 p-3 text-center">
-                <div className="text-2xl font-bold text-slate-700">{result.skipped}</div>
-                <div className="text-xs font-medium text-slate-600">Skipped</div>
-              </div>
-            </div>
-
-            {/* Attempt Intelligence */}
-            <div className="relative overflow-hidden rounded-lg border border-amber-100 bg-amber-50 p-4">
-              <div className="flex items-start gap-3">
-                <BrainCircuit className="mt-1 h-5 w-5 flex-shrink-0 text-amber-600" />
-                <div>
-                  <h3 className="text-sm font-semibold text-amber-900">Attempt Intelligence</h3>
-                  <p className="mt-1 text-xs leading-relaxed text-amber-800">
-                    You lost{' '}
-                    <span className="font-bold">
-                      {result.attempt_intelligence.wasted_points} marks
-                    </span>{' '}
-                    due to negative marking. If you had skipped those wrong answers, your score
-                    would be{' '}
-                    <span className="font-bold">
-                      {result.attempt_intelligence.could_have_scored}
-                    </span>
-                    .
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Tabs for detailed view */}
-        <Tabs defaultValue="analysis" className="w-full">
-          <TabsList className="mb-4 grid w-full grid-cols-3">
-            <TabsTrigger value="analysis">Analysis</TabsTrigger>
-            <TabsTrigger value="review">Review</TabsTrigger>
-            <TabsTrigger value="facts">Flashcards</TabsTrigger>
+      <div className="mx-auto max-w-3xl p-4">
+        <Tabs defaultValue="result" className="w-full">
+          <TabsList className="mb-6 grid w-full grid-cols-2 rounded-2xl bg-white p-1 shadow-sm border border-slate-100">
+            <TabsTrigger value="result" className="rounded-xl py-3 text-[11px] font-black tracking-widest uppercase transition-all data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+              {isHi ? 'परिणाम' : 'Result'}
+            </TabsTrigger>
+            <TabsTrigger value="review" className="rounded-xl py-3 text-[11px] font-black tracking-widest uppercase transition-all data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+              {isHi ? 'समीक्षा' : 'Review'}
+            </TabsTrigger>
           </TabsList>
 
-          {/* ANALYSIS TAB */}
-          <TabsContent value="analysis" className="relative space-y-4">
-            {isGuest && <PremiumLock label="Detailed Analysis Locked" />}
-            <h3 className="mb-2 text-sm font-semibold tracking-wider text-slate-500 uppercase">
-              Subject Performance
-            </h3>
-            {result.subject_breakdown.map((sub) => (
-              <div key={sub.subject} className="rounded-xl border bg-white p-4 shadow-sm">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="font-medium text-slate-800">{sub.subject}</span>
-                  <span
-                    className={`text-sm font-bold ${sub.score >= 0 ? 'text-green-600' : 'text-red-600'}`}
-                  >
-                    {sub.score} pts
-                  </span>
+          <TabsContent value="result" className="space-y-6 outline-none">
+            {/* Main Score Card */}
+            <div className="group relative overflow-hidden rounded-[2.5rem] border-b-4 border-indigo-500/20 bg-white p-8 shadow-sm transition-all hover:shadow-md">
+              <div className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-20" />
+              
+              <div className="mb-6 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-[11px] font-black tracking-widest text-slate-400 uppercase">
+                  <Target className="h-4 w-4 text-amber-500" />
+                  Expert Verified Analysis
                 </div>
-                <div className="flex h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    style={{ width: `${(sub.correct / sub.total) * 100}%` }}
-                    className="h-full bg-green-500"
-                  />
-                  <div
-                    style={{ width: `${(sub.wrong / sub.total) * 100}%` }}
-                    className="h-full bg-red-500"
-                  />
-                </div>
-                <div className="mt-2 flex justify-between text-xs text-slate-400">
-                  <span>{sub.correct} Correct</span>
-                  <span>{sub.wrong} Wrong</span>
-                </div>
+                <Badge variant="secondary" className="rounded-full px-3 py-1 text-[10px] font-black tracking-widest uppercase">
+                  {totalQuestions} Questions
+                </Badge>
               </div>
-            ))}
-          </TabsContent>
 
-          {/* REVIEW TAB (All Questions) */}
-          <TabsContent value="review" className="relative min-h-[200px] space-y-4">
-            {result.detailed_analysis?.map((q: any, idx: number) => {
-              const isLocked = isGuest && q.status !== 'correct';
-              return (
-                <Card
-                  key={idx}
-                  className={`border-l-4 shadow-sm ${
-                    q.status === 'correct'
-                      ? 'border-l-green-500'
-                      : q.status === 'wrong'
-                        ? 'border-l-red-500'
-                        : 'border-l-slate-300'
-                  } relative overflow-hidden`}
-                >
-                  {/* Lock Overlay for Guest on Wrong/Skipped */}
-                  {isLocked && (
-                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/10 backdrop-blur-[4px]">
-                      <div className="rounded-xl border border-slate-100 bg-white p-3 text-center shadow-lg">
-                        <div className="mx-auto mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-amber-50">
-                          <Lock className="h-4 w-4 text-amber-600" />
-                        </div>
-                        <p className="mb-1 text-xs font-bold text-slate-800">Unlock Solution</p>
-                        <Button
-                          size="sm"
-                          className="h-7 bg-amber-500 text-xs text-white hover:bg-amber-600"
-                          onClick={handleUnlock}
-                        >
-                          Upgrade
-                        </Button>
-                      </div>
+              <div className="mb-8 flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
+                <div>
+                  <p className="mb-1 text-xs font-bold tracking-widest text-slate-400 uppercase">Net Score (UPSC Standard)</p>
+                  <div className="flex items-baseline gap-2">
+                    <h2 className="text-6xl font-black text-slate-900 tracking-tighter">{result.net_score}</h2>
+                    <span className="text-2xl font-bold text-slate-400">/ {result.max_score}</span>
+                  </div>
+                  
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                     <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-black tracking-widest text-emerald-600 uppercase border border-emerald-500/10">
+                        <Plus className="h-3 w-3" /> {result.correct} Correct
+                     </div>
+                     <div className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/10 px-3 py-1 text-[10px] font-black tracking-widest text-rose-600 uppercase border border-rose-500/10">
+                        <Minus className="h-3 w-3" /> {result.wrong} Penalty
+                     </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-center gap-4 sm:items-end">
+                  {result.qualification && (
+                    <div className={cn(
+                      "inline-flex items-center rounded-2xl px-4 py-2 text-xs font-black shadow-sm border",
+                      result.net_score >= (result.max_score * 0.48)
+                        ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                        : "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                    )}>
+                      {result.net_score >= (result.max_score * 0.48) ? (
+                        <><Trophy className="mr-2 h-4 w-4" /> QUALIFIED</>
+                      ) : (
+                        <><TrendingDown className="mr-2 h-4 w-4" /> PUSH NEEDED</>
+                      )}
                     </div>
                   )}
-
-                  <CardContent className="p-4">
-                    <div className="mb-2 flex items-start justify-between">
-                      <Badge variant="outline" className="text-xs">
-                        {q.subject || 'General'}
-                      </Badge>
-                      <Badge
-                        variant={
-                          q.status === 'correct'
-                            ? 'default'
-                            : q.status === 'wrong'
-                              ? 'destructive'
-                              : 'secondary'
-                        }
-                        className="text-[10px] uppercase"
-                      >
-                        {q.status}
-                      </Badge>
-                    </div>
-
-                    <p className="mb-3 text-sm font-medium text-slate-800">
-                      <span className="mr-2 text-slate-400">Q{idx + 1}.</span>
-                      {q.questionText || q.question || 'Question Text'}
-                    </p>
-
-                    <div className="space-y-1 rounded bg-slate-50 p-3 text-xs text-slate-600">
-                      <p className={q.status === 'correct' ? 'font-bold text-green-700' : ''}>
-                        <span className="font-semibold text-slate-500">Your Answer:</span>{' '}
-                        {q.userAnswer ?? 'Skipped'}
-                      </p>
-                      {!isLocked && (
-                        <p>
-                          <span className="font-semibold text-slate-500">Correct Answer:</span>{' '}
-                          {q.correctAnswer}
-                        </p>
-                      )}
-                    </div>
-
-                    {!isLocked && q.explanation && (
-                      <div className="mt-3 border-t pt-2 text-xs text-slate-600">
-                        <span className="mb-1 block font-semibold">Explanation:</span>
-                        {q.explanation}
+                  
+                  <div className="flex gap-4">
+                    <div className="text-center sm:text-right">
+                      <div className={`text-2xl font-black ${getGradeColor(result.attempt_intelligence.strategy_grade)}`}>
+                        Grade {result.attempt_intelligence.strategy_grade}
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </TabsContent>
-
-          {/* FACTS TAB (Flashcards) */}
-          <TabsContent value="facts" className="relative min-h-[200px] space-y-4">
-            {isGuest && <PremiumLock label="Flashcards Locked" />}
-            {result.pyq_facts.length === 0 ? (
-              <div className="py-10 text-center text-slate-500">
-                No high-yield facts linked to your mistakes.
+                      <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Strategy</p>
+                    </div>
+                    <div className="h-8 w-[1px] bg-slate-100" />
+                    <div className="text-center sm:text-right">
+                      <div className="text-2xl font-black text-amber-500">
+                        {result.detailed_analysis?.reduce((acc: number, curr: any) => acc + (curr.timeTakenSeconds || 0), 0) > 0 
+                          ? `${Math.floor(result.detailed_analysis.reduce((acc: number, curr: any) => acc + (curr.timeTakenSeconds || 0), 0) / 60)}m`
+                          : '--'}
+                      </div>
+                      <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Duration</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div className="grid gap-4">
-                {result.pyq_facts.map((fact: any) => (
-                  <Card
-                    key={fact.id}
-                    className="overflow-hidden border-l-4 border-l-amber-400 shadow-sm"
-                  >
-                    <CardContent className="p-5">
-                      <div className="mb-3 flex items-center gap-2">
-                        <Badge
-                          variant="secondary"
-                          className="bg-amber-100 text-amber-800 hover:bg-amber-200"
-                        >
-                          {fact.subject}
-                        </Badge>
-                        {fact.importanceScore > 8 && (
-                          <span className="flex items-center gap-1 text-xs font-bold text-red-600">
-                            <Trophy className="h-3 w-3" /> High Yield
-                          </span>
-                        )}
-                      </div>
 
-                      <p className="mb-4 text-sm leading-relaxed font-medium text-slate-800">
-                        {isHi && fact.factText ? fact.factText : fact.factTextEn || fact.factText}
-                      </p>
+              <div className="space-y-3">
+                 <div className="flex justify-between text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                    <span>Performance Scale</span>
+                    <span className="text-indigo-500">Elite Zone: {Math.round(result.max_score * 0.55)}+</span>
+                 </div>
+                 <div className="relative flex h-3 w-full overflow-hidden rounded-full bg-slate-100 border border-slate-200">
+                    <div className="absolute left-[48%] z-20 h-full w-[1.5px] bg-amber-500" />
+                    <div className="absolute left-[55%] z-20 h-full w-[1.5px] bg-indigo-500/50" />
+                    <motion.div
+                       initial={{ width: 0 }}
+                       animate={{ width: `${Math.min((result.net_score / result.max_score) * 100, 100)}%` }}
+                       className="relative z-10 h-full bg-gradient-to-r from-emerald-500 to-indigo-500"
+                    />
+                 </div>
+                 <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+                    <span>0 Marks</span>
+                    <span className="text-amber-500">Target Range ({Math.round(result.max_score * 0.48)})</span>
+                    <span>Max ({result.max_score})</span>
+                 </div>
+              </div>
+            </div>
 
-                      {(fact.memoryTip || fact.memoryTipEn) && (
-                        <div className="mb-3 rounded-lg border border-blue-100 bg-blue-50 p-3">
-                          <div className="mb-1 flex items-center gap-2 text-blue-800">
-                            <Lightbulb className="h-4 w-4" />
-                            <span className="text-xs font-bold uppercase">Memory Tip</span>
-                          </div>
-                          <p className="text-xs text-blue-700">
-                            {isHi && fact.memoryTip
-                              ? fact.memoryTip
-                              : fact.memoryTipEn || fact.memoryTip}
-                          </p>
-                        </div>
-                      )}
-
-                      {(fact.scamAlert || fact.scamAlertEn) && (
-                        <div className="rounded-lg border border-red-100 bg-red-50 p-3">
-                          <div className="mb-1 flex items-center gap-2 text-red-800">
-                            <ShieldAlert className="h-4 w-4" />
-                            <span className="text-xs font-bold uppercase">Scam Alert</span>
-                          </div>
-                          <p className="text-xs text-red-700">
-                            {isHi && fact.scamAlert
-                              ? fact.scamAlert
-                              : fact.scamAlertEn || fact.scamAlert}
-                          </p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
+            {/* 
+              Future Implementation: Audit & Strategic Intelligence Cards 
+              Bhai, yaha par wo audit cards aayenge jab feature full activate hoga.
+            */}
+            {/*
+            {(isOverAttempting || accuracy < 75) && (
+              <div className="group relative overflow-hidden rounded-[2rem] border-b-4 border-rose-500/20 bg-white p-6 shadow-sm transition-all hover:shadow-md">
+                 ... Audit Card Content ...
               </div>
             )}
+            */}
+          </TabsContent>
+
+          <TabsContent value="review" className="space-y-4 outline-none">
+             <div className="flex items-center justify-between px-2 mb-2">
+                <h3 className="text-sm font-black tracking-widest text-slate-400 uppercase">{isHi ? 'समीक्षा' : 'Review Performance'}</h3>
+                <Badge variant="outline" className="text-[10px] font-black border-slate-200 text-slate-400">DETAILED VIEW</Badge>
+             </div>
+             
+             <div className="space-y-4">
+              {result.detailed_analysis?.map((q: any, idx: number) => {
+                const isLocked = isGuest && q.status !== 'correct';
+                return (
+                  <div
+                    key={idx}
+                    className={cn(
+                      "group relative overflow-hidden rounded-[1.5rem] border-l-8 bg-white p-6 shadow-sm transition-all hover:shadow-md",
+                      q.status === 'correct' ? 'border-l-emerald-500' : q.status === 'wrong' ? 'border-l-rose-500' : 'border-l-slate-300'
+                    )}
+                  >
+                    {isLocked && (
+                      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/40 backdrop-blur-[4px]">
+                         <PremiumLock label="Solution Locked" />
+                      </div>
+                    )}
+
+                    <div className="mb-4 flex items-center justify-between">
+                      <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-widest border-slate-200 text-slate-500">
+                         {q.subject || 'GS'} • Q{idx + 1}
+                      </Badge>
+                      <div className={cn(
+                        "flex h-6 items-center px-2 rounded-full text-[9px] font-black uppercase tracking-widest",
+                        q.status === 'correct' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'
+                      )}>
+                        {q.status}
+                      </div>
+                    </div>
+
+                    <p className="mb-4 text-sm font-bold leading-relaxed text-slate-900">
+                      {q.questionText || q.question}
+                    </p>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3">
+                         <span className="block mb-1 text-[9px] font-black text-slate-400 uppercase">Your Choice</span>
+                         <span className="text-xs font-bold text-slate-700">{q.userAnswer || 'Skipped'}</span>
+                      </div>
+                      {!isLocked && (
+                        <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-3">
+                           <span className="block mb-1 text-[9px] font-black text-emerald-500 uppercase">Correct Answer</span>
+                           <span className="text-xs font-bold text-emerald-700">{q.correctAnswer}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+             </div>
           </TabsContent>
         </Tabs>
-      </div>
-
-      {/* Bottom Action Bar */}
-      <div className="fixed bottom-0 left-0 z-20 flex w-full gap-3 border-t bg-white p-4 shadow-lg">
-        <Button variant="outline" className="flex-1" onClick={onRetry}>
-          <Repeat className="mr-2 h-4 w-4" /> Retry
-        </Button>
-        <Button className="flex-1 bg-blue-600 hover:bg-blue-700" onClick={onExit}>
-          Finish Analysis
-        </Button>
       </div>
     </div>
   );
@@ -399,4 +329,25 @@ function getGradeColor(grade: string) {
     default:
       return 'text-red-600';
   }
+}
+
+function getSubjectIcon(subject: string) {
+  const s = subject.toLowerCase();
+  if (s.includes('history')) return <Landmark className="h-4 w-4" />;
+  if (s.includes('geography')) return <Map className="h-4 w-4" />;
+  if (s.includes('polity')) return <Compass className="h-4 w-4" />;
+  if (s.includes('economy')) return <PieChart className="h-4 w-4" />;
+  if (s.includes('science')) return <FlaskConical className="h-4 w-4" />;
+  if (s.includes('hindi') || s.includes('english')) return <Languages className="h-4 w-4" />;
+  if (s.includes('current')) return <Globe className="h-4 w-4" />;
+  return <BookOpen className="h-4 w-4" />;
+}
+
+function getSubjectColor(subject: string) {
+  const s = subject.toLowerCase();
+  if (s.includes('history')) return 'border-amber-100 text-amber-600';
+  if (s.includes('geography')) return 'border-emerald-100 text-emerald-600';
+  if (s.includes('polity')) return 'border-blue-100 text-blue-600';
+  if (s.includes('economy')) return 'border-indigo-100 text-indigo-600';
+  return 'border-slate-100 text-slate-600';
 }

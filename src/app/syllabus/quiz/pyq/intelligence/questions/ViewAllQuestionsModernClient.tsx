@@ -9,28 +9,13 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { formatUnitTitle } from '../components/shared/constants';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { ModernQuestionList } from '../components/modern/ModernQuestionList';
-
-interface QuestionData {
-  id: string;
-  text: string;
-  textEn?: string | null;
-  year?: number;
-  qNo?: number;
-  type?: string;
-  options?: any[];
-  matchPairs?: any[];
-  correctAnswer?: any;
-  explanation?: string | null;
-  explanationEn?: string | null;
-  subject?: string | null;
-  extendedData?: any | null;
-}
+import type { PyqQuestionListItem } from './pyqQuestionListItem';
 
 interface ViewAllQuestionsModernClientProps {
   examId?: string;
   unitId: string;
   unitTitle: string;
-  questions: QuestionData[];
+  questions: PyqQuestionListItem[];
   source: 'paper' | 'overall' | 'topic' | 'subject';
   topicTitle?: string;
   year?: number;

@@ -54,6 +54,7 @@ export function FormattedQuestionText({
 
   // Use enhanced UPSCQuestionRenderer when available and requested
   if (useEnhancedRenderer && question) {
+    const withExt = question as Question & { extended_data?: unknown; extendedData?: unknown };
     const questionData = {
       id: question.id,
       text: text,
@@ -61,7 +62,7 @@ export function FormattedQuestionText({
       type: question.type,
       options: question.options,
       correctAnswer: question.correctAnswer,
-      extendedData: (question as any).extended_data || (question as any).extendedData || null,
+      extendedData: withExt.extendedData ?? withExt.extended_data ?? null,
       matchPairs: question.matchPairs,
     };
     

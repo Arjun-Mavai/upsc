@@ -16,43 +16,13 @@ import { YearBadge } from '../components/shared/UnitBadge';
 import { formatUnitTitle, getUnitColor } from '../components/shared/constants';
 import { SUBJECT_VARIANTS, SUBJECTS } from '@/lib/pyq-ui-constants';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
-
-interface QuestionData {
-  id: string;
-  text: string;
-  textEn?: string | null;
-  year?: number;
-  qNo?: number;
-  type?: string;
-  options?: any[];
-  matchPairs?: any[];
-  correctAnswer?: any;
-  explanation?: string | null;
-  explanationEn?: string | null;
-  subject?: string | null;
-  extendedData?: {
-    layoutType?: 'statements' | 'table' | 'assertion_reason' | 'standard';
-    contextStr?: string;
-    contextStrEn?: string;
-    listItems?: { id: string; text: string; textEn?: string }[];
-    statementI?: string;
-    statementIEn?: string;
-    statementII?: string;
-    statementIIEn?: string;
-    questionPrompt?: string;
-    questionPromptEn?: string;
-    tableHeaders?: string[];
-    tableHeadersEn?: string[];
-    tableRows?: string[][];
-    tableRowsEn?: string[][];
-  } | null;
-}
+import type { PyqQuestionListItem } from './pyqQuestionListItem';
 
 interface ViewAllQuestionsClientProps {
   examId?: string;
   unitId: string;
   unitTitle: string;
-  questions: QuestionData[];
+  questions: PyqQuestionListItem[];
   source: 'paper' | 'overall' | 'topic' | 'subject';
   topicTitle?: string;
   year?: number;

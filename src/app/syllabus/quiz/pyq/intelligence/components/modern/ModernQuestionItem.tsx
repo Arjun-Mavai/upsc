@@ -8,9 +8,10 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { YearBadge } from '../shared/UnitBadge';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { UPSCQuestionRenderer } from '@/features/tests/components/UPSCQuestionRenderer';
+import { UPSCQuestionRenderer, type UpscRendererQuestion } from '@/features/tests/components/UPSCQuestionRenderer';
 import { PremiumExplanation } from '@/features/tests/components/PremiumExplanation';
 import { SUBJECT_VARIANTS, SUBJECTS } from '@/lib/pyq-ui-constants';
+import type { PyqQuestionListItem } from '../../questions/pyqQuestionListItem';
 
 const PASTEL_THEMES = [
   { bg: 'bg-[#F2F8FF]', border: 'border-[#D9EAFE]', hover: 'hover:border-[#BFDBFE]' }, // Blue
@@ -21,23 +22,9 @@ const PASTEL_THEMES = [
   { bg: 'bg-[#F6F0FD]', border: 'border-[#E6D4F9]', hover: 'hover:border-[#DECCFC]' }, // Purple
 ];
 
-export interface QuestionData {
-  id: string;
-  text: string;
-  textEn?: string | null;
-  year: number;
-  qNo?: number;
-  subject?: string;
-  testTitle?: string;
-  options?: any;
+export type QuestionData = PyqQuestionListItem & {
   optionsEn?: string[];
-  correctAnswer?: number | string;
-  extendedData?: any;
-  explanation?: string | null;
-  explanationEn?: string | null;
-  type?: string;
-  matchPairs?: any[];
-}
+};
 
 interface ModernQuestionItemProps {
   question: QuestionData;
@@ -152,11 +139,11 @@ export function ModernQuestionItem({
                 layout="position"
                 className={cn(
                   "text-[15px] leading-[1.6] sm:text-[18px] font-medium tracking-tight text-[#1D1D1F]",
-                  "line-clamp-2"
+                  "max-h-[9rem] overflow-y-auto pr-1 sm:max-h-[11rem]"
                 )}
                 style={{ WebkitFontSmoothing: 'antialiased' }}
                 dangerouslySetInnerHTML={{
-                  __html: displayText.slice(0, 180) + (displayText.length > 180 ? '...' : ''),
+                  __html: displayText,
                 }}
               />
 
@@ -240,7 +227,7 @@ export function ModernQuestionItem({
               
               {/* Force theme="light" to get the crisp dark text */}
               <UPSCQuestionRenderer 
-                question={question as any} 
+                question={question as UpscRendererQuestion} 
                 isHindi={isHindi} 
                 showOptions={true} 
                 theme="light" 
@@ -263,7 +250,7 @@ export function ModernQuestionItem({
               </div>
 
               {/* Navigate to dedicated subject page */}
-              {(() => {
+              {/* {(() => {
                 const isUPSC = examId === 'upsc';
                 const baseUrl = isUPSC ? '/upsc/intelligence' : '/syllabus/quiz/pyq/intelligence';
                 return (
@@ -294,7 +281,7 @@ export function ModernQuestionItem({
                     </Link>
                   </div>
                 );
-              })()}
+              })()} */}
             </div>
           </motion.div>
         )}
