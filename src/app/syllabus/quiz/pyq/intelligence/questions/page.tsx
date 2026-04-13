@@ -8,6 +8,25 @@ import ViewAllQuestionsClient from './ViewAllQuestionsClient';
 import type { PyqQuestionListItem } from './pyqQuestionListItem';
 import { getUnitDistributionStats, getUserAccess } from '@/actions/pyq-analytics';
 import { getYearFromTestId } from '@/lib/pyq-constants';
+import { logger } from '@/lib/logger';
+
+// ── HELPER: Safe JSON Parsing ─────────────────────────────────
+const safeParse = (val: any, fallback: any = null) => {
+  if (val == null) return fallback;
+  if (typeof val !== 'string') return val;
+  try {
+    return JSON.parse(val);
+  } catch (err) {
+    logger.warn('Failed to parse JSON field in page:', {
+      category: 'content',
+      metadata: {
+        valuePreview: val.substring(0, 100),
+        error: err instanceof Error ? err.message : String(err),
+      },
+    });
+    return fallback;
+  }
+};
 
 // Cache for 1 hour
 export const revalidate = 3600;
@@ -50,35 +69,22 @@ const getQuestionsWithDetails = unstable_cache(
       .where(inArray(questions.id, questionIds));
 
     return questionData.map((q) => {
-      // Use getYearFromTestId for accurate year extraction instead of regex on title
       const year = getYearFromTestId(q.testId);
-      const extendedData = (() => {
-        const raw = q.extendedData;
-        if (raw == null) return null;
-        if (typeof raw === 'string') {
-          try {
-            return JSON.parse(raw);
-          } catch {
-            return null;
-          }
-        }
-        return raw;
-      })();
-
       return {
         id: q.id,
-        text: q.text,
-        textEn: q.textEn,
-        options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
+        text: q.text || '',
+        textEn: q.textEn || null,
+        options: safeParse(q.options, []),
         type: q.type || 'standard',
-        matchPairs: typeof q.matchPairs === 'string' ? JSON.parse(q.matchPairs) : q.matchPairs,
-        correctAnswer: q.correctAnswer,
-        explanation: q.explanation,
-        explanationEn: q.explanationEn,
+        matchPairs: safeParse(q.matchPairs, []),
+        correctAnswer: q.correctAnswer || '',
+        explanation: q.explanation || null,
+        explanationEn: q.explanationEn || null,
         year,
-        qNo: q.order,
-        subject: q.subject,
-        extendedData,
+        qNo: q.order || 0,
+        subject: q.subject || null,
+        testTitle: q.testTitle,
+        extendedData: safeParse(q.extendedData, {}),
       };
     });
   },
@@ -168,13 +174,19 @@ export default async function ViewAllQuestionsPage({ searchParams }: PageProps) 
     const subjectData = await getOverallWeightageSubjectData(undefined, undefined, isPro);
     
     if (subject === 'All') {
-      const allQuestionIds = subjectData.flatMap(data => data.questions.map(q => q.id));
-      questionList = await getQuestionsWithDetails(allQuestionIds);
+      // 🚀 Optimization: Instead of re-fetching 600+ questions, we already have most data.
+      // We only convert the format. If type/matchPairs are strictly needed later, 
+      // we could fetch them, but for "View All", subjectData is usually sufficient.
+      questionList = subjectData.flatMap(data => data.questions.map(q => ({
+        ...q,
+        type: 'standard', // Default for overall view
+        matchPairs: [],
+      } as PyqQuestionListItem)));
       unitTitle = `All Subjects Questions (2020-2025)`;
     } else {
       const matchingSubject = subjectData.find(data => data.subject === subject);
       if (matchingSubject) {
-        // Convert subject questions to the expected format
+        // For a single subject, we can afford the full fetch for completeness
         questionList = await getQuestionsWithDetails(matchingSubject.questions.map(q => q.id));
         unitTitle = `${subject} Questions (2020-2025)`;
       }

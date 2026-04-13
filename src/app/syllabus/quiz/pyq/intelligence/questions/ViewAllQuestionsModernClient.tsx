@@ -69,12 +69,12 @@ export default function ViewAllQuestionsModernClient({
     const yearRange = isUPSC ? '2015-2025' : '2020-2025';
 
     if (source === 'topic' && topicTitle) return topicTitle;
-    if (source === 'paper' && year) return `${prefix} ${year} - ${formatUnitTitle(unitId, isHindi)}`;
+    if (source === 'paper' && year) return `${prefix} ${year} - ${formatUnitTitle(unitId || '', isHindi)}`;
     if (source === 'subject' && subject) {
-      const subjectName = subject === 'All' ? (isHindi ? 'सभी विषय' : 'All Subjects') : formatUnitTitle(subject, isHindi);
+      const subjectName = subject === 'All' ? (isHindi ? 'सभी विषय' : 'All Subjects') : formatUnitTitle(subject || '', isHindi);
       return `${subjectName} Questions (${yearRange})`;
     }
-    return `${formatUnitTitle(unitId, isHindi)} - ${unitTitle}`;
+    return `${formatUnitTitle(unitId || '', isHindi)} - ${unitTitle || ''}`;
   }, [source, topicTitle, year, unitId, unitTitle, subject, examId, isHindi]);
 
   const FREE_SUBJECT = 'History';

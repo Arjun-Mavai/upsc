@@ -75,6 +75,7 @@ async function IntelligenceDataFetcher({ examId }: { examId: string }) {
 
   return (
     <PYQIntelligenceClient
+      examId={examId}
       subjectStats={subjectStats}
       stats={unitStats}
       repeatedQuestions={repeatedQuestions}

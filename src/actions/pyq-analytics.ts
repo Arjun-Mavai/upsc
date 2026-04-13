@@ -11,6 +11,24 @@ import { getCurrentExam } from '@/config/exams';
 import { getCurrentUser } from './auth-actions';
 import { logger } from '@/lib/logger';
 
+// ── HELPER: Safe JSON Parsing ─────────────────────────────────
+const safeParse = (val: any, fallback: any = null) => {
+  if (val == null) return fallback;
+  if (typeof val !== 'string') return val;
+  try {
+    return JSON.parse(val);
+  } catch (err) {
+    logger.warn('Failed to parse JSON field:', {
+      category: 'content',
+      metadata: {
+        valuePreview: val.substring(0, 100),
+        error: err instanceof Error ? err.message : String(err),
+      },
+    });
+    return fallback;
+  }
+};
+
 // ============================================
 // Types
 // ============================================
@@ -280,17 +298,16 @@ export async function getOverallWeightageSubjectData(
               return {
                 id: q.id,
                 text: q.text || '',
-                textEn: q.textEn,
+                textEn: q.textEn || null,
                 year,
-                qNo: q.order,
+                qNo: q.order || 0,
                 testTitle: `${exam.id.toUpperCase()} Prelims ${year}`,
                 testId: q.testId,
-                options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
-                correctAnswer: q.correctAnswer,
-                extendedData:
-                  typeof q.extendedData === 'string' ? JSON.parse(q.extendedData) : q.extendedData,
-                explanation: q.explanation,
-                explanationEn: q.explanationEn,
+                options: safeParse(q.options, []),
+                correctAnswer: q.correctAnswer || '',
+                extendedData: safeParse(q.extendedData, {}),
+                explanation: q.explanation || null,
+                explanationEn: q.explanationEn || null,
                 subject: q.subject || undefined,
               };
             })
@@ -403,16 +420,15 @@ export async function getUnitDistributionStats(
             stats[key].questions.push({
               id: q.id,
               text: q.text || '',
-              textEn: q.textEn,
+              textEn: q.textEn || null,
               year,
-              qNo: q.order,
+              qNo: q.order || 0,
               subject: q.subject || undefined,
-              options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
-              correctAnswer: q.correctAnswer,
-              extendedData:
-                typeof q.extendedData === 'string' ? JSON.parse(q.extendedData) : q.extendedData,
-              explanation: q.explanation,
-              explanationEn: q.explanationEn,
+              options: safeParse(q.options, []),
+              correctAnswer: q.correctAnswer || '',
+              extendedData: safeParse(q.extendedData, {}),
+              explanation: q.explanation || null,
+              explanationEn: q.explanationEn || null,
             });
           }
         }

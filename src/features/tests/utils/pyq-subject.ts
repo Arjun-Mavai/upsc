@@ -106,18 +106,26 @@ export function normalizeSubject(rawSubject: string | null, isUPSC: boolean = fa
     return 'Geography (India & World)';
   }
 
-  // 8. Current Affairs (Mapping International Relations here or directly as Current Affairs)
+  // 8. International Relations
+  if (
+    lower.includes('international') || 
+    /\bir\b/.test(lower) || 
+    lower.includes('relation') ||
+    lower.includes('organization') ||
+    lower.includes('institution') ||
+    lower.includes('summit')
+  ) {
+    return 'International Relations';
+  }
+
+  // 9. Current Affairs
   if (
     lower.includes('current') || 
     lower.includes('news') || 
     lower.includes('daily') || 
     lower.includes('award') || 
-    lower.includes('summit') ||
-    lower.includes('international') || 
-    /\bir\b/.test(lower) || 
-    lower.includes('relation') ||
-    lower.includes('organization') ||
-    lower.includes('institution')
+    lower.includes('miscellaneous') ||
+    lower.includes('misc')
   ) {
     return 'Current Affairs';
   }
