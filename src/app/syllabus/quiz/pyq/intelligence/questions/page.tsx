@@ -108,7 +108,6 @@ const getQuestionsByTopic = unstable_cache(
 
     const questionIds = mappings.map((m) => m.questionId);
     const questionList = await getQuestionsWithDetails(questionIds);
-    console.log('questionList by topic', questionList);
 
     return {
       topic: topic[0],

@@ -2,6 +2,7 @@ import { verifyAuth } from '@/lib/auth';
 import { getUserAnalytics } from '@/features/analytics/actions';
 import { redirect } from 'next/navigation';
 import AnalyticsDashboardWrapper from './AnalyticsDashboardWrapper';
+import { getExamContext } from '@/lib/exam-context';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 🎯 ANALYTICS PAGE (Server Component)
@@ -24,6 +25,8 @@ export default async function AnalyticsPage() {
     redirect('/login');
   }
 
+  const exam = await getExamContext();
+
   return (
     <Suspense
       fallback={
@@ -32,12 +35,12 @@ export default async function AnalyticsPage() {
         </div>
       }
     >
-      <AnalyticsContent userId={user.id} />
+      <AnalyticsContent userId={user.id} examId={exam.id} />
     </Suspense>
   );
 }
 
-async function AnalyticsContent({ userId }: { userId: string }) {
-  const analyticsData = await getUserAnalytics(userId);
+async function AnalyticsContent({ userId, examId }: { userId: string; examId: string }) {
+  const analyticsData = await getUserAnalytics(userId, examId);
   return <AnalyticsDashboardWrapper analytics={analyticsData} />;
 }

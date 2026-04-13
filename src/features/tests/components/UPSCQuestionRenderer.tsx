@@ -144,6 +144,38 @@ function extIntroEmbedsStatementLabels(htmlOrText: string | undefined): boolean 
   return /(?:Statement|कथन)\s*[-:]?\s*(?:I{1,3}|IV|V|VI{0,3}|VII|VIII|IX|X|\d+)\b/i.test(plain);
 }
 
+/** Plain intro line only — everything before the first Statement / कथन marker (matches parseUPSCContent). */
+function introBeforeFirstStatement(rawText: string): string {
+  if (!rawText) return '';
+  const text = cleanHtml(rawText).replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
+  const re = /(?:Statement|कथन)\s*[-:]?\s*(I{1,3}|IV|V|VI{0,3}|VII|VIII|IX|X|\d+)\s*[:.]?\s*/i;
+  const m = text.match(re);
+  if (m && m.index !== undefined && m.index > 0) {
+    return text.substring(0, m.index).trim();
+  }
+  return '';
+}
+
+/**
+ * Some CMS stems repeat "Statement-I … Statement-II …" after Statement III inside the last slice.
+ * Truncate before that rerun so cards don't duplicate.
+ */
+function truncateDuplicateStatementTail(text: string): string {
+  const patterns = [
+    /\n\s*Statement-I\b/i,
+    /\s{2,}Statement-I\b/i,
+    /\n\s*Statement\s+I\s*[:.]/i,
+    /\r?\n\s*(?:Statement|कथन)\s*-\s*I\b/i,
+  ];
+  let cut = text.length;
+  for (const p of patterns) {
+    const m = text.match(p);
+    if (m && m.index !== undefined && m.index > 60 && m.index < cut) cut = m.index;
+  }
+  if (cut < text.length) return text.substring(0, cut).trim();
+  return text;
+}
+
 // Valid Roman numerals for list items (I through X)
 const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 
@@ -338,6 +370,90 @@ const QUESTION_LINE_PATTERNS = [
   /कितने\s+(?:कथन|युग्म|जोड़े)\s+सही\s+हैं.*/i,
 ];
 
+/** Closing prompts ("Which of the following…") are short; stems that repeat similar phrases inside a statement are not. */
+const MAX_QUESTION_TAIL_CHARS = 1100;
+
+/**
+ * After the last *first-seen* Statement/कथन header when there are 2+ distinct markers — question line must not be taken from earlier in the stem.
+ */
+function endAfterLastUniqueStatementHeader(text: string): number | null {
+  const statementPattern =
+    /(?:Statement|कथन)\s*[-:]?\s*(I{1,3}|IV|V|VI{0,3}|VII|VIII|IX|X|\d+)\s*[:.]?\s*/gi;
+  const statementMatches = [...text.matchAll(statementPattern)];
+  const seenStmtKeys = new Set<string>();
+  const unique = statementMatches.filter((m) => {
+    const key = m[1].toUpperCase();
+    if (seenStmtKeys.has(key)) return false;
+    seenStmtKeys.add(key);
+    return true;
+  });
+  if (unique.length < 2) return null;
+  const last = unique[unique.length - 1];
+  return (last.index ?? 0) + last[0].length;
+}
+
+/** Prefer the latest match whose tail is short (real UPSC prompt at the end, not a phrase mid-statement). */
+function extractClosingQuestionLine(text: string): { main: string; questionLine: string } {
+  const len = text.length;
+  if (!len) return { main: '', questionLine: '' };
+
+  const afterLastStmt = endAfterLastUniqueStatementHeader(text);
+  const minStart = afterLastStmt != null ? afterLastStmt : Math.floor(len * 0.28);
+
+  let bestIdx = -1;
+  for (const pattern of QUESTION_LINE_PATTERNS) {
+    const re = new RegExp(
+      pattern.source,
+      pattern.global ? pattern.flags : `${pattern.flags}g`
+    );
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text)) !== null) {
+      const idx = m.index;
+      const tailLen = len - idx;
+      if (idx >= minStart && tailLen <= MAX_QUESTION_TAIL_CHARS && idx > bestIdx) {
+        bestIdx = idx;
+      }
+    }
+  }
+
+  if (bestIdx >= 0) {
+    return {
+      main: text.substring(0, bestIdx).trim(),
+      questionLine: text.substring(bestIdx).trim(),
+    };
+  }
+  return { main: text, questionLine: '' };
+}
+
+/** Strip a trailing prompt from the last list slice only when it looks like a short closing line. */
+function stripEmbeddedQuestionLineFromTail(itemText: string): { body: string; questionLine: string } {
+  const len = itemText.length;
+  if (!len) return { body: itemText, questionLine: '' };
+  const minStart = Math.floor(len * 0.3);
+
+  let bestIdx = -1;
+  for (const pattern of QUESTION_LINE_PATTERNS) {
+    const re = new RegExp(
+      pattern.source,
+      pattern.global ? pattern.flags : `${pattern.flags}g`
+    );
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(itemText)) !== null) {
+      const idx = m.index;
+      const tailLen = len - idx;
+      if (idx >= minStart && tailLen <= MAX_QUESTION_TAIL_CHARS && idx > bestIdx) {
+        bestIdx = idx;
+      }
+    }
+  }
+
+  if (bestIdx < 0) return { body: itemText, questionLine: '' };
+  return {
+    body: itemText.substring(0, bestIdx).trim(),
+    questionLine: itemText.substring(bestIdx).trim(),
+  };
+}
+
 // ============================================================================
 // PARSER - Robust pattern detection
 // ============================================================================
@@ -349,24 +465,10 @@ function parseUPSCContent(rawText: string): ParsedContent {
   let text = cleanHtml(rawText);
   text = text.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
 
-  // Step 1: Extract question line from end
-  let questionLine = '';
-  let mainContent = text;
-  
-  for (const pattern of QUESTION_LINE_PATTERNS) {
-    const match = text.match(pattern);
-    if (match && match.index !== undefined) {
-      // More flexible threshold: either after 20% of text OR after any statement patterns
-      const hasStatements = /(?:Statement|कथन)\s*[-:]?\s*[I1]/.test(text);
-      const flexibleThreshold = hasStatements ? text.length * 0.2 : text.length * 0.3;
-      
-      if (match.index > flexibleThreshold) {
-        questionLine = text.substring(match.index).trim();
-        mainContent = text.substring(0, match.index).trim();
-        break;
-      }
-    }
-  }
+  // Step 1: Extract question line from end (avoid matching mid-statement phrases)
+  const extracted = extractClosingQuestionLine(text);
+  let mainContent = extracted.main;
+  let questionLine = extracted.questionLine;
 
   const items: ParsedItem[] = [];
   let context = mainContent;
@@ -416,17 +518,17 @@ function parseUPSCContent(rawText: string): ParsedContent {
         
         // For last item, check if it contains a question line
         if (i === statementMatchesUnique.length - 1 && !questionLine) {
-          for (const pattern of QUESTION_LINE_PATTERNS) {
-            const qlMatch = itemText.match(pattern);
-            if (qlMatch && qlMatch.index !== undefined && qlMatch.index >= 0) {
-              questionLine = itemText.substring(qlMatch.index).trim();
-              itemText = itemText.substring(0, qlMatch.index).trim();
-              break;
-            }
+          const stripped = stripEmbeddedQuestionLineFromTail(itemText);
+          if (stripped.questionLine) {
+            questionLine = stripped.questionLine;
+            itemText = stripped.body;
           }
         }
         
         if (itemText) {
+          if (i === statementMatchesUnique.length - 1) {
+            itemText = truncateDuplicateStatementTail(itemText);
+          }
           // Use the original word (Statement/कथन) from the match
           const originalWord = match[0].includes('कथन') ? 'कथन' : 'Statement';
           items.push({
@@ -482,13 +584,10 @@ function parseUPSCContent(rawText: string): ParsedContent {
         
         // For last item, check if it contains a question line
         if (i === validRomanMatches.length - 1 && !questionLine) {
-          for (const pattern of QUESTION_LINE_PATTERNS) {
-            const qlMatch = itemText.match(pattern);
-            if (qlMatch && qlMatch.index !== undefined && qlMatch.index >= 0) {
-              questionLine = itemText.substring(qlMatch.index).trim();
-              itemText = itemText.substring(0, qlMatch.index).trim();
-              break;
-            }
+          const stripped = stripEmbeddedQuestionLineFromTail(itemText);
+          if (stripped.questionLine) {
+            questionLine = stripped.questionLine;
+            itemText = stripped.body;
           }
         }
         
@@ -534,13 +633,10 @@ function parseUPSCContent(rawText: string): ParsedContent {
         
         // For last item, check if it contains a question line
         if (i === numberMatches.length - 1 && !questionLine) {
-          for (const pattern of QUESTION_LINE_PATTERNS) {
-            const qlMatch = itemText.match(pattern);
-            if (qlMatch && qlMatch.index !== undefined && qlMatch.index >= 0) {
-              questionLine = itemText.substring(qlMatch.index).trim();
-              itemText = itemText.substring(0, qlMatch.index).trim();
-              break;
-            }
+          const stripped = stripEmbeddedQuestionLineFromTail(itemText);
+          if (stripped.questionLine) {
+            questionLine = stripped.questionLine;
+            itemText = stripped.body;
           }
         }
         
@@ -698,17 +794,38 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
 
   // Determine display values
   const contextStr = useMemo(() => {
+    const parsedStatementBlocks =
+      parsed.items.length >= 2 && parsed.items.every((it) => it.type === 'statement');
+    const fromExtStatementList =
+      Boolean(
+        ext?.listItems &&
+          ext.listItems.length >= 2 &&
+          (ext.listType === 'statements' || ext.layoutType === 'statements')
+      );
+    const structuredStatements = parsedStatementBlocks || fromExtStatementList;
+
+    // CMS often puts full stem+statements in contextStr while we also render statement cards → duplicate.
+    if (structuredStatements) {
+      const stem = isHindi ? question.text : question.textEn || question.text;
+      let intro = (parsed.context || '').trim();
+      const stemPlain = cleanHtml(stem).replace(/\s+/g, ' ');
+      const stemLen = stemPlain.length || 1;
+      if (!intro || intro.length > stemLen * 0.72) {
+        const cut = introBeforeFirstStatement(stem);
+        if (cut) intro = cut;
+      }
+      return intro;
+    }
+
     if (!ext?.contextStr && !ext?.contextStrEn) {
       return parsed.context;
     }
     const extIntro = isHindi ? ext.contextStr! : ext.contextStrEn || ext.contextStr!;
-    const parsedStatementBlocks =
-      parsed.items.length >= 2 && parsed.items.every((it) => it.type === 'statement');
     if (parsedStatementBlocks && extIntroEmbedsStatementLabels(extIntro)) {
       return parsed.context;
     }
     return extIntro;
-  }, [ext, isHindi, parsed.context, parsed.items]);
+  }, [ext, isHindi, parsed.context, parsed.items, question.text, question.textEn]);
 
   const questionLine = ext?.questionPrompt 
     ? (isHindi ? ext.questionPrompt : ext.questionPromptEn || ext.questionPrompt) 
@@ -834,6 +951,11 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
     item.type === 'statement' || item.marker.toLowerCase().includes('statement')
   );
 
+  const parsedStatementBlocks =
+    parsed.items.length >= 2 && parsed.items.every((it) => it.type === 'statement');
+  const showAssertionReasonBlock =
+    ext?.layoutType === 'assertion_reason' && !parsedStatementBlocks;
+
   return (
     <div className={cn('space-y-4 font-serif selection:bg-emerald-500/30', styles.container)}>
       {/* Context/Introduction */}
@@ -955,8 +1077,8 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
         </div>
       )}
 
-      {/* Assertion/Reason Layout */}
-      {ext?.layoutType === 'assertion_reason' && (
+      {/* Assertion/Reason Layout — skip if stem already parsed as multi-statement (avoids I/II twice) */}
+      {showAssertionReasonBlock && (
         <div className="space-y-5 py-2">
           {[
             { label: isHindi ? 'कथन-I' : 'Statement-I', text: isHindi ? ext.statementI : ext.statementIEn || ext.statementI },

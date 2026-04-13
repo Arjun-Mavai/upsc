@@ -65,7 +65,9 @@ function typeLabel(type: string) {
   if (type === 'UNIT') return 'Unit';
   if (type === 'TOPIC') return 'Topic';
   if (type === 'CSAT') return 'CSAT';
-  if (type === 'PYQ') return 'PYQ';
+  if (type === 'PYQ' || type === 'UPSC_PYQ') return 'PYQ';
+  if (type === 'UPSC_FLT') return 'FLT';
+  if (type === 'UPSC_FREE_QUIZ') return 'Free Quiz';
   return 'Test';
 }
 
@@ -91,6 +93,7 @@ export function TestHistoryClient({ analytics }: TestHistoryClientProps) {
 
   const filteredHistory = recentActivity.filter((item: any) => {
     if (activeTab === 'ALL') return true;
+    if (activeTab === 'PYQ') return item.type === 'PYQ' || item.type === 'UPSC_PYQ';
     return item.type === activeTab;
   });
 
@@ -133,7 +136,7 @@ export function TestHistoryClient({ analytics }: TestHistoryClientProps) {
 
           {/* Filter tabs — pill style */}
           <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-0.5">
-            {['ALL', 'UNIT', 'TOPIC', 'CSAT', 'PYQ'].map((tab) => (
+            {['ALL', 'PYQ'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -281,7 +284,7 @@ function TestHistoryRow({
           {activity.timeTaken && <span className="text-slate-300">•</span>}
           {activity.timeTaken && (
             <span className="flex items-center gap-1 font-mono text-slate-400">
-              ⏱️ {activity.timeTaken}s
+              ⏱️ {activity.timeTaken}
             </span>
           )}
         </div>

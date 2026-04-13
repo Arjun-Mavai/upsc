@@ -114,7 +114,12 @@ const typeLabel = (type: string) => {
     case 'CSAT':
       return 'CSAT Paper';
     case 'PYQ':
-      return 'Prev. Year Paper';
+    case 'UPSC_PYQ':
+      return 'PYQ';
+    case 'UPSC_FLT':
+      return 'FLT';
+    case 'UPSC_FREE_QUIZ':
+      return 'Free Quiz';
     default:
       return type;
   }
@@ -238,9 +243,11 @@ export default function AnalyticsDashboardClient({
     },
   ];
 
-  const filteredHistory = recentActivity.filter(
-    (item) => activeTab === 'ALL' || item.type === activeTab
-  );
+  const filteredHistory = recentActivity.filter((item) => {
+    if (activeTab === 'ALL') return true;
+    if (activeTab === 'PYQ') return item.type === 'PYQ' || item.type === 'UPSC_PYQ';
+    return item.type === activeTab;
+  });
 
   const container = {
     hidden: { opacity: 0 },
@@ -451,7 +458,7 @@ export default function AnalyticsDashboardClient({
             </div>
 
             <div className="no-scrollbar flex gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1">
-              {['ALL', 'UNIT', 'TOPIC', 'CSAT', 'PYQ'].map((tab) => (
+              {['ALL', 'PYQ'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
