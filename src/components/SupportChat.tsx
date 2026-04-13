@@ -112,7 +112,7 @@ export function SupportChat() {
   };
 
   const handleTelegram = () => {
-    window.open('https://t.me/mppss_26_bot', '_blank');
+    window.open('https://t.me/UPSCZEN', '_blank');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

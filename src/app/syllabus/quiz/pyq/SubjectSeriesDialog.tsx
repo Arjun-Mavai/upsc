@@ -217,8 +217,8 @@ export function SubjectSeriesDialog({
                           whileTap={{ scale: 0.98 }}
                           onMouseEnter={() => {
                             if (!locked) {
-                              const url = `/syllabus/quiz/play?mode=pyq-subject&subject=${subject}&limit=${CHUNK_SIZE}&offset=${item.offset}`;
-                              router.prefetch(url);
+                            const url = `/syllabus/quiz/play?mode=pyq-subject&subject=${encodeURIComponent(subject)}&limit=${CHUNK_SIZE}&offset=${item.offset}`;
+                            router.prefetch(url);
                             }
                           }}
                           onClick={() => handlePartClick(item.part, item.offset, !!locked)}

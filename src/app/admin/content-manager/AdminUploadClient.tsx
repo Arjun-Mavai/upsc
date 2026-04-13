@@ -535,7 +535,12 @@ export default function AdminUploadPage() {
                               ]
                             </code>
                           </span>
-                          <span className="text-[10px] text-emerald-500 font-medium">✨ Supports "extendedData" for complex UPSC Numbered/Table questions</span>
+                          <span className="text-[10px] text-emerald-500 font-medium">
+                            ✨ Table: add <code className="text-emerald-600">extendedData.tableRows</code> +{' '}
+                            <code className="text-emerald-600">tableRowsEn</code> (+ headers).{' '}
+                            <code className="text-emerald-600">layoutType</code> optional if rows exist — stem alone
+                            cannot draw a table.
+                          </span>
                         </div>
                         {testData.type === 'MISC' && (
                           <a

@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { toast } from 'sonner';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
-import { ViewTransition } from 'react';
+import { Fragment } from 'react';
 
 import { getUserTier } from '@/lib/access-control';
 import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
@@ -46,6 +46,8 @@ interface TopicSelectionClientProps {
   initialDbData: Record<string, Topic[]>;
 }
 
+import { GlobalLoader } from '@/components/ui/GlobalLoader';
+
 export default function TopicSelectionClient({ initialDbData }: TopicSelectionClientProps) {
   const router = useRouter();
   const { language, user } = useSettingsStore();
@@ -58,6 +60,7 @@ export default function TopicSelectionClient({ initialDbData }: TopicSelectionCl
   const [dbData, setDbData] = useState<Record<string, Topic[]> | null>(initialDbData);
   const [loading, setLoading] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [isStarting, setIsStarting] = useState(false);
 
   const hi = language === 'hi';
 
@@ -140,6 +143,7 @@ export default function TopicSelectionClient({ initialDbData }: TopicSelectionCl
     }
 
     if (topic.testId) {
+      setIsStarting(true);
       trackFbCustomEvent('test_started', {
         test_type: 'topic',
         test_name: topic.titleEn || topic.title,
@@ -166,7 +170,7 @@ export default function TopicSelectionClient({ initialDbData }: TopicSelectionCl
   }
 
   return (
-    <ViewTransition>
+    <Fragment>
       <div className="relative min-h-screen overflow-hidden bg-[#fafbfc] pb-20 font-sans">
         {/* 🎭 PREMIUM BACKGROUND BLURS */}
         <div className="pointer-events-none absolute top-0 left-0 h-[500px] w-full bg-gradient-to-b from-slate-100/30 to-transparent" />
@@ -342,7 +346,15 @@ export default function TopicSelectionClient({ initialDbData }: TopicSelectionCl
       </div>
 
       <SyllabusLockModal open={paywallOpen} onOpenChange={setPaywallOpen} />
+
+      {/* Global Loader Overlay */}
+      {isStarting && (
+        <GlobalLoader
+          variant="overlay"
+          label={hi ? 'आपका टेस्ट तैयार हो रहा है...' : 'Preparing your test...'}
+        />
+      )}
     </div>
-    </ViewTransition>
+  </Fragment>
   );
 }

@@ -9,7 +9,7 @@ import { SCORING_CONFIG, mapCorrectAnswerToIndex, getExamScoring } from '@/lib/q
 import { logger } from '@/lib/logger';
 import { insertUserToLeaderboard } from '@/actions/leaderboard-actions';
 import { getExamContext } from '@/lib/exam-context';
-import { sendTelegramNotification, escapeHTML } from '@/lib/telegram';
+import { sendTelegramNotification, escapeHTML } from '@/lib/tg-notify';
 
 /**
  * Ensures a record exists in the 'tests' table for virtual/practice sessions.

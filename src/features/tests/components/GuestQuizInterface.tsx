@@ -23,6 +23,7 @@ import { QuizQuestion } from './quiz/QuizQuestion';
 import { QuizNavigation } from './quiz/QuizNavigation';
 import { QuizPaletteMobile, QuizPaletteDesktop } from './quiz/QuizPalette';
 import { QuizExitDialog } from './quiz/QuizExitDialog';
+import { QuizSubmitDialog } from './quiz/QuizSubmitDialog';
 import { GuestEntryDialog } from './quiz/GuestEntryDialog';
 import { QuizExplanation } from './quiz/QuizExplanation';
 import { getCorrectAnswerIndex } from '@/lib/quiz-scoring';
@@ -76,8 +77,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
     currentQuestion,
     isAnswered,
     totalQuestions,
-    // setIsSubmitted is likely returned by useQuizLogic but not exposed in destructuring in QuizInterface?
-    // Let's check logic. useQuizLogic handles 'isSubmitted' state.
+    activeQuestionTime,
   } = useQuizLogic({ ...props, userId: null }); // Force userId null
 
   // Effective instant mode — disableInstantMode true h to force OFF
@@ -99,6 +99,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
 
   // Custom Guest Submit State (to trigger storing and redirect)
   const [isProcessingResult, setIsProcessingResult] = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   // Translations
   const t = {
@@ -242,6 +243,14 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
   }, [isSubmitted]);
 
   // ── Submit handler (GUEST SPECIFIC) ──
+  const handleQuizSubmitAction = useCallback(() => {
+    setShowSubmitConfirm(true);
+  }, []);
+
+  const handleConfirmSubmit = useCallback(() => {
+    setShowSubmitConfirm(false);
+    handleSubmit();
+  }, [handleSubmit]);
   useEffect(() => {
     // Watch for isSubmitted change from useQuizLogic
     // When isSubmitted becomes true, we process and redirect
@@ -324,6 +333,8 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
       current: t.current,
       submitTest: t.submitTest,
     },
+    timeLeft,
+    language,
   };
 
   return (
@@ -375,6 +386,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
               onToggleReview={toggleMarkForReview}
               getParsedOptions={getParsedOptions}
               translations={{ question: t.question, markReview: t.markReview, unmark: t.unmark }}
+              currentTimeSpent={activeQuestionTime}
             />
 
             {effectiveInstantMode && isAnswered && (
@@ -393,7 +405,7 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
             totalQuestions={totalQuestions}
             onPrev={handlePrev}
             onNext={handleNext}
-            onSubmit={handleSubmit}
+            onSubmit={handleQuizSubmitAction}
             translations={{ prev: t.prev, next: t.next, submit: t.submit }}
           />
         </main>
@@ -425,6 +437,19 @@ export function GuestQuizInterface(props: GuestQuizInterfaceProps) {
         onMobileChange={setGuestMobile}
         onSubmit={handleGuestEntrySubmit}
         onExit={showExitModal}
+      />
+
+      <QuizSubmitDialog
+        open={showSubmitConfirm}
+        onOpenChange={setShowSubmitConfirm}
+        onConfirm={handleConfirmSubmit}
+        stats={{
+          attempted: Object.keys(answers).length,
+          skipped: totalQuestions - Object.keys(answers).length,
+          marked: markedforReview.length,
+          total: totalQuestions,
+        }}
+        language={language}
       />
     </div>
   );

@@ -38,7 +38,7 @@ export default function EmailTemplate({
             letterSpacing: '-0.5px',
           }}
         >
-          UPSC Intelligence - 2026
+          UPSC Intelligence
         </h1>
         <p
           style={{
@@ -50,7 +50,7 @@ export default function EmailTemplate({
             textTransform: 'uppercase',
           }}
         >
-          Smart PYQ Analysis
+          Civil Services · PYQ mastery
         </p>
       </div>
 

@@ -435,7 +435,7 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
 
               <h4 className="mb-4 flex items-center gap-2 text-[11px] font-black tracking-[0.2em] text-emerald-500 uppercase">
                 <Brain size={14} className="shrink-0" />{' '}
-                {finalLanguage === 'hi' ? 'तर्क एवं विश्लेषण' : 'Logic & Analysis'}
+                {finalLanguage === 'hi' ? 'फैसला एवं तर्क (Verdict)' : 'Verdict & Logic Path'}
               </h4>
 
               <div

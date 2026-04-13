@@ -11,10 +11,11 @@ import {
   pyqTopics,
   mppscUsers
 } from '@/db/schema';
+import { logger } from '@/lib/logger';
 import { eq, and, inArray, desc } from 'drizzle-orm';
 import { verifyAuth } from '@/lib/auth';
-import { getCorrectAnswerIndex } from '@/lib/quiz-scoring';
 import { checkQualification } from '@/features/tests/utils/cutoff-logic';
+import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
 
 // ------------------------------------------------------------------
 // Types
@@ -27,6 +28,7 @@ export interface SmartResultResponse {
   wrong: number;
   skipped: number;
   accuracy: number;
+  total_questions: number;
   
   qualification?: {
     status: 'Qualified' | 'Not Qualified' | 'N/A';
@@ -58,19 +60,130 @@ export interface SmartResultResponse {
 }
 
 // ------------------------------------------------------------------
+// Enriched Logic for Flashcards (Any Mode / Any User)
+// ------------------------------------------------------------------
+
+export async function getHighYieldFactsForQuestions(
+  questionIds: string[],
+  testId?: string
+): Promise<any[]> {
+  if ((!questionIds || questionIds.length === 0) && !testId) return [];
+
+  try {
+    const topicIds: string[] = [];
+
+    // 1. If testId is provided, try to find the test's own topic mapping first
+    if (testId) {
+      const test = await db.query.tests.findFirst({
+        where: eq(tests.id, testId),
+        columns: { topicId: true, type: true }
+      });
+
+      if (test?.topicId) {
+        const linkedPyqTopic = await db.query.pyqTopics.findFirst({
+          where: eq(pyqTopics.id, test.topicId)
+        });
+        
+        if (linkedPyqTopic) {
+          topicIds.push(linkedPyqTopic.id);
+        }
+      }
+    }
+
+    // 2. Find topics linked to specific questions (via PYQ mappings)
+    if (questionIds && questionIds.length > 0) {
+      const questionTopics = await db
+        .select({
+          qId: pyqQuestionTopics.questionId,
+          tId: pyqQuestionTopics.topicId
+        })
+        .from(pyqQuestionTopics)
+        .where(inArray(pyqQuestionTopics.questionId, questionIds));
+
+      const mappedTopicIds = questionTopics.map(qt => qt.tId);
+      mappedTopicIds.forEach(id => {
+        if (!topicIds.includes(id)) topicIds.push(id);
+      });
+    }
+
+    // 3. Fallback: Check if we can find topics by normalized subject name for these questions
+    if (topicIds.length === 0 && questionIds && questionIds.length > 0) {
+      const questionData = await db
+        .select({ subject: questions.subject })
+        .from(questions)
+        .where(inArray(questions.id, questionIds));
+      
+      const rawSubjects = [...new Set(questionData.map(q => q.subject).filter(Boolean))];
+      const normalizedSubjects = [...new Set(rawSubjects.map(s => normalizeSubject(s)))];
+      
+      if (normalizedSubjects.length > 0) {
+        const fallbackTopics = await db
+          .select({ id: pyqTopics.id })
+          .from(pyqTopics)
+          .where(inArray(pyqTopics.subject, normalizedSubjects as string[]))
+          .limit(10);
+        
+        fallbackTopics.forEach(t => {
+          if (!topicIds.includes(t.id)) topicIds.push(t.id);
+        });
+      }
+    }
+
+    // 4. Fetch facts from the topics
+    let facts = topicIds.length > 0 ? await db.query.pyqFactBank.findMany({
+      where: and(
+        inArray(pyqFactBank.topicId, topicIds)
+      ),
+      orderBy: [desc(pyqFactBank.importanceScore)],
+      limit: 15
+    }) : [];
+
+    // 5. Final Resilience Fallback: If no facts found by topics, try by subject
+    if (facts.length === 0) {
+      const finalQuestionIds = questionIds && questionIds.length > 0 ? questionIds : 
+                                (testId ? (await db.select({id: questions.id}).from(questions).where(eq(questions.testId, testId)).limit(10)).map(q => q.id) : []);
+
+      if (finalQuestionIds.length > 0) {
+        const questionData = await db
+          .select({ subject: questions.subject })
+          .from(questions)
+          .where(inArray(questions.id, finalQuestionIds));
+        
+        const rawSubjects = [...new Set(questionData.map(q => q.subject).filter(Boolean))];
+        const normalizedSubjects = [...new Set(rawSubjects.map(s => normalizeSubject(s)))];
+
+        if (normalizedSubjects.length > 0) {
+          facts = await db.query.pyqFactBank.findMany({
+            where: and(
+              inArray(pyqFactBank.subject, normalizedSubjects as string[])
+            ),
+            orderBy: [desc(pyqFactBank.importanceScore)],
+            limit: 15
+          });
+        }
+      }
+    }
+
+    return facts;
+  } catch (error) {
+    logger.error('Error fetching facts for questions:', error, { category: 'db' });
+    return [];
+  }
+}
+
+// ------------------------------------------------------------------
 // Main Action
 // ------------------------------------------------------------------
 
 export async function calculateUPSCResult(
   testId: string, 
-  attemptId?: string // Optional: if null, fetch latest
+  attemptId?: string 
 ): Promise<SmartResultResponse | { error: string }> {
   try {
     const session = await verifyAuth();
     if (!session) return { error: 'Unauthorized' };
     const userId = session.id;
 
-    // 1. Fetch Attempt
     let attempt;
     if (attemptId) {
       attempt = await db.query.userAttempts.findFirst({
@@ -85,10 +198,8 @@ export async function calculateUPSCResult(
 
     if (!attempt) return { error: 'Attempt not found' };
 
-    // 2. Fetch Answers & Questions & Test Details & User Details
-    const [answers, testQuestions, testDetails, userDetails] = await Promise.all([
+    const [answers, testDetails, userDetails] = await Promise.all([
       db.select().from(attemptAnswers).where(eq(attemptAnswers.attemptId, attempt.id)),
-      db.select().from(questions).where(eq(questions.testId, testId)),
       db.query.tests.findFirst({ where: eq(tests.id, testId) }),
       db.query.mppscUsers.findFirst({ 
         where: eq(mppscUsers.id, userId),
@@ -98,9 +209,17 @@ export async function calculateUPSCResult(
 
     if (!testDetails) return { error: 'Test not found' };
 
-    // 3. Analyze Scoring
-    // Dynamic marking based on question metadata
-    
+    // Fetch questions: For virtual tests, they are not linked by testId in DB record
+    let testQuestions;
+    if (testId.startsWith('practice-')) {
+      const questionIds = answers.map(a => a.questionId);
+      testQuestions = await db.select().from(questions).where(inArray(questions.id, questionIds));
+    } else {
+      testQuestions = await db.select().from(questions).where(eq(questions.testId, testId));
+    }
+
+    if (!testDetails) return { error: 'Test not found' };
+
     const scoring = testQuestions.map(q => {
       const ans = answers.find(a => a.questionId === q.id);
       
@@ -108,12 +227,12 @@ export async function calculateUPSCResult(
       let delta = 0;
       let userAnswer = null;
       
-      const marks = q.marks ?? 3; // Fallback to 3 if null (though schema says notNull)
+      const marks = q.marks ?? 3; 
       const negative = q.negativeMarks ?? 1;
 
       if (ans) {
         userAnswer = ans.userAnswer;
-        if (Number(ans.userAnswer) === getCorrectAnswerIndex(q.correctAnswer, q.options as any)) {
+        if (ans.userAnswer === q.correctAnswer) {
           status = 'correct';
           delta = marks;
         } else {
@@ -138,13 +257,10 @@ export async function calculateUPSCResult(
     const skipped = scoring.filter(i => i.status === 'skipped').length;
     const total_questions = testQuestions.length;
     
-    // Max score is sum of all question marks
     const max_score = scoring.reduce((sum, item) => sum + (item.marks ?? 3), 0);
 
     const accuracy = (correct + wrong) > 0 ? correct / (correct + wrong) : 0;
 
-    // 4. Intelligence Metrics
-    // Sum of negative marks for all wrong answers
     const wasted_points = scoring
       .filter(i => i.status === 'wrong')
       .reduce((sum, item) => sum + item.negativeUsed, 0);
@@ -158,7 +274,6 @@ export async function calculateUPSCResult(
     else if (accuracy >= 0.50) strategy_grade = 'C';
     else strategy_grade = 'D';
 
-    // 5. Subject Breakdown
     const subjects = [...new Set(scoring.map(s => s.subject))];
     const subject_breakdown = subjects.map(sub => {
       const items = scoring.filter(i => i.subject === sub);
@@ -179,7 +294,6 @@ export async function calculateUPSCResult(
       };
     });
 
-    // 6. Qualification Check
     let qualification = undefined;
     if (testDetails.cutoffs && userDetails) {
        const userCategory = userDetails.category || 'UR';
@@ -200,33 +314,8 @@ export async function calculateUPSCResult(
        };
     }
 
-    // 7. PYQ/Fact Linkage for WRONG answers
     const wrongQuestionIds = scoring.filter(s => s.status === 'wrong').map(s => s.id);
-    
-    let facts: any[] = [];
-    if (wrongQuestionIds.length > 0) {
-      // Find topics linked to these questions
-      const questionTopics = await db
-        .select({
-          qId: pyqQuestionTopics.questionId,
-          tId: pyqQuestionTopics.topicId
-        })
-        .from(pyqQuestionTopics)
-        .where(inArray(pyqQuestionTopics.questionId, wrongQuestionIds));
-
-      const topicIds = [...new Set(questionTopics.map(qt => qt.tId))];
-
-      if (topicIds.length > 0) {
-        // Fetch high-yield facts for these topics
-        facts = await db.query.pyqFactBank.findMany({
-          where: and(
-            inArray(pyqFactBank.topicId, topicIds)
-          ),
-          orderBy: [desc(pyqFactBank.importanceScore)],
-          limit: 20
-        });
-      }
-    }
+    const facts = await getHighYieldFactsForQuestions(wrongQuestionIds, testId);
 
     return {
       net_score,
@@ -235,6 +324,7 @@ export async function calculateUPSCResult(
       wrong,
       skipped,
       accuracy,
+      total_questions,
       attempt_intelligence: {
         accuracy_vs_breakeven: accuracy - breakeven_accuracy,
         wasted_points,
@@ -253,7 +343,7 @@ export async function calculateUPSCResult(
     };
 
   } catch (error) {
-    console.error('Error calculating result:', error);
+    logger.error('Error calculating result:', error, { category: 'api' });
     return { error: 'Calculation failed' };
   }
 }

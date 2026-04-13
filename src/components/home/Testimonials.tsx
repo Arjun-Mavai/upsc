@@ -58,8 +58,8 @@ export function Testimonials() {
       : 'Join students from across India who are decoding UPSC Prelims with expert precision.',
   };
 
-  // Duplicate testimonials for seamless loop
-  const doubledTestimonials = [...TESTIMONIALS, ...TESTIMONIALS];
+  // Quadruple testimonials for extremely large screens and seamless loop
+  const repeatedTestimonials = [...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS];
 
   return (
     <section className="overflow-hidden border-t border-slate-100 bg-white py-24">
@@ -83,20 +83,20 @@ export function Testimonials() {
       <div className="relative flex overflow-hidden py-10">
         <motion.div
           animate={{
-            x: [0, -100 * TESTIMONIALS.length + '%'],
+            x: [0, '-25%'],
           }}
           transition={{
             x: {
               repeat: Infinity,
               repeatType: 'loop',
-              duration: 30, // Adjust speed as needed
+              duration: 50, // Standard smooth pace
               ease: 'linear',
             },
           }}
           className="flex gap-8 px-4"
           style={{ width: 'fit-content' }}
         >
-          {doubledTestimonials.map((user, idx) => (
+          {repeatedTestimonials.map((user, idx) => (
             <div
               key={`${user.name}-${idx}`}
               className="group relative flex h-full min-w-[320px] max-w-[350px] flex-col justify-between rounded-3xl border border-slate-100 bg-slate-50/50 p-8 transition-all duration-300 hover:border-amber-200 hover:bg-white hover:shadow-xl hover:shadow-amber-500/5 md:min-w-[400px]"

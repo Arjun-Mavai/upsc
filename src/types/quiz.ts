@@ -23,6 +23,8 @@ export interface Question {
     matchId: string;
     matchEn?: string;
   }[];
+  /** Structured layout from admin/PDF pipeline (statements, table rows, etc.) */
+  extendedData?: unknown;
 }
 
 export interface TestAttempt {

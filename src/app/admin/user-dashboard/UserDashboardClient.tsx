@@ -111,41 +111,52 @@ export default function UserDashboardClient({ users }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
-      <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-6">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/admin/dashboard')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="flex items-center gap-2 text-xl font-black text-slate-900 md:text-2xl">
-              <Users className="h-5 w-5 text-slate-700 md:h-6 md:w-6" />
-              Student Dashboard
-            </h1>
-            <p className="text-xs text-slate-500 md:text-sm">
-              Performance tracking • Test history • Insights
-            </p>
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-slate-900 selection:text-white">
+      <div className="mx-auto max-w-7xl space-y-8 p-6 md:p-8 lg:p-12">
+        {/* Header Section */}
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-4">
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => router.push('/admin/dashboard')}
+                className="rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:bg-slate-50"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="flex items-center gap-3 text-2xl font-black tracking-tight text-slate-900 md:text-3xl lg:text-4xl">
+                <Users className="h-6 w-6 text-slate-700 md:h-8 md:w-8" />
+                Student Dashboard
+              </h1>
+              <div className="mt-1 flex items-center gap-2 text-xs font-bold text-slate-500 md:text-sm">
+                <span className="flex items-center gap-1">
+                  <Activity className="h-3 w-3 text-emerald-500" /> Live Monitoring
+                </span>
+                <span>•</span>
+                <span>UPSC ZEN Platform Admin</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-3 gap-3">
+        {/* Global Stats Cards */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 md:gap-6">
           <SummaryCard
-            icon={<Users className="h-4 w-4" />}
-            label="Students"
+            icon={<Users className="h-5 w-5" />}
+            label="Total Students"
             value={totalUsers}
             color="blue"
           />
           <SummaryCard
-            icon={<Activity className="h-4 w-4" />}
-            label="Active"
+            icon={<Activity className="h-5 w-5" />}
+            label="Highly Active"
             value={activeUsers}
             color="emerald"
           />
           <SummaryCard
-            icon={<Trophy className="h-4 w-4" />}
-            label="Tests"
+            icon={<Trophy className="h-5 w-5" />}
+            label="Total Attempts"
             value={totalAttempts}
             color="violet"
           />
@@ -214,13 +225,13 @@ export default function UserDashboardClient({ users }: Props) {
           </Card>
         )}
 
-        {/* Search + Sort */}
-        <div className="flex flex-col gap-3 sm:flex-row">
+        {/* Action Bar: Search & Filtering */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search by name or email..."
-              className="pl-10"
+              className="h-12 rounded-2xl border-slate-200 pl-11 shadow-sm transition-all focus:border-slate-900 focus:ring-slate-950/5 lg:text-base"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -228,14 +239,17 @@ export default function UserDashboardClient({ users }: Props) {
               }}
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
             {(['recent', 'attempts', 'score'] as const).map((s) => (
               <Button
                 key={s}
                 size="sm"
                 variant={sortBy === s ? 'default' : 'outline'}
                 onClick={() => setSortBy(s)}
-                className="text-xs"
+                className={cn(
+                  'h-10 rounded-xl px-4 text-xs font-black uppercase tracking-widest transition-all',
+                  sortBy === s ? 'bg-slate-900 text-white shadow-lg' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
+                )}
               >
                 {s === 'recent' ? '🕐 Recent' : s === 'attempts' ? '🔢 Tests' : '🏆 Score'}
               </Button>
@@ -243,92 +257,103 @@ export default function UserDashboardClient({ users }: Props) {
           </div>
         </div>
 
-        <p className="text-xs text-slate-400">{filtered.length} students found</p>
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+             Student Directory ({filtered.length})
+           </p>
+        </div>
 
-        {/* User List */}
-        <div className="space-y-2">
+        {/* Dynamic User List */}
+        <div className="grid gap-4">
           {visible.map((user) => {
             const isExpanded = expandedUser === user.id;
             const userHistory = testHistory[user.id] || [];
             const isLoading = loadingHistory === user.id;
 
             return (
-              <Card key={user.id} className="border transition-all hover:shadow-sm">
-                <CardContent className="p-3 md:p-4">
-                  {/* Main Row */}
+              <Card 
+                key={user.id} 
+                className={cn(
+                  "overflow-hidden border-slate-200 transition-all duration-300",
+                  isExpanded ? "ring-2 ring-slate-900/5 shadow-xl" : "hover:border-slate-300 hover:shadow-md"
+                )}
+              >
+                <CardContent className="p-0">
+                  {/* Main Header Row */}
                   <div
-                    className="flex cursor-pointer items-center gap-3 md:gap-4"
+                    className={cn(
+                      "flex cursor-pointer items-center gap-4 p-4 transition-colors",
+                      isExpanded ? "bg-slate-50/80" : "hover:bg-slate-50/30"
+                    )}
                     onClick={() => handleExpand(user.id)}
                   >
-                    {/* Avatar */}
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600 md:h-10 md:w-10">
-                      {(user.name?.[0] || user.email[0]).toUpperCase()}
+                    {/* User Profile Identicon */}
+                    <div className="relative">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 text-lg font-black text-slate-600 shadow-sm border border-slate-200">
+                        {(user.name?.[0] || user.email[0]).toUpperCase()}
+                      </div>
+                      <div className={cn(
+                        "absolute -bottom-1 -right-1 h-4 w-4 rounded-lg border-2 border-white shadow-sm",
+                        user.lastActiveAt && new Date(user.lastActiveAt).getTime() > Date.now() - 3600000 
+                          ? "bg-emerald-500" 
+                          : "bg-slate-300"
+                      )} />
                     </div>
 
-                    {/* Info */}
+                    {/* Basic Identity */}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="truncate text-sm font-bold text-slate-900">
-                          {user.name || 'No Name'}
+                        <h3 className="truncate text-base font-black tracking-tight text-slate-900">
+                          {user.name || 'Anonymous UPSC Aspirant'}
                         </h3>
-                        <Badge className={cn('text-[9px]', TIER_COLORS[user.planTier || 'free'])}>
-                          {user.planTier || 'free'}
-                        </Badge>
+                        {user.planTier === 'pro' && (
+                          <Badge className="bg-amber-100 text-[9px] font-black uppercase tracking-widest text-amber-700 hover:bg-amber-100 border border-amber-200">
+                            PRO
+                          </Badge>
+                        )}
                       </div>
-                      <p className="truncate text-[11px] text-slate-400">{user.email}</p>
+                      <p className="truncate text-xs font-bold text-slate-400">{user.email}</p>
                     </div>
 
-                    {/* Quick Stats - Desktop */}
-                    <div className="hidden shrink-0 items-center gap-3 text-xs sm:flex">
-                      <div className="flex items-center gap-1 font-bold text-slate-700">
-                        <Target className="h-3.5 w-3.5 text-slate-400" />
-                        {user.totalAttempts}
-                      </div>
-                      {user.avgScore != null && user.avgScore > 0 && (
-                        <div
-                          className={cn(
-                            'rounded-md px-2 py-0.5 text-xs font-bold',
-                            user.avgScore >= 70
-                              ? 'bg-emerald-100 text-emerald-700'
-                              : user.avgScore >= 50
-                                ? 'bg-amber-100 text-amber-700'
-                                : 'bg-rose-100 text-rose-700'
-                          )}
-                        >
-                          {user.avgScore.toFixed(0)}%
-                        </div>
-                      )}
-                      {user.lastActiveAt && (
-                        <span className="text-[11px] text-slate-400">
-                          {formatSmartDate(new Date(user.lastActiveAt))}
-                        </span>
-                      )}
+                    {/* High Density Performance Metrics (Desktop) */}
+                    <div className="hidden shrink-0 items-center gap-6 md:flex">
+                       <div className="text-center">
+                         <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Attempts</div>
+                         <div className="flex items-center justify-center gap-1.5 font-black text-slate-900">
+                            <Target className="h-3.5 w-3.5 text-indigo-500" />
+                            {user.totalAttempts}
+                         </div>
+                       </div>
+
+                       {user.avgScore != null && user.avgScore > 0 && (
+                         <div className="text-center">
+                           <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Avg Score</div>
+                           <div className={cn(
+                             "inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-black ring-1 ring-inset",
+                             user.avgScore >= 70 ? "bg-emerald-50 text-emerald-700 ring-emerald-500/20" :
+                             user.avgScore >= 50 ? "bg-amber-50 text-amber-700 ring-amber-500/20" :
+                             "bg-rose-50 text-rose-700 ring-rose-500/20"
+                           )}>
+                             {user.avgScore.toFixed(0)}%
+                           </div>
+                         </div>
+                       )}
+
+                       {user.lastActiveAt && (
+                         <div className="text-right min-w-[80px]">
+                            <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Last Active</div>
+                            <div className="text-xs font-bold text-slate-700">
+                               {formatSmartDate(new Date(user.lastActiveAt))}
+                            </div>
+                         </div>
+                       )}
                     </div>
 
-                    {/* Quick Stats - Mobile */}
-                    <div className="flex shrink-0 items-center gap-2 text-xs sm:hidden">
-                      <span className="font-bold text-slate-600">{user.totalAttempts}</span>
-                      {user.avgScore != null && user.avgScore > 0 && (
-                        <span
-                          className={cn(
-                            'font-bold',
-                            user.avgScore >= 70
-                              ? 'text-emerald-600'
-                              : user.avgScore >= 50
-                                ? 'text-amber-600'
-                                : 'text-rose-600'
-                          )}
-                        >
-                          {user.avgScore.toFixed(0)}%
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="text-slate-400">
+                    <div className="flex shrink-0 items-center justify-center h-10 w-10 rounded-xl bg-slate-100/50 text-slate-400 transition-colors group-hover:bg-slate-100 group-hover:text-slate-900">
                       {isExpanded ? (
-                        <ChevronUp className="h-4 w-4" />
+                        <ChevronUp className="h-5 w-5" />
                       ) : (
-                        <ChevronDown className="h-4 w-4" />
+                        <ChevronDown className="h-5 w-5" />
                       )}
                     </div>
                   </div>
@@ -610,20 +635,22 @@ function SummaryCard({
   color: string;
 }) {
   const colors: Record<string, string> = {
-    blue: 'bg-blue-50 text-blue-600',
-    emerald: 'bg-emerald-50 text-emerald-600',
-    violet: 'bg-violet-50 text-violet-600',
-    amber: 'bg-amber-50 text-amber-600',
+    blue: 'bg-blue-50 text-blue-600 border-blue-100',
+    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+    violet: 'bg-violet-50 text-violet-600 border-violet-100',
+    amber: 'bg-amber-50 text-amber-600 border-amber-100',
   };
   return (
-    <Card className="border-slate-100">
-      <CardContent className="flex items-center gap-2 p-3 md:gap-3 md:p-4">
-        <div className={cn('rounded-full p-2', colors[color])}>{icon}</div>
+    <Card className={cn('border shadow-sm transition-all hover:shadow-md', colors[color])}>
+      <CardContent className="flex items-center gap-3 p-4 md:gap-4 md:p-6">
+        <div className={cn('flex h-12 w-12 items-center justify-center rounded-2xl border bg-white shadow-sm', colors[color])}>
+          {icon}
+        </div>
         <div>
-          <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 md:text-[10px]">
+          <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 opacity-70">
             {label}
           </p>
-          <p className="text-lg font-black text-slate-900 md:text-xl">{value}</p>
+          <p className="text-2xl font-black tracking-tight text-slate-900 md:text-3xl">{value}</p>
         </div>
       </CardContent>
     </Card>
@@ -642,17 +669,17 @@ function CategoryStat({
   color: string;
 }) {
   const colors: Record<string, string> = {
-    violet: 'bg-violet-50 border-violet-100',
-    blue: 'bg-blue-50 border-blue-100',
-    amber: 'bg-amber-50 border-amber-100',
-    emerald: 'bg-emerald-50 border-emerald-100',
-    rose: 'bg-rose-50 border-rose-100',
+    violet: 'bg-violet-50/50 border-violet-100/50 text-violet-600',
+    blue: 'bg-blue-50/50 border-blue-100/50 text-blue-600',
+    amber: 'bg-amber-50/50 border-amber-100/50 text-amber-600',
+    emerald: 'bg-emerald-50/50 border-emerald-100/50 text-emerald-600',
+    rose: 'bg-rose-50/50 border-rose-100/50 text-rose-600',
   };
   return (
-    <div className={cn('rounded-xl border p-2 text-center md:p-3', colors[color])}>
-      <div className="text-sm md:text-lg">{emoji}</div>
-      <div className="text-base font-black text-slate-900 md:text-lg">{count}</div>
-      <div className="text-[8px] font-bold uppercase text-slate-500 md:text-[10px]">{label}</div>
+    <div className={cn('rounded-2xl border p-3 text-center transition-all hover:bg-white hover:shadow-sm', colors[color])}>
+      <div className="mb-1 text-sm">{emoji}</div>
+      <div className="text-xl font-black text-slate-900">{count}</div>
+      <div className="text-[9px] font-black uppercase tracking-widest text-slate-500">{label}</div>
     </div>
   );
 }

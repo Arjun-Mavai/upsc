@@ -41,12 +41,34 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
     'Science',
     'ICT',
     'Current Affairs',
+    'Environment & Ecology',
+    'Science & Technology',
+    'Art & Culture',
+    'International Relations',
+    'History (Ancient, Medieval, Modern)',
+    'Geography (India & World)',
+    'Polity (Indian Constitution & Governance)',
+    'Economy (Basic Economics & Indian Economy)',
+    'Quantitative Aptitude',
+    'Reasoning',
+    'Agriculture',
+    'Economy / Agriculture',
+    'Defence',
+    'Defence / IR',
+    'Geography / IR',
+    'Environment / IR',
+    'Governance / Economy',
+    'Governance / Social Issues',
     'Misc',
+    'General Studies',
+    'General Studies (GS)',
   ];
   if (subject && !ALLOWED_SUBJECTS.includes(subject)) {
     // Prevent arbitrary subject injection
     redirect('/syllabus/quiz/pyq');
   }
+
+  const exam = getCurrentExam();
 
   // 1. Handle Subject Practice Mode (Mixed PYQ)
   if (mode === 'pyq-subject' && subject) {
@@ -88,7 +110,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
     }
 
     // ✅ Access Granted - Fetch Questions
-    const rawQuestions = await getQuestionsBySubject(subject);
+    const rawQuestions = await getQuestionsBySubject(subject, exam.id);
 
     // Slice questions for pagination (Chunking)
     const questionsSlice = rawQuestions.slice(offset, offset + limit);
@@ -104,11 +126,18 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
       );
     }
 
-    const exam = getCurrentExam();
     const scoring = getExamScoring(exam, 'PYQ'); // Subject practice is usually GS/PYQ style
 
     const questions: Question[] = questionsSlice.map((q: any) => {
       const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+      let ext = q.extendedData;
+      if (typeof ext === 'string') {
+        try {
+          ext = JSON.parse(ext);
+        } catch {
+          ext = undefined;
+        }
+      }
       return {
         id: q.id,
         question: q.questionText,
@@ -121,6 +150,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
         subject: `PYQ ${q.year}`,
         type: q.type || 'standard',
         matchPairs: q.matchPairs, // Fixed typo matchPairs
+        extendedData: ext,
         negativeMarks: scoring.negativeMarking,
         marks: scoring.marksPerQuestion,
       };
@@ -187,13 +217,21 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
   const userId = user?.id;
   const isTestingUser = user?.role === 'admin';
 
-  const exam = getCurrentExam();
   const scoring = getExamScoring(exam, testData.type);
 
   // Map Questions
   const questions: Question[] = testData.questions.map((q) => {
     // Ensure options are parsed if they come as a stringified array
     const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
+
+    let ext = q.extendedData;
+    if (typeof ext === 'string') {
+      try {
+        ext = JSON.parse(ext);
+      } catch {
+        ext = undefined;
+      }
+    }
 
     return {
       id: q.id,
@@ -212,6 +250,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
       subject: q.subject || undefined,
       type: (q.type as 'standard' | 'matching') || 'standard',
       matchPairs: (q.matchPairs as any) || undefined,
+      extendedData: ext,
       negativeMarks: q.negativeMarks ?? scoring.negativeMarking,
       marks: q.marks ?? scoring.marksPerQuestion,
     };

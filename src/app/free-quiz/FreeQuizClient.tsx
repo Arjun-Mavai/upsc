@@ -27,15 +27,15 @@ import { UPSC_UNITS } from './constants';
 // Subjects list — filter me use hoga
 const SUBJECTS = [
   { value: 'History', label: 'History', labelHi: 'इतिहास' },
-  { value: 'MP Culture', label: 'MP Culture', labelHi: 'म.प्र. संस्कृति' },
+  { value: 'Art & Culture', label: 'Art & Culture', labelHi: 'कला एवं संस्कृति' },
   { value: 'Geography', label: 'Geography', labelHi: 'भूगोल' },
-  { value: 'MP Geography', label: 'MP Geography', labelHi: 'म.प्र. भूगोल' },
+  { value: 'Environment', label: 'Environment', labelHi: 'पर्यावरण' },
   { value: 'Polity', label: 'Polity', labelHi: 'राजव्यवस्था' },
   { value: 'Economy', label: 'Economy', labelHi: 'अर्थव्यवस्था' },
-  { value: 'Science', label: 'Science', labelHi: 'विज्ञान' },
+  { value: 'Science', label: 'Science & Tech', labelHi: 'विज्ञान एवं प्रौद्योगिकी' },
   { value: 'Current Affairs', label: 'Current Affairs', labelHi: 'समसामयिकी' },
-  { value: 'ICT', label: 'ICT', labelHi: 'सूचना प्रौद्योगिकी' },
-  { value: 'MP Tribes', label: 'MP Tribes', labelHi: 'म.प्र. जनजातियाँ' },
+  { value: 'International Relations', label: 'International Relations', labelHi: 'अंतर्राष्ट्रीय संबंध' },
+  { value: 'Ethics', label: 'Ethics', labelHi: 'नीतिशास्त्र' },
 ];
 
 interface FreeQuiz {

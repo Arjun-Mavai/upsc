@@ -401,7 +401,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                         <div className="flex flex-col gap-4">
                           <div className="flex items-center gap-2">
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white">
-                              <span className="text-xs font-bold">MP</span>
+                              <span className="text-xs font-bold">ZN</span>
                             </div>
                             <SheetTitle className="font-display text-lg font-bold">Menu</SheetTitle>
                           </div>
@@ -472,7 +472,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                     <div className="tap-scale-96">
                       <SheetClose asChild>
                         <a
-                          href="https://t.me/UPSCIntelligence"
+          href="https://t.me/UPSCZEN"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-sky-50 hover:text-sky-600"

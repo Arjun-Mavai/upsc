@@ -102,6 +102,7 @@ export function useQuizLogic({
   // useRef because we don't want re-renders when this changes
   // Stores timestamp when user started viewing current question
   const questionStartTimeRef = useRef<number>(Date.now());
+  const [activeQuestionTime, setActiveQuestionTime] = useState(0);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 🔧 HELPER FUNCTIONS (Internal utilities)
@@ -134,6 +135,7 @@ export function useQuizLogic({
 
     // Reset reference for next question
     questionStartTimeRef.current = now;
+    setActiveQuestionTime(0);
   }, [questions, currentQuestionIndex]);
 
   /**
@@ -466,6 +468,7 @@ export function useQuizLogic({
     setIsSubmitted(false);
     setQuestionTimes({});
     questionStartTimeRef.current = Date.now();
+    setActiveQuestionTime(0);
   }, [testId, timeLimitInMinutes]);
 
   /**
@@ -495,6 +498,10 @@ export function useQuizLogic({
           clearInterval(timerId);
           return 0; // Timer khatam, test auto-submit hoga
         }
+        
+        // Update live time for current question
+        setActiveQuestionTime((t) => t + 1);
+        
         return prev - 1; // Har second -1
       });
     }, 1000);
@@ -547,6 +554,7 @@ export function useQuizLogic({
     instantModeEnabled, // Is instant feedback ON?
     language, // Current language (hi/en)
     questionTimes, // ⏱️ Time spent per question { questionId: seconds }
+    activeQuestionTime, // 🕒 Live time for the current question
     needsFeedback, // Feedback requirement
     setNeedsFeedback, // Manual control for feedback modal
 

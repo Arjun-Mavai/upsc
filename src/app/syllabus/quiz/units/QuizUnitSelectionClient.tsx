@@ -13,7 +13,7 @@ import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockMo
 import { QUIZ_CONSTANTS } from '@/config/quiz';
 import { getUserTier } from '@/lib/access-control';
 import { trackFbCustomEvent } from '@/lib/analytics/facebook-pixel';
-import { ViewTransition } from 'react';
+import { Fragment } from 'react';
 
 interface QuizUnitSelectionClientProps {
   availableTests: {
@@ -31,11 +31,14 @@ interface QuizUnitSelectionClientProps {
   }[];
 }
 
+import { GlobalLoader } from '@/components/ui/GlobalLoader';
+
 export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSelectionClientProps) {
   const router = useRouter();
   const { language, user, authCheckStatus } = useSettingsStore(); // ✅ Fix: Read auth status
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [isStarting, setIsStarting] = useState(false);
 
   // 🔄 Wait for Auth Check to complete before determining access
   const isAuthLoading = authCheckStatus === 'idle' || authCheckStatus === 'loading';
@@ -60,6 +63,7 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
     if (isLocked) {
       setUnlockModalOpen(true);
     } else {
+      setIsStarting(true);
       trackFbCustomEvent('test_started', {
         test_type: 'unit',
         test_name: title,
@@ -91,7 +95,7 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
   }
 
   return (
-    <ViewTransition>
+    <Fragment>
       <div className="relative min-h-screen overflow-hidden bg-[#fafbfc] pb-20 font-sans">
         {/* 🎭 PREMIUM BACKGROUND BLURS */}
         <div className="pointer-events-none absolute top-0 left-0 h-[500px] w-full bg-gradient-to-b from-slate-100/30 to-transparent" />
@@ -192,7 +196,15 @@ export default function QuizUnitSelectionClient({ availableTests }: QuizUnitSele
       </div>
 
       <SyllabusLockModal open={unlockModalOpen} onOpenChange={setUnlockModalOpen} />
+
+      {/* Global Loader Overlay */}
+      {isStarting && (
+        <GlobalLoader
+          variant="overlay"
+          label={hi ? 'आपका टेस्ट तैयार हो रहा है...' : 'Preparing your test...'}
+        />
+      )}
     </div>
-    </ViewTransition>
+  </Fragment>
   );
 }
