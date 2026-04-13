@@ -3,8 +3,11 @@ import { logger } from '@/lib/logger';
 import Razorpay from 'razorpay';
 import { verifyAuth } from '@/lib/auth';
 import { z } from 'zod';
+import { db } from '@/db';
+import { pricingConfig } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { PRICING_DEFAULTS } from '@/config/pricing';
 import { checkRateLimit } from '@/lib/rate-limit';
-import { getPricingConfigRow, pricingRowToData } from '@/lib/pricing-db';
 
 const createOrderSchema = z.object({
   planType: z.enum(['pro', 'upgrade']), // UPSC only has Pro plan
@@ -49,12 +52,27 @@ export async function POST(req: Request) {
       throw new Error('Razorpay keys not configured');
     }
 
-    // 💰 Amount Calculation: DB `default` row (admin) + optional per-exam row
-    const p = pricingRowToData(await getPricingConfigRow(examId));
+    // 💰 Amount Calculation: The Single Source of Truth
+    // Fetch pricing for specific exam, fallback to 'default'
+    const rows = await db
+      .select()
+      .from(pricingConfig)
+      .where(eq(pricingConfig.id, examId))
+      .limit(1);
+    
+    let p = rows[0];
+    if (!p) {
+      const defaultRows = await db
+        .select()
+        .from(pricingConfig)
+        .where(eq(pricingConfig.id, 'default'))
+        .limit(1);
+      p = defaultRows[0] || PRICING_DEFAULTS;
+    }
 
     const PLAN_AMOUNTS: Record<string, number> = {
-      pro: p.proPrice * 100,
-      upgrade: p.upgradePrice * 100,
+      pro: (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100, // Amount in Paise (INR * 100)
+      upgrade: ((p as any).upgradePrice ?? 99) * 100, // Upgrade to pro
     };
 
     const amount = PLAN_AMOUNTS[planType];

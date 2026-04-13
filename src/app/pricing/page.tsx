@@ -295,7 +295,7 @@ export default function PricingPage() {
               <div className="h-4 w-px bg-amber-200 mx-1" />
               <Badge className="h-6 border-emerald-200 bg-emerald-100 px-2 py-0 text-xs font-black text-emerald-800 hover:bg-emerald-100">
                 <Users className="mr-1 h-3 w-3" />
-                {p.studentsBought} joined
+                {p.studentsBought || PRICING_DEFAULTS.studentsBought} joined
               </Badge>
             </div>
           </div>

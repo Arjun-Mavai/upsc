@@ -1,9 +1,9 @@
 'use server';
 
 import { db } from '@/db';
-import { mppscUsers, payments } from '@/db/schema';
+import { mppscUsers, pricingConfig, payments } from '@/db/schema';
 import { eq, sql } from 'drizzle-orm';
-import { getPricingConfigRow, pricingRowToData } from '@/lib/pricing-db';
+import { PRICING_DEFAULTS } from '@/config/pricing';
 import { verifyAuth } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
@@ -115,11 +115,16 @@ export async function startPayment(input: StartPaymentInput) {
       return { error: 'Razorpay keys not configured' };
     }
 
-    const p = pricingRowToData(await getPricingConfigRow(examId));
+    const rows = await db
+      .select()
+      .from(pricingConfig)
+      .where(eq(pricingConfig.id, examId))
+      .limit(1);
+    const p = rows[0] || PRICING_DEFAULTS;
 
     const PLAN_AMOUNTS: Record<string, number> = {
-      pro: p.proPrice * 100,
-      upgrade: p.upgradePrice * 100,
+      pro: (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100,
+      upgrade: (p.upgradePrice ?? PRICING_DEFAULTS.upgradePrice) * 100,
     };
 
     const amount = PLAN_AMOUNTS[planType];
@@ -223,10 +228,15 @@ export async function verifyPayment(input: VerifyPaymentInput) {
     }
 
     const amountInPaise = Number(order.amount);
-    const p = pricingRowToData(await getPricingConfigRow(purchasedExamId));
+    const rows = await db
+      .select()
+      .from(pricingConfig)
+      .where(eq(pricingConfig.id, purchasedExamId))
+      .limit(1);
+    const p = rows[0] || PRICING_DEFAULTS;
 
-    const proPaise = p.proPrice * 100;
-    const upgradePaise = p.upgradePrice * 100;
+    const proPaise = (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100;
+    const upgradePaise = (p.upgradePrice ?? PRICING_DEFAULTS.upgradePrice) * 100;
 
     let planTier: 'pro';
     if (amountInPaise === proPaise || amountInPaise === upgradePaise) {

@@ -3,7 +3,7 @@ import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
 import { db } from '@/db';
-import { payments, verificationTokens, mppscUsers } from '@/db/schema';
+import { payments, verificationTokens, mppscUsers, pricingConfig } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { Resend } from 'resend';
 import EmailTemplate from '@/components/email-template';
@@ -11,8 +11,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { addHours } from 'date-fns';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { appPath } from '@/lib/app-url';
+import { PRICING_DEFAULTS } from '@/config/pricing';
 import { notifyAdminOnPayment, notifyAdminOnEmailFailure } from '@/lib/admin-notify';
-import { getPricingConfigRow, pricingRowToData } from '@/lib/pricing-db';
 
 /**
  * Payment Verification API - The Trust Center 🏦
@@ -122,14 +122,28 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Order does not belong to this user' }, { status: 403 });
     }
 
-    // 🏷️ Step 5: Logic to assign Plan based on Amount (DB default row + exam fallback)
-    const p = pricingRowToData(await getPricingConfigRow(examId));
+    // 🏷️ Step 5: Logic to assign Plan based on Amount
+    const pricingRows = await db
+      .select()
+      .from(pricingConfig)
+      .where(eq(pricingConfig.id, examId))
+      .limit(1);
 
-    const proAmountPaise = p.proPrice * 100;
+    let p = pricingRows[0];
+    if (!p) {
+      const defaultRows = await db
+        .select()
+        .from(pricingConfig)
+        .where(eq(pricingConfig.id, 'default'))
+        .limit(1);
+      p = defaultRows[0] || PRICING_DEFAULTS;
+    }
+
+    const proAmountPaise = (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100;
     const planTier = 'pro' as const; // UPSC only has Pro plan
 
     // 📅 Calculate Expiry Date
-    const months = p.proMonths;
+    const months = p.proMonths ?? PRICING_DEFAULTS.proMonths;
     const accessExpiresAt = new Date();
     accessExpiresAt.setMonth(accessExpiresAt.getMonth() + months);
 
@@ -154,7 +168,6 @@ export async function POST(req: Request) {
           planTier: planTier as 'lite' | 'pro',
           isSubscribed: true,
           accessExpiresAt,
-          examType: 'upsc',
         })
         .where(eq(mppscUsers.id, userId));
     });
