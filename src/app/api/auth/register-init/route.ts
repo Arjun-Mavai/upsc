@@ -76,7 +76,7 @@ export async function POST(req: Request) {
         .set({
           name,
           phone,
-          metadata: JSON.stringify({ source }),
+          metadata: { source },
         })
         .where(eq(mppscUsers.id, existingUser.id));
 
@@ -96,7 +96,7 @@ export async function POST(req: Request) {
       password: tempPassword,
       isActive: false, // 👈 Key: Inactive until paid
       role: 'guest',
-      metadata: JSON.stringify({ source }),
+      metadata: { source },
       planTier: 'free',
       examType: 'upsc' as const, // UPSC-only repo
     });

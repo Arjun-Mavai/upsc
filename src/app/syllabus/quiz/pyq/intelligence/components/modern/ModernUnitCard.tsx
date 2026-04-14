@@ -52,7 +52,6 @@ export function ModernUnitCard({
   themeBorder = 'border-[#E5E5EA]',
 }: ModernUnitCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-  const [showAllQuestions, setShowAllQuestions] = useState(false);
   const [lockModalOpen, setLockModalOpen] = useState(false);
 
   const { isSubscribed, user } = useSettingsStore();
@@ -191,18 +190,6 @@ export function ModernUnitCard({
                   {isHindi ? 'प्रश्न' : 'Questions'} ({questions.length})
                 </span>
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowAllQuestions(!showAllQuestions);
-                    }}
-                    className="flex items-center gap-1.5 text-[12px] font-semibold text-[#86868B] hover:text-[#1D1D1F] transition-colors"
-                  >
-                    <Eye className="h-3.5 w-3.5" />
-                    {showAllQuestions
-                      ? isHindi ? 'संक्षिप्त' : 'Collapse'
-                      : isHindi ? 'विस्तार' : 'Expand'}
-                  </button>
                   <TransitionLink
                     href={viewAllUrl}
                     onClick={handleActionClick}
@@ -216,14 +203,13 @@ export function ModernUnitCard({
               </div>
 
               {/* Questions List */}
-              <div className={cn("overflow-y-auto", isFlat ? "px-0 pb-2" : "px-4 sm:px-6 py-4", showAllQuestions ? 'max-h-none' : 'max-h-[60vh]')}>
+              <div className={cn("overflow-y-auto", isFlat ? "px-0 pb-2" : "px-4 sm:px-6 py-4", 'max-h-[60vh]')}>
                 <ModernQuestionList
                   questions={questions}
                   isHindi={isHindi}
                   getRepeatCount={getRepeatCount}
                   showYears={true}
                   groupByYear={groupQuestionsByYear}
-                  showAllExpanded={showAllQuestions}
                   examId={examId}
                   isPro={isPro}
                   onLockedClick={() => setLockModalOpen(true)}

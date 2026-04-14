@@ -41,7 +41,6 @@ export default function ViewAllQuestionsModernClient({
   const isHindi = language === 'hi';
   const [lockModalOpen, setLockModalOpen] = useState(false);
 
-  const [showAllExpanded, setShowAllExpanded] = useState(false);
   const [filterYear, setFilterYear] = useState<number | null>(null);
 
   const searchParams = useSearchParams();
@@ -59,14 +58,14 @@ export default function ViewAllQuestionsModernClient({
 
   useEffect(() => {
     if (isPdfMode && filteredQuestions.length > 0) {
-      setShowAllExpanded(true);
+      // Global expansion is now handled differently or removed for performance
     }
   }, [isPdfMode, filteredQuestions]);
 
   const pageTitle = useMemo(() => {
     const isUPSC = examId === 'upsc';
     const prefix = isUPSC ? 'UPSC Civil Services' : 'UPSC Civil Services';
-    const yearRange = isUPSC ? '2015-2025' : '2020-2025';
+    const yearRange = isUPSC ? '2020-2025' : '2020-2025';
 
     if (source === 'topic' && topicTitle) return topicTitle;
     if (source === 'paper' && year) return `${prefix} ${year} - ${formatUnitTitle(unitId || '', isHindi)}`;
@@ -78,14 +77,6 @@ export default function ViewAllQuestionsModernClient({
   }, [source, topicTitle, year, unitId, unitTitle, subject, examId, isHindi]);
 
   const FREE_SUBJECT = 'History';
-
-  const toggleAll = useCallback(() => {
-    if (!isPro && unitId !== FREE_SUBJECT) {
-        setLockModalOpen(true);
-        return;
-    }
-    setShowAllExpanded(!showAllExpanded);
-  }, [showAllExpanded, isPro, unitId]);
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] pb-24 text-[#1D1D1F] selection:bg-[#000000] selection:text-white font-sans antialiased">
@@ -159,37 +150,6 @@ export default function ViewAllQuestionsModernClient({
               )}
             </div>
 
-            {/* Expand All Action */}
-            <button
-              onClick={toggleAll}
-              className="group flex h-9 shrink-0 items-center gap-2 rounded-full border border-[#D1D1D6] bg-white px-4 text-[13px] font-semibold text-[#1D1D1F] transition-all hover:bg-[#F5F5F7] active:scale-95 shadow-sm"
-            >
-              <AnimatePresence mode="wait">
-                {showAllExpanded ? (
-                  <motion.div
-                    key="collapse"
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -5 }}
-                    className="flex items-center gap-1.5"
-                  >
-                    <EyeOff className="h-4 w-4 text-[#86868B]" />
-                    {isHindi ? 'सब बंद करें' : 'Collapse All'}
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="expand"
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -5 }}
-                    className="flex items-center gap-1.5"
-                  >
-                    <Eye className="h-4 w-4 text-[#86868B]" />
-                    {isHindi ? 'सब खोलें' : 'Expand All'}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </button>
           </div>
         </div>
       </div>
@@ -201,7 +161,6 @@ export default function ViewAllQuestionsModernClient({
             questions={filteredQuestions as any[]} 
             isHindi={isHindi}
             showYears={true}
-            showAllExpanded={showAllExpanded}
             examId={examId}
             isPro={isPro}
             onLockedClick={() => setLockModalOpen(true)}

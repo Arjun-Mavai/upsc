@@ -79,14 +79,12 @@ export async function POST(request: Request) {
       isSubscribed: true,
       isActive: true,
       accessExpiresAt,
-      metadata: JSON.stringify({
-        ...(typeof user.metadata === 'string'
-          ? JSON.parse(user.metadata || '{}')
-          : user.metadata || {}),
+      metadata: {
+        ...((user.metadata as Record<string, unknown>) || {}),
         upgradedFrom: oldTier,
         upgradedAt: new Date().toISOString(),
         upgradedBy: decoded.userId,
-      }),
+      },
     };
 
     if (newPassword) {

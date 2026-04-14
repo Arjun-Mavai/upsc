@@ -121,7 +121,7 @@ export default function ViewAllQuestionsClassicClient({
   const pageTitle = useMemo(() => {
     const isUPSC = examId === 'upsc';
     const prefix = isUPSC ? 'UPSC Civil Services' : 'UPSC Civil Services';
-    const yearRange = isUPSC ? '2015-2025' : '2020-2025';
+    const yearRange = isUPSC ? '2020-2025' : '2020-2025';
 
     if (source === 'topic' && topicTitle) {
       return topicTitle;

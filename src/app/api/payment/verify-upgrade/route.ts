@@ -42,6 +42,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // 👤 Step 0: Identify User (for notifications)
+    const user = await db.query.mppscUsers.findFirst({
+      where: eq(mppscUsers.id, userId),
+    });
+    if (!user || user.email === null) {
+      return NextResponse.json({ error: 'User not found' }, { status: 400 });
+    }
+
     const secret = process.env.RAZORPAY_KEY_SECRET;
     if (!secret) throw new Error('Razorpay secret not configured');
 
@@ -65,6 +73,17 @@ export async function POST(req: Request) {
     );
 
     if (!isValidSignature) {
+      // 🚨 Notify Admin: Failed Signature
+      notifyAdminOnPayment({
+        type: 'failed',
+        userName: user?.name || 'Unknown',
+        userEmail: user?.email || 'N/A',
+        planTier: 'pro',
+        amountInRupees: 0,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+      }).catch(() => {});
+
       return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 });
     }
 
@@ -78,20 +97,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, message: 'Payment already verified' });
     }
 
-    // 👤 Verify User
-    const user = await db.query.mppscUsers.findFirst({
-      where: eq(mppscUsers.id, userId),
-    });
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 400 });
-    }
-
     // 🕵️ Razorpay Cross-Check
     const instance = new Razorpay({
       key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
       key_secret: secret,
     });
     const order = await instance.orders.fetch(razorpay_order_id);
+    const paidAmount = order.amount as number;
 
     // 🛡️ Vulnerability Fix: Cross-Check UserId
     // Check agar order kisi aur user (order.notes.userId) ka h, to block karo.
@@ -106,11 +118,22 @@ export async function POST(req: Request) {
           metadata: { orderUserId, razorpay_order_id },
         }
       );
+
+      // 🚨 Notify Admin: IDOR Attempt
+      notifyAdminOnPayment({
+        type: 'failed',
+        userName: user?.name || 'Unknown (Fraud)',
+        userEmail: user?.email || 'N/A',
+        planTier: 'pro',
+        amountInRupees: paidAmount / 100,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+      }).catch(() => {});
+
       return NextResponse.json({ error: 'Order does not belong to this user' }, { status: 400 });
     }
 
     // 💡 Note: razorpay_key_id public hota h (safe to expose), secret server par safe h.
-    const paidAmount = order.amount as number;
 
     // 🏷️ Plan Verification - UPSC has only Pro plan
     const pricingRows = await db

@@ -22,7 +22,6 @@ interface ModernQuestionListProps {
   showYears?: boolean;
   groupByYear?: boolean;
   maxVisible?: number;
-  showAllExpanded?: boolean;
   examId?: string;
   isPro?: boolean;
   onLockedClick?: () => void;
@@ -39,7 +38,6 @@ export function ModernQuestionList({
   showYears = true,
   groupByYear = false,
   maxVisible,
-  showAllExpanded = false,
   examId,
   isPro = false,
   onLockedClick,
@@ -90,7 +88,6 @@ export function ModernQuestionList({
                     isHindi={isHindi}
                     repeatCount={getRepeatCount?.(q.id) || 0}
                     showYear={false}
-                    defaultExpanded={showAllExpanded}
                     examId={examId}
                     isFreeAccess={isFreeAccess}
                     onLockedClick={onLockedClick}
@@ -124,7 +121,6 @@ export function ModernQuestionList({
             isHindi={isHindi}
             repeatCount={getRepeatCount?.(q.id) || 0}
             showYear={showYears}
-            defaultExpanded={showAllExpanded}
             examId={examId}
             isFreeAccess={isFreeAccess}
             onLockedClick={onLockedClick}

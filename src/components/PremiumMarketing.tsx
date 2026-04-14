@@ -74,8 +74,8 @@ export function PremiumMarketing({ onUnlock }: PremiumMarketingProps) {
 
         <p className="mx-auto mb-8 max-w-md text-lg leading-relaxed text-slate-500">
           {hi
-            ? `प्रो प्लान पर अपग्रेड करें और अनलिमिटेड क्विज़, टेस्ट और स्मार्ट एनालिसिस अनलॉक करें। केवल ₹${p.upgradePrice} में।`
-            : `Upgrade to Pro and unlock Unlimited Quizzes, Tests, and Smart Analytics. Just pay the difference.`}
+            ? `प्रो प्लान पर अपग्रेड करें और विशेषज्ञ व्याख्याएं, विषय-वार PYQs और स्मार्ट इनसाइट्स अनलॉक करें। केवल ₹${p.upgradePrice} में।`
+            : `Upgrade to Pro and unlock Expert Logic, Organized PYQs, and Premium Intelligence Insights. Just pay the difference.`}
         </p>
 
         <div className="group relative w-full max-w-md">

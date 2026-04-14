@@ -96,12 +96,10 @@ export async function POST(request: Request) {
           isActive: true,
           accessExpiresAt,
           deletedAt: null,
-          metadata: JSON.stringify({
-            ...(typeof existing.metadata === 'string'
-              ? JSON.parse(existing.metadata || '{}')
-              : existing.metadata || {}),
+          metadata: {
+            ...((existing.metadata as Record<string, unknown>) || {}),
             ...grantMeta,
-          }),
+          },
         })
         .where(eq(mppscUsers.id, existing.id));
 
@@ -144,7 +142,7 @@ export async function POST(request: Request) {
       isActive: true,
       role: 'guest',
       accessExpiresAt,
-      metadata: JSON.stringify(grantMeta),
+      metadata: grantMeta,
     });
 
     // ── Log Activity ──────────────────────────────────────────────

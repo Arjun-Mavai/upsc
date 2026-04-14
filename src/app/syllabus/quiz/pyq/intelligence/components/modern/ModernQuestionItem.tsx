@@ -32,7 +32,6 @@ interface ModernQuestionItemProps {
   isHindi: boolean;
   repeatCount?: number;
   showYear?: boolean;
-  defaultExpanded?: boolean;
   examId?: string;
   isFreeAccess?: boolean;
   onLockedClick?: () => void;
@@ -47,7 +46,6 @@ export function ModernQuestionItem({
   isHindi,
   repeatCount = 0,
   showYear = true,
-  defaultExpanded = false,
   examId,
   isFreeAccess = false,
   onLockedClick,
@@ -55,7 +53,8 @@ export function ModernQuestionItem({
   isAlternating = false,
   themeBg = 'bg-transparent',
 }: ModernQuestionItemProps) {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const { user, isSubscribed } = useSettingsStore();
   
   const isPro = isSubscribed || user?.role === 'admin';

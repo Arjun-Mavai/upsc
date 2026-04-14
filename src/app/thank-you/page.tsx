@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -12,16 +12,70 @@ import {
   BarChart3,
   Sparkles,
   Shield,
+  Brain,
+  LayoutGrid,
+  Zap,
+  History,
+  TrendingUp,
+  Phone,
+  Download,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 function ThankYouContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [checking, setChecking] = useState(true);
+
   const plan = searchParams.get('plan') || 'pro';
   const email = searchParams.get('email') || '';
   const name = searchParams.get('name') || '';
   const type = searchParams.get('type'); // 'upgrade' or null
+
+  useEffect(() => {
+    // 🛡️ Access Control: Robust check for fresh payment
+    let isAuthorized = false;
+    
+    try {
+      // 1. Primary check: sessionStorage (Transient flag)
+      const isFresh = sessionStorage.getItem('payment_success_fresh') === 'true';
+      if (isFresh) isAuthorized = true;
+      
+      // 🛡️ Strict Mode Resilience:
+      // We don't clear the flag immediately because React 18 Strict Mode (in dev) 
+      // runs effects twice. If we clear it in run 1, run 2 fails.
+      // We clear it after a short delay so both runs see the flag.
+      setTimeout(() => {
+        try {
+          sessionStorage.removeItem('payment_success_fresh');
+          sessionStorage.removeItem('payment_success_time');
+        } catch (e) {}
+      }, 2000); 
+    } catch (e) {
+      // sessionStorage might be blocked in private mode
+      console.warn('sessionStorage check failed, falling back to URL verification');
+    }
+
+    // 2. Secondary check: URL Verification Timestamp (Fallback)
+    // If sessionStorage failed, we check if the 'v' timestamp is very recent (last 5 mins)
+    const vParam = searchParams.get('v');
+    if (!isAuthorized && vParam) {
+      const vTime = parseInt(vParam);
+      const now = Date.now();
+      // If the link is less than 5 minutes old, we trust it as a fresh redirect
+      if (!isNaN(vTime) && now - vTime < 5 * 60 * 1000) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized || !email) {
+      // Unauthorized access or direct visit -> Redirect to home
+      router.replace('/');
+      return;
+    }
+
+    setChecking(false);
+  }, [email, router, searchParams]);
 
   const firstName = name.split(' ')[0] || 'Student';
   const isPro = plan === 'pro' || plan === 'upgrade';
@@ -30,22 +84,36 @@ function ThankYouContent() {
   const planColor = isPro ? 'text-amber-600' : 'text-blue-600';
   const planBg = isPro ? 'bg-amber-50 border-amber-200' : 'bg-blue-50 border-blue-200';
 
-  // Auto-redirect for upgrades
   useEffect(() => {
-    if (isUpgrade) {
+    if (isUpgrade && !checking) {
       const timer = setTimeout(() => {
         router.push('/syllabus/quiz/topic');
       }, 3500);
       return () => clearTimeout(timer);
     }
-  }, [isUpgrade, router]);
+  }, [isUpgrade, router, checking]);
+
+  if (checking) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-100 border-t-emerald-500" />
+      </div>
+    );
+  }
+
+  const handleWhatsApp = () => {
+    const message = 'I just bought the Pro plan and need help getting started';
+    window.open(`https://wa.me/918766451748?text=${encodeURIComponent(message)}`, '_blank');
+  };
 
   const features = isPro
     ? [
-        { icon: Target, text: 'Unlimited Topic & Unit Tests' },
-        { icon: BookOpen, text: 'PYQ Papers (2020-2025)' },
-        { icon: BarChart3, text: 'Smart Analytics Dashboard' },
-        { icon: Sparkles, text: 'Full Length Mock Tests (100Q)' },
+        { icon: BookOpen, text: 'UPSC CSE PYQ Papers (2020-2025)' },
+        { icon: Brain, text: 'Expert Wisdom Explanations' },
+        { icon: LayoutGrid, text: 'Subject & Year-wise PYQs' },
+        { icon: Zap, text: 'Instant Mode Logic' },
+        { icon: History, text: 'Personal Test History' },
+        { icon: TrendingUp, text: 'Premium PYQ Analytics' },
       ]
     : [
         { icon: Target, text: 'Topic Tests per Unit (Limited)' },
@@ -198,6 +266,29 @@ function ThankYouContent() {
             </>
           )}
         </div>
+
+        {/* ── App & Support Actions ── */}
+        {!isUpgrade && (
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              asChild
+              variant="secondary"
+              className="h-11 border-amber-200 bg-amber-50 font-bold text-amber-700 hover:bg-amber-100"
+            >
+              <Link href="/#install-guide">
+                <Download className="mr-2 h-4 w-4" /> Download App
+              </Link>
+            </Button>
+            <Button
+              onClick={handleWhatsApp}
+              variant="secondary"
+              className="h-11 border-emerald-200 bg-emerald-50 font-bold text-emerald-700 hover:bg-emerald-100"
+            >
+              <Phone className="mr-2 h-4 w-4" /> Support
+            </Button>
+          </div>
+        )}
+
 
         {/* Motivational note */}
         <p className="px-4 text-center text-xs text-slate-400">

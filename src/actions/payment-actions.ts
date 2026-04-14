@@ -12,6 +12,7 @@ import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import { z } from 'zod';
 import { sendTelegramNotification, escapeHTML } from '@/lib/tg-notify';
+import { notifyAdminOnPayment } from '@/lib/admin-notify';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 💳 START PAYMENT (Register + Create Order)
@@ -71,26 +72,14 @@ export async function startPayment(input: StartPaymentInput) {
 
     let userId: string;
     if (existingUser) {
-      let existingMeta: Record<string, unknown> = {};
-      const raw = existingUser.metadata;
-      if (raw) {
-        if (typeof raw === 'string') {
-          try {
-            existingMeta = JSON.parse(raw);
-          } catch {
-            existingMeta = {};
-          }
-        } else if (typeof raw === 'object' && raw !== null && !Array.isArray(raw)) {
-          existingMeta = raw as Record<string, unknown>;
-        }
-      }
+      const existingMeta = (existingUser.metadata as Record<string, unknown>) || {};
 
       await db
         .update(mppscUsers)
         .set({
           name: name.trim(),
           phone: phone.trim(),
-          metadata: JSON.stringify({ ...existingMeta, source }),
+          metadata: { ...existingMeta, source },
         })
         .where(eq(mppscUsers.id, existingUser.id));
       userId = existingUser.id;
@@ -105,7 +94,7 @@ export async function startPayment(input: StartPaymentInput) {
         password: tempPassword,
         isActive: false,
         role: 'user',
-        metadata: JSON.stringify({ source }),
+        metadata: { source },
         planTier: 'free',
         examType: 'upsc', // UPSC platform forces upsc type
       });
@@ -201,6 +190,21 @@ export async function verifyPayment(input: VerifyPaymentInput) {
     );
 
     if (!isValidSignature) {
+      // 🚨 Notify Admin: Failed Signature (Potential Fraud or System Error)
+      const user = await db.query.mppscUsers.findFirst({
+        where: eq(mppscUsers.id, userId),
+      });
+
+      notifyAdminOnPayment({
+        type: 'failed',
+        userName: user?.name || 'Unknown',
+        userEmail: user?.email || 'N/A',
+        planTier: 'pro', // Default for UPSC
+        amountInRupees: 0,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+      }).catch(() => {});
+
       return { error: 'Invalid signature' };
     }
 
@@ -225,6 +229,21 @@ export async function verifyPayment(input: VerifyPaymentInput) {
     const purchasedExamId = (order.notes?.examId as string) || 'upsc'; // Extract examId
 
     if (orderUserId && orderUserId !== userId) {
+      // 🚨 Notify Admin: Potential IDOR attempt
+      const user = await db.query.mppscUsers.findFirst({
+        where: eq(mppscUsers.id, userId),
+      });
+
+      notifyAdminOnPayment({
+        type: 'failed',
+        userName: user?.name || 'Unknown (Fraud)',
+        userEmail: user?.email || 'N/A',
+        planTier: 'pro',
+        amountInRupees: Number(order.amount) / 100,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+      }).catch(() => {});
+
       return { error: 'Order does not belong to this user' };
     }
 
@@ -275,25 +294,23 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         .where(eq(mppscUsers.id, userId));
     });
 
-    // 🚀 Step 6: Notify via Telegram (Bina kisi secure info ke)
+    // 🚀 Step 6: Notify via Centralized Admin System (Email + Telegram)
     try {
       const user = await db.query.mppscUsers.findFirst({
         where: eq(mppscUsers.id, userId),
       });
 
-      const amountInRupees = amountInPaise / 100;
-      const message = `💰 <b>Payment Successful!</b>\n\n` +
-        `👤 User: ${escapeHTML(user?.name || 'Unknown')}\n` +
-        `📧 Email: ${escapeHTML(user?.email || 'N/A')}\n` +
-        `📞 Phone: ${escapeHTML(user?.phone || 'N/A')}\n` +
-        `🎟️ Plan: ${planTier.toUpperCase()}\n` +
-        `💵 Amount: ₹${amountInRupees}\n` +
-        `🆔 Payment ID: ${razorpay_payment_id.slice(-6)} (Masked)\n` +
-        `✅ Access granted instantly.`;
-
-      await sendTelegramNotification(message);
+      await notifyAdminOnPayment({
+        type: 'new_payment',
+        userName: user?.name || 'Unknown',
+        userEmail: user?.email || 'N/A',
+        planTier: planTier,
+        amountInRupees: amountInPaise / 100,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+      });
     } catch (err) {
-      logger.error('Telegram notification failed for payment', { err });
+      logger.error('Centralized notification failed for payment', { err });
     }
 
     return { success: true, planTier };

@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
+import { sendTelegramNotification, escapeHTML } from '@/lib/tg-notify';
 
 /**
  * 📧 ADMIN NOTIFICATION SYSTEM
@@ -17,7 +18,7 @@ import { sql } from 'drizzle-orm';
  * Falls back to RESEND_FROM_EMAIL if not set.
  */
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.RESEND_FROM_EMAIL || 'admin@zenscroll.app';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.RESEND_FROM_EMAIL || 'upsc@zenscroll.app';
 
 interface PaymentNotification {
   type: 'new_payment' | 'upgrade' | 'failed';
@@ -121,6 +122,23 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
     } else {
       logger.info('Admin notified of payment', { category: 'email', metadata: { type, userEmail, amount: amountInRupees } });
     }
+
+    // 🚀 NEW: Notify via Telegram (UPSC ZEN Branding)
+    try {
+      const tgStatus = type === 'new_payment' ? '💰 <b>UPSC ZEN: New Payment</b>' : type === 'upgrade' ? '🚀 <b>UPSC ZEN: Plan Upgrade</b>' : '⚠️ <b>UPSC ZEN: Payment Failed</b>';
+      const tgMessage = `${tgStatus}\n\n` +
+        `👤 User: ${escapeHTML(userName)}\n` +
+        `📧 Email: ${escapeHTML(userEmail)}\n` +
+        `💵 Amount: <b>₹${amountInRupees}</b>\n` +
+        `🎟️ Plan: ${planTier.toUpperCase()}${isUpgrade ? ' (Upgrade)' : ''}\n\n` +
+        `🆔 Order: <code>${orderId}</code>\n` +
+        `🆔 Payment: <code>${paymentId}</code>\n` +
+        `⚡ <i>Action: Automated access granted.</i>`;
+
+      await sendTelegramNotification(tgMessage);
+    } catch (tgErr) {
+      logger.error('Failed to send admin Telegram notification', tgErr, { category: 'email' });
+    }
   } catch (error) {
     // Non-blocking: Don't let email failure break payment flow
     logger.error('Admin notification error (non-blocking)', error, { category: 'email' });
@@ -190,6 +208,21 @@ export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) 
       subject: `🚨 EMAIL FAILED: ${userName} (${userEmail}) — Payment ID: ${paymentId}`,
       html,
     });
+
+    // 🚀 NEW: Notify via Telegram (UPSC ZEN Branding - Critical)
+    try {
+      const tgMessage = `🚨 <b>UPSC ZEN: USER EMAIL FAILED</b>\n\n` +
+        `Payment was successful but welcome email (Resend) failed.\n\n` +
+        `👤 User: ${escapeHTML(userName)}\n` +
+        `📧 Email: ${escapeHTML(userEmail)}\n` +
+        `🆔 Payment: <code>${paymentId}</code>\n\n` +
+        `⚠️ <b>Bhai, manual action lo:</b> Send setup link from admin panel.\n` +
+        `❌ Error: <i>${escapeHTML(errorMessage)}</i>`;
+
+      await sendTelegramNotification(tgMessage);
+    } catch (tgErr) {
+      logger.error('Failed to send admin failure Telegram notification', tgErr, { category: 'email' });
+    }
 
   } catch (error) {
     // Last resort: Log to DB if even this fails

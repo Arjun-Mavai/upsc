@@ -55,8 +55,8 @@ const FAQS: QA[] = [
       hi: 'टेस्ट सीरीज़ में क्या-क्या शामिल है?',
     },
     answer: {
-      en: 'Topic-wise tests, Unit tests, Full Length Tests (100Q), CSAT papers, PYQ papers (2020-2025), smart explanations, and Analytics dashboard.',
-      hi: 'टॉपिक वाइज़ टेस्ट, यूनिट टेस्ट, फुल लेंथ टेस्ट (100 प्रश्न), CSAT पेपर, PYQ पेपर (2020-2025), स्मार्ट एक्सप्लेनेशन और एनालिटिक्स डैशबोर्ड।',
+      en: 'Subject-wise tests, PYQ papers (2020-2025), smart explanations, and Analytics dashboard.',
+      hi: 'विषय-वार टेस्ट, PYQ पेपर (2020-2025), स्मार्ट एक्सप्लेनेशन और एनालिटिक्स डैशबोर्ड।',
     },
   },
 ];
@@ -107,7 +107,7 @@ export function SupportChat() {
   if (pathname !== '/') return null;
 
   const handleWhatsApp = () => {
-    const message = 'Hi, I need help with the UPSC App. My query is:';
+    const message = 'I just bought the Pro plan and need help getting started';
     window.open(`https://wa.me/918766451748?text=${encodeURIComponent(message)}`, '_blank');
   };
 
@@ -255,7 +255,7 @@ export function SupportChat() {
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                             className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500/50 focus:outline-none"
-                            placeholder="john@example.com"
+                            placeholder="upsc@zenscroll.app"
                           />
                         </div>
                         <div className="space-y-1">

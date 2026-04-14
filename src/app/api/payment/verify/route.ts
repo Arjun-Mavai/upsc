@@ -49,6 +49,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // 👤 Step 0: Identify User (for notifications)
+    const user = await db.query.mppscUsers.findFirst({
+      where: eq(mppscUsers.id, userId),
+    });
+    if (!user || user.email === null) {
+      return NextResponse.json({ error: 'User not found' }, { status: 400 });
+    }
+
     const secret = process.env.RAZORPAY_KEY_SECRET;
     if (!secret) throw new Error('Razorpay secret not configured');
 
@@ -74,6 +82,17 @@ export async function POST(req: Request) {
     );
 
     if (!isValidSignature) {
+      // 🚨 Notify Admin: Failed Signature
+      notifyAdminOnPayment({
+        type: 'failed',
+        userName: user?.name || 'Unknown',
+        userEmail: user?.email || 'N/A',
+        planTier: 'pro',
+        amountInRupees: 0,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+      }).catch(() => {});
+
       return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 });
     }
 
@@ -86,14 +105,6 @@ export async function POST(req: Request) {
       .limit(1);
     if (existingPayment.length > 0) {
       return NextResponse.json({ success: true, message: 'Payment already verified' });
-    }
-
-    // 👤 Step 3: Verify User
-    const user = await db.query.mppscUsers.findFirst({
-      where: eq(mppscUsers.id, userId),
-    });
-    if (!user || user.email === null) {
-      return NextResponse.json({ error: 'User not found' }, { status: 400 });
     }
 
     // 🕵️ Step 4: Cross-Check with Razorpay API (Trust but Verify)
@@ -119,6 +130,18 @@ export async function POST(req: Request) {
           orderId: razorpay_order_id,
         },
       });
+
+      // 🚨 Notify Admin: IDOR Attempt
+      notifyAdminOnPayment({
+        type: 'failed',
+        userName: user?.name || 'Unknown (Fraud)',
+        userEmail: user?.email || 'N/A',
+        planTier: 'pro',
+        amountInRupees: paidAmount / 100,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+      }).catch(() => {});
+
       return NextResponse.json({ error: 'Order does not belong to this user' }, { status: 403 });
     }
 

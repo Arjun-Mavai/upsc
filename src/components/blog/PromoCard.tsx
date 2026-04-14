@@ -115,7 +115,7 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
       {isPro ? (
         <>
           <p className="relative z-10 mb-6 text-sm leading-relaxed text-slate-300">
-            Premium access active! Master your preparation with full mock tests & exclusive content.
+            Premium access active! Master your preparation with expert logic explanations & exclusive PYQ intelligence.
           </p>
           {/* Premium Button */}
           <div className="relative overflow-hidden rounded-xl p-[1.5px]">
@@ -133,7 +133,7 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
         <>
           <p className="relative z-10 mb-6 text-sm leading-relaxed text-slate-300">
             Lite Plan Active. Upgrade to <span className="font-bold text-white">Pro</span> for
-            unlimited Full Mock Tests & Analytics.
+            unlimited Expert logic & PYQ Analytics.
           </p>
           {/* Premium Button */}
           <div className="relative overflow-hidden rounded-xl p-[1.5px] shadow-lg shadow-purple-500/20 transition-all hover:scale-[1.02] hover:shadow-purple-500/40">

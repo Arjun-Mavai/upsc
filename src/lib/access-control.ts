@@ -116,7 +116,9 @@ export function getUserTier(user: AccessControlUser | null): PlanTier | 'guest' 
 
   const isSubscribed = !!(user.isSubscribed ?? user.is_subscribed);
   if (isSubscribed) {
-    return 'pro';
+    const tier = user.planTier ?? user.plan_tier;
+    if (tier === 'lite') return 'lite';
+    return 'pro'; // Default to pro if subscribed but tier not explicitly lite
   }
 
   return 'free';

@@ -164,7 +164,7 @@ export function ModernOverallWeightage({
                           {isHindi ? sub.nameHi : sub.name}
                         </h4>
                         {!isPro && FREE_SUBJECTS.includes(sub.name) && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-[#1D1D1F] px-2 py-0.5 text-[9px] font-black tracking-widest text-white uppercase sm:px-2.5 sm:py-1">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[#007AFF] px-2 py-0.5 text-[9px] font-black tracking-widest text-white uppercase shadow-[0_2px_10px_rgba(0,122,255,0.3)] sm:px-2.5 sm:py-1">
                             <Sparkles className="h-2.5 w-2.5" />
                             {isHindi ? 'फ्री' : 'FREE'}
                           </span>
@@ -182,20 +182,19 @@ export function ModernOverallWeightage({
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between sm:justify-end gap-3 pl-16 sm:gap-4 sm:pl-0">
-                    <div className="flex-1 sm:flex-none">
-                      {isUnlocked && isPro && (
-                        <TransitionLink
-                          href={`${baseUrl}/questions?subject=${encodeURIComponent(sub.name)}&source=subject`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="group flex items-center justify-center gap-2 rounded-2xl border border-[#E5E5EA] bg-white px-4 py-2.5 text-[13px] font-bold text-[#1D1D1F] shadow-sm transition-all hover:shadow-md active:scale-[0.98] sm:px-5 sm:py-3"
-                        >
-                          {isHindi ? 'सभी देखें' : 'View All'}
-                          <ArrowRight className="h-4 w-4 text-[#86868B] transition-transform group-hover:translate-x-1" />
-                        </TransitionLink>
-                      )}
-                    </div>
-
+                  <div className="flex items-center gap-2 sm:gap-3 pl-16 sm:pl-0">
+                    {/* Compact View All Button */}
+                    {isUnlocked && (
+                      <TransitionLink
+                        href={`${baseUrl}/questions?subject=${encodeURIComponent(sub.name)}&source=subject`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="group flex items-center gap-1.5 rounded-xl border border-[#D1D1D6] bg-white px-3 py-2 text-[11px] font-bold text-[#1D1D1F] transition-all hover:bg-[#F5F5F7] active:scale-95 shadow-sm"
+                      >
+                        <span className="hidden sm:inline">{isHindi ? 'सभी देखें' : 'View All'}</span>
+                        <ChevronRight className="h-3.5 w-3.5 text-[#86868B] transition-transform group-hover:translate-x-0.5" />
+                      </TransitionLink>
+                    )}
+                    
                     <div className={cn(
                       "flex h-9 w-9 items-center justify-center rounded-full transition-all duration-300",
                       isSubjectExpanded ? "bg-[#1D1D1F] text-white" : "bg-[#F5F5F7] text-[#86868B]"
@@ -219,7 +218,12 @@ export function ModernOverallWeightage({
                       transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                       className="overflow-hidden"
                     >
-                      <div className={cn("border-t p-1 sm:p-8 sm:pt-4", theme.border)}>
+                      <div className={cn("border-t p-1 sm:p-8 sm:pt-6", theme.border)}>
+                        <div className="flex items-center justify-between mb-4 px-2 sm:px-0">
+                          <h5 className="text-sm font-bold text-[#1D1D1F] uppercase tracking-wider opacity-60">
+                            {isHindi ? 'टॉप प्रश्न' : 'Top Questions'}
+                          </h5>
+                        </div>
                         <div className="p-0.5 sm:p-2">
                           {(() => {
                             const subjectData = subjectQuestionsData.find(
@@ -261,6 +265,17 @@ export function ModernOverallWeightage({
                             );
                           })()}
                         </div>
+                        {isUnlocked && isPro && (
+                          <div className="mt-6 flex justify-center px-2 pb-2 sm:px-0">
+                            <TransitionLink
+                              href={`${baseUrl}/questions?subject=${encodeURIComponent(sub.name)}&source=subject`}
+                              className="group flex w-full items-center justify-center gap-2 rounded-2xl border border-[#E5E5EA] bg-white px-6 py-3.5 text-[14px] font-bold text-[#1D1D1F] shadow-sm transition-all hover:shadow-md active:scale-[0.98] sm:w-auto sm:min-w-[280px]"
+                            >
+                              {isHindi ? 'सभी विषय के प्रश्न देखें' : 'View All Subject Questions'}
+                              <ArrowRight className="ml-1 h-4 w-4 text-[#86868B] transition-transform group-hover:translate-x-1" />
+                            </TransitionLink>
+                          </div>
+                        )}
                       </div>
                     </motion.div>
                   )}
@@ -271,26 +286,6 @@ export function ModernOverallWeightage({
         </div>
       </div>
 
-      <div className="flex justify-center pt-4">
-        {isPro ? (
-          <TransitionLink
-            href={`${baseUrl}/questions?subject=All&source=subject`}
-            transitionTypes={['slide']}
-            className="group flex h-14 w-full items-center justify-center rounded-full bg-[#1D1D1F] px-8 text-sm font-semibold tracking-wide text-white shadow-md transition-all hover:scale-[1.02] hover:bg-[#333336] active:scale-95 sm:w-auto sm:min-w-[320px]"
-          >
-            {isHindi ? 'सभी विषय के प्रश्न देखें' : 'View All Subject Questions'}
-            <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </TransitionLink>
-        ) : (
-          <button
-            onClick={() => setLockModalOpen(true)}
-            className="group flex h-14 w-full items-center justify-center rounded-full bg-[#1D1D1F] px-8 text-sm font-semibold tracking-wide text-white shadow-md transition-all hover:scale-[1.02] hover:bg-[#333336] active:scale-95 sm:w-auto sm:min-w-[320px]"
-          >
-            {isHindi ? 'सभी विषय के प्रश्न देखें' : 'View All Subject Questions'}
-            <Lock className="ml-2 h-4 w-4 opacity-70" />
-          </button>
-        )}
-      </div>
     </div>
   );
 }

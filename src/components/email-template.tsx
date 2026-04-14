@@ -141,19 +141,22 @@ export default function EmailTemplate({
           <table style={{ width: '100%', fontSize: '14px', color: '#4b5563' }}>
             <tbody>
               <tr>
-                <td style={{ padding: '4px 0' }}>✅ Year-wise PYQ Analytics (2020-2025)</td>
+                <td style={{ padding: '4px 0' }}>✅ UPSC CSE PYQ Papers (2020-2025)</td>
               </tr>
               <tr>
-                <td style={{ padding: '4px 0' }}>✅ Subject-wise Segmented Question Banks</td>
+                <td style={{ padding: '4px 0' }}>✅ Expert Wisdom (Verdict, Logic Path)</td>
               </tr>
               <tr>
-                <td style={{ padding: '4px 0' }}>✅ Instant Expert Logic for Every Question</td>
+                <td style={{ padding: '4px 0' }}>✅ Subject-Wise & Year-Wise Organised PYQs</td>
               </tr>
               <tr>
-                <td style={{ padding: '4px 0' }}>✅ High-Performance Thematic Dashboard</td>
+                <td style={{ padding: '4px 0' }}>✅ Instant Mode: Logic Behind Every Option</td>
               </tr>
               <tr>
-                <td style={{ padding: '4px 0' }}>✅ Premium Intelligence Strategy Blogs</td>
+                <td style={{ padding: '4px 0' }}>✅ Personal Test History & Dashboard</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '4px 0' }}>✅ Premium PYQ Analysis & Insights</td>
               </tr>
             </tbody>
           </table>

@@ -310,10 +310,25 @@ export function PaymentModal({
             setIsLoading(false);
             setLoadingPhase(null);
 
+            // 🛡️ Set transient flag for Thank You page access control
+            // We use try-catch to ensure that even if sessionStorage is blocked (private mode/full storage),
+            // the user still reaches the Thank You page.
+            const timestamp = Date.now();
+            try {
+              if (typeof window !== 'undefined') {
+                sessionStorage.setItem('payment_success_fresh', 'true');
+                sessionStorage.setItem('payment_success_time', timestamp.toString());
+              }
+            } catch (e) {
+              console.error('sessionStorage blocked:', e);
+            }
+
             const displayPlan = planType === 'upgrade' ? 'pro' : verifyResult.planTier || planType;
             const upgradeParam = planType === 'upgrade' ? '&type=upgrade' : '';
+            
+            // We add a 'v' (verification) param as a secondary layer if sessionStorage fails
             router.push(
-              `/thank-you?plan=${displayPlan}&email=${encodeURIComponent(values.email)}&name=${encodeURIComponent(values.name)}${upgradeParam}`
+              `/thank-you?plan=${displayPlan}&email=${encodeURIComponent(values.email)}&name=${encodeURIComponent(values.name)}${upgradeParam}&v=${timestamp}`
             );
           } catch (error) {
             console.error(error);
