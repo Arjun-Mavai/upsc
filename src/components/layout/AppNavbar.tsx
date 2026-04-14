@@ -20,6 +20,12 @@ import { toast } from 'sonner';
 import { usePwa } from '@/hooks/usePwa';
 import { useQuery } from '@tanstack/react-query';
 import { getCurrentUser } from '@/actions/auth-actions';
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from '@/components/ui/accordion';
 
 import './navbar-animations.css';
 
@@ -38,6 +44,11 @@ import {
   Zap,
   History,
   Info,
+  BarChart2,
+  PieChart,
+  Search,
+  Database,
+  ChevronRight,
 } from './icons';
 
 // Import optimized sub-components
@@ -447,24 +458,66 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                         const isActive = pathname === item.href;
                         const Icon = item.icon;
                         return (
-                          <div key={item.href} className="tap-scale-96">
-                            <SheetClose asChild>
-                              <Link
-                                href={item.href}
-                                className={cn(
-                                  'flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-200',
-                                  isActive
-                                    ? 'bg-slate-900 text-white shadow-sm'
-                                    : 'text-slate-700 hover:bg-slate-100 active:bg-slate-200'
-                                )}
-                              >
-                                <Icon
-                                  size={18}
-                                  className={cn(isActive ? 'text-white' : item.color)}
-                                />
-                                {item.name}
-                              </Link>
-                            </SheetClose>
+                          <div key={item.href} className="flex flex-col gap-1">
+                            <div className="tap-scale-96">
+                              <SheetClose asChild>
+                                <Link
+                                  href={item.href}
+                                  className={cn(
+                                    'flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-200',
+                                    isActive
+                                      ? 'bg-slate-900 text-white shadow-sm'
+                                      : 'text-slate-700 hover:bg-slate-100 active:bg-slate-200'
+                                  )}
+                                >
+                                  <Icon
+                                    size={18}
+                                    className={cn(isActive ? 'text-white' : item.color)}
+                                  />
+                                  {item.name}
+                                </Link>
+                              </SheetClose>
+                            </div>
+
+                            {/* ✅ PYQ INSIGHTS DROPDOWN — Specifically positioned after Dashboard */}
+                            {item.name === 'Dashboard' && (
+                              <div className="px-0 py-1">
+                                <Accordion type="single" collapsible className="w-full border-none">
+                                  <AccordionItem value="pyq-analysis" className="border-none">
+                                    <AccordionTrigger className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:no-underline active:bg-slate-100 [&[data-state=open]]:bg-slate-50">
+                                      <div className="flex items-center gap-3">
+                                        <BarChart2 size={18} className="text-emerald-600" />
+                                        <span>PYQ Insights</span>
+                                      </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="pt-1 pb-2 pl-6 pr-2">
+                                      <div className="flex flex-col gap-1 border-l-2 border-slate-100 ml-2">
+                                        <SheetClose asChild>
+                                          <Link
+                                            href="/upsc/intelligence"
+                                            prefetch={true}
+                                            className="mx-2 flex items-center gap-3 rounded-lg py-3 px-3 text-xs font-bold text-slate-600 transition-all hover:bg-emerald-50 hover:text-emerald-700 active:scale-95"
+                                          >
+                                            <PieChart size={14} className="text-amber-500" />
+                                            Subject Analytics
+                                          </Link>
+                                        </SheetClose>
+                                        <SheetClose asChild>
+                                          <Link
+                                            href="/upsc/intelligence/questions?subject=All&source=subject"
+                                            prefetch={true}
+                                            className="mx-2 flex items-center gap-3 rounded-lg py-3 px-3 text-xs font-bold text-slate-600 transition-all hover:bg-sky-50 hover:text-sky-700 active:scale-95"
+                                          >
+                                            <Search size={14} className="text-sky-500" />
+                                            Master PYQ Explorer
+                                          </Link>
+                                        </SheetClose>
+                                      </div>
+                                    </AccordionContent>
+                                  </AccordionItem>
+                                </Accordion>
+                              </div>
+                            )}
                           </div>
                         );
                       })}

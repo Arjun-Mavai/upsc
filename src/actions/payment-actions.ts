@@ -11,6 +11,7 @@ import Razorpay from 'razorpay';
 import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import { z } from 'zod';
+import { sendTelegramNotification, escapeHTML } from '@/lib/tg-notify';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 💳 START PAYMENT (Register + Create Order)
@@ -284,6 +285,23 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         })
         .where(eq(mppscUsers.id, userId));
     });
+
+    // 🚀 Step 6: Notify via Telegram (Bina kisi secure info ke)
+    try {
+      const amountInRupees = amountInPaise / 100;
+      const message = `💰 <b>Payment Successful!</b>\n\n` +
+        `👤 User: ${escapeHTML(currentUser?.name || 'Unknown')}\n` +
+        `📧 Email: ${escapeHTML(currentUser?.email || 'N/A')}\n` +
+        `📞 Phone: ${escapeHTML(currentUser?.phone || 'N/A')}\n` +
+        `🎟️ Plan: ${planTier.toUpperCase()}\n` +
+        `💵 Amount: ₹${amountInRupees}\n` +
+        `🆔 Payment ID: ${razorpay_payment_id.slice(-6)} (Masked)\n` +
+        `✅ Access granted instantly.`;
+
+      await sendTelegramNotification(message);
+    } catch (err) {
+      logger.error('Telegram notification failed for payment', { err });
+    }
 
     return { success: true, planTier };
   } catch (error: unknown) {

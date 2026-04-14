@@ -19,6 +19,10 @@ export {
   Download,
   Zap,
   RefreshCw,
+  Search,
+  Database,
+  ChevronRight,
+  PieChart,
 } from 'lucide-react';
 
 // Type exports for better TypeScript support
