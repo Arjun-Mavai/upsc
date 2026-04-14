@@ -39,7 +39,7 @@ export function ConnectSocials({
         <motion.a
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          href="https://t.me/UPSCIntelligence"
+          href="https://t.me/upsc_zen"
           target="_blank"
           rel="noopener noreferrer"
           className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500 text-white shadow-sm transition-colors hover:bg-sky-600"
@@ -54,7 +54,7 @@ export function ConnectSocials({
         <motion.a
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          href="https://youtube.com/@UPSCZEN/shorts"
+          href="https://www.youtube.com/@UPSCZEN-s8w"
           target="_blank"
           rel="noopener noreferrer"
           className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-600 text-white shadow-sm transition-colors hover:bg-red-700"
@@ -104,7 +104,7 @@ export function ConnectSocials({
         <motion.a
           whileHover={{ scale: 1.02, y: -2 }}
           whileTap={{ scale: 0.98 }}
-          href="https://t.me/UPSCIntelligence"
+          href="https://t.me/upsc_zen"
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
@@ -150,7 +150,7 @@ export function ConnectSocials({
         <motion.a
           whileHover={{ scale: 1.02, y: -2 }}
           whileTap={{ scale: 0.98 }}
-          href="https://youtube.com/@UPSCZEN/shorts"
+          href="https://www.youtube.com/@UPSCZEN-s8w"
           target="_blank"
           rel="noopener noreferrer"
           className={cn(

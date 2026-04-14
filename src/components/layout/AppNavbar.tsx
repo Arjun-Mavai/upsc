@@ -525,7 +525,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                     <div className="tap-scale-96">
                       <SheetClose asChild>
                         <a
-          href="https://t.me/UPSCZEN"
+          href="https://t.me/upsc_zen"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-sky-50 hover:text-sky-600"

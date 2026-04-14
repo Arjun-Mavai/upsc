@@ -3,15 +3,22 @@
 import { useTransition } from 'react';
 import { Sparkles, ArrowRight, Loader2, BrainCircuit } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 
 export function HeroSectionUPSC() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const textVariants = {
+  const textVariants: Variants = {
     hidden: { opacity: 0, y: 40 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.2, 0.65, 0.3, 0.9] } },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { 
+        duration: 0.8, 
+        ease: [0.2, 0.65, 0.3, 0.9] 
+      } 
+    },
   };
 
   return (
