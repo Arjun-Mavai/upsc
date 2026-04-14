@@ -3,7 +3,6 @@
 import React, { useState, useEffect, memo } from 'react';
 import { LazyMotion, domAnimation, m, AnimatePresence } from 'framer-motion';
 import { 
-  History, 
   ArrowRight, 
   CheckCircle2,
   Lightbulb,
@@ -124,14 +123,14 @@ export function PYQShowcaseSection() {
 
   return (
     <LazyMotion features={domAnimation}>
-      <section id="analysis" className="relative overflow-hidden py-16 sm:py-32 contain-layout">
+      <section id="analysis" className="relative overflow-hidden py-16 sm:py-32">
         {/* Background glow effects - hardware accelerated */}
         <div className="pointer-events-none absolute top-1/2 left-[-10%] h-[300px] w-[300px] sm:h-[500px] sm:w-[500px] -translate-y-1/2 rounded-full bg-emerald-500/5 blur-[80px] sm:blur-[120px] will-change-transform" />
         <div className="pointer-events-none absolute right-[-5%] bottom-0 h-[250px] w-[250px] sm:h-[400px] sm:w-[400px] rounded-full bg-pink-500/5 blur-[70px] sm:blur-[100px] will-change-transform" />
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-24">
-            
+
             {/* LEFT COLUMN: Strategic Copy */}
             <div className="relative z-10 space-y-6 sm:space-y-10 text-center lg:text-left">
               <m.div
@@ -152,13 +151,13 @@ export function PYQShowcaseSection() {
                 className="py-1 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl md:text-5xl lg:text-6xl"
               >
                 {isHindi ? (
-                  <div className="flex flex-col leading-[1.2] sm:leading-[1.25] pb-2 sm:pb-4">
+                  <div className="flex flex-col items-center lg:items-start leading-[1.2] sm:leading-[1.25] pb-2 sm:pb-4 mx-auto lg:mx-0 w-fit">
                     <span>UPSC के हर प्रश्न में</span>
                     <span className="bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent italic px-1">छुपी हुई रणनीति</span>
                   </div>
                 ) : (
-                  <div className="flex flex-col leading-[1.1] pb-2 sm:pb-4">
-                    <span>UPSC <span className="bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent italic">Strategic</span></span>
+                  <div className="flex flex-col items-center lg:items-start leading-[1.2] sm:leading-[1.25] pb-2 sm:pb-4 mx-auto lg:mx-0 w-fit">
+                    <span>UPSC <span className="bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent italic px-1">Strategic</span></span>
                     <span>Intelligence</span>
                   </div>
                 )}
@@ -184,7 +183,7 @@ export function PYQShowcaseSection() {
                 transition={{ delay: 0.3 }}
                 className="flex items-center justify-center lg:justify-start"
               >
-                <div className="relative w-full overflow-hidden">
+                <div className="relative w-full max-w-[340px] sm:max-w-none mx-auto lg:mx-0 overflow-hidden">
                   <div className="flex gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-2 max-w-full">
                     {TABS.map((tab) => (
                       <button
@@ -239,11 +238,10 @@ export function PYQShowcaseSection() {
 
             {/* RIGHT COLUMN: Visual Showcase Cards */}
             <div 
-              className="group relative flex flex-col items-center lg:items-end"
+              className="group relative flex w-full flex-col items-center justify-center lg:items-end"
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
-            >
-              {/* Ambient Background Blur */}
+            >              {/* Ambient Background Blur */}
               <div className="absolute -inset-4 sm:-inset-10 rounded-[3rem] sm:rounded-[4rem] bg-gradient-to-br from-pink-600/10 via-emerald-500/10 to-rose-600/10 opacity-40 blur-[40px] sm:blur-[80px] group-hover:opacity-60 transition-opacity duration-1000" />
 
               <div className="relative aspect-[4/5.5] sm:aspect-[3.5/5.4] w-full max-w-[340px] sm:max-w-md">

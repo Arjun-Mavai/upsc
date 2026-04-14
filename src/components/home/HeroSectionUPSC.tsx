@@ -33,7 +33,7 @@ export function HeroSectionUPSC() {
         <div className="absolute bottom-0 right-[-20%] w-[600px] h-[600px] bg-[radial-gradient(circle_at_center,rgba(217,119,6,0.08),transparent_60%)] blur-[100px]" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl space-y-6 text-center md:space-y-12">
+      <div className="relative z-10 mx-auto max-w-7xl space-y-4 text-center md:space-y-12">
         
         {/* 🚀 BADGE */}
         <motion.div 
@@ -74,7 +74,7 @@ export function HeroSectionUPSC() {
             initial="hidden"
             animate="visible"
             transition={{ delay: 0.4 }}
-            className="mx-auto mt-4 max-w-3xl px-2 text-base font-medium text-slate-400 sm:text-lg md:text-2xl leading-relaxed md:mt-6"
+            className="mx-auto mt-2 max-w-3xl px-2 text-base font-medium text-slate-400 sm:text-lg md:text-2xl leading-relaxed md:mt-6"
           >
             Beyond just answers. Master the <strong className="text-amber-200">Logic Path</strong>, decode <strong className="text-amber-200">Trap Watch</strong>, and understand the <strong className="text-amber-200">Verdict</strong> of every UPSC Prelims question.
           </motion.p>
@@ -85,7 +85,7 @@ export function HeroSectionUPSC() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="mx-auto flex w-full max-w-md flex-col items-center justify-center gap-6 px-4 pt-0 md:pt-6"
+          className="mx-auto flex w-full max-w-md flex-col items-center justify-center gap-6 px-4 pt-2 md:pt-6 pb-20 md:pb-0"
         >
           <button
             onClick={() => {
