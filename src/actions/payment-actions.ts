@@ -107,7 +107,7 @@ export async function startPayment(input: StartPaymentInput) {
         role: 'user',
         metadata: JSON.stringify({ source }),
         planTier: 'free',
-        examType: examId as 'upsc' | 'mppsc' | 'all',
+        examType: 'upsc', // UPSC platform forces upsc type
       });
     }
 
@@ -119,7 +119,7 @@ export async function startPayment(input: StartPaymentInput) {
     const rows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, examId))
+      .where(eq(pricingConfig.examType, 'upsc'))
       .limit(1);
     const p = rows[0] || PRICING_DEFAULTS;
 
@@ -232,7 +232,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
     const rows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, purchasedExamId))
+      .where(eq(pricingConfig.examType, 'upsc'))
       .limit(1);
     const p = rows[0] || PRICING_DEFAULTS;
 
@@ -246,21 +246,10 @@ export async function verifyPayment(input: VerifyPaymentInput) {
       return { error: 'Payment amount does not match any valid plan' };
     }
 
-    // 🔄 Logical ExamType Calculation
-    // If user is already subscribed and buying a DIFFERENT exam -> set to 'all'
-    const currentUser = await db.query.mppscUsers.findFirst({
-      where: eq(mppscUsers.id, userId),
-    });
-
-    let nextExamType: 'upsc' | 'mppsc' | 'all' = purchasedExamId as any;
-    if (currentUser?.isSubscribed) {
-      const currentType = currentUser.examType;
-      if (currentType !== purchasedExamId && currentType !== 'all') {
-        nextExamType = 'all';
-      } else {
-        nextExamType = currentType as any;
-      }
-    }
+    // 🔄 Platform Isolation
+    // On the UPSC platform, we always set the user's examType to 'upsc'
+    // This prevents cross-platform access if the database is shared.
+    const nextExamType: 'upsc' | 'mppsc' | 'mppolice' = 'upsc';
 
     await db.transaction(async (tx) => {
       await tx.insert(payments).values({
@@ -272,7 +261,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         amount: amountInPaise,
         planTier,
         status: 'captured',
-        examType: purchasedExamId as any,
+        examType: 'upsc', // Log as UPSC payment
       });
 
       await tx
@@ -288,11 +277,15 @@ export async function verifyPayment(input: VerifyPaymentInput) {
 
     // 🚀 Step 6: Notify via Telegram (Bina kisi secure info ke)
     try {
+      const user = await db.query.mppscUsers.findFirst({
+        where: eq(mppscUsers.id, userId),
+      });
+
       const amountInRupees = amountInPaise / 100;
       const message = `💰 <b>Payment Successful!</b>\n\n` +
-        `👤 User: ${escapeHTML(currentUser?.name || 'Unknown')}\n` +
-        `📧 Email: ${escapeHTML(currentUser?.email || 'N/A')}\n` +
-        `📞 Phone: ${escapeHTML(currentUser?.phone || 'N/A')}\n` +
+        `👤 User: ${escapeHTML(user?.name || 'Unknown')}\n` +
+        `📧 Email: ${escapeHTML(user?.email || 'N/A')}\n` +
+        `📞 Phone: ${escapeHTML(user?.phone || 'N/A')}\n` +
         `🎟️ Plan: ${planTier.toUpperCase()}\n` +
         `💵 Amount: ₹${amountInRupees}\n` +
         `🆔 Payment ID: ${razorpay_payment_id.slice(-6)} (Masked)\n` +

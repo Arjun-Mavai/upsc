@@ -18,17 +18,20 @@ import { PRICING_DEFAULTS } from '@/config/pricing';
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 // Default pricing values from centralized config
-const DEFAULTS = { id: 'default' as const, ...PRICING_DEFAULTS };
+const DEFAULTS = (examType: string) => ({ examType, ...PRICING_DEFAULTS });
 
 // ── GET — Public, cached ────────────────────────────────────
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const examType = (searchParams.get('examType') || 'upsc') as 'upsc' | 'mppsc' | 'mppolice';
+
     const rows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.examType, examType))
       .limit(1);
-    const pricing = rows[0] || DEFAULTS;
+    const pricing = rows[0] || DEFAULTS(examType);
 
     return NextResponse.json(
       { pricing },
@@ -40,15 +43,15 @@ export async function GET() {
     );
   } catch (error) {
     logger.error('Pricing GET error:', error);
-    // Fallback to defaults on error — pricing page never breaks
-    return NextResponse.json({ pricing: DEFAULTS });
+    return NextResponse.json({ pricing: DEFAULTS('upsc') });
   }
 }
 
 // ── PUT — Admin-only, updates pricing + busts cache ─────────
 export async function PUT(request: Request) {
   try {
-    // Admin auth check
+    // Admin auth check (simplified check, usually handled by middleware/verifyAuth)
+    // Here we maintain the existing logic but update it for multi-exam
     const cookieStore = await cookies();
     const token = cookieStore.get('mppsc_token')?.value;
     if (!token) {
@@ -69,21 +72,26 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
+    const { examType, ...data } = body;
+
+    if (!examType) {
+      return NextResponse.json({ error: 'examType is required' }, { status: 400 });
+    }
 
     // Upsert — insert if not exists, update if exists
     const existing = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, 'default'))
+      .where(eq(pricingConfig.examType, examType))
       .limit(1);
 
     if (existing.length === 0) {
-      await db.insert(pricingConfig).values({ id: 'default', ...body, updatedAt: new Date() });
+      await db.insert(pricingConfig).values({ examType, ...data, updatedAt: new Date() });
     } else {
       await db
         .update(pricingConfig)
-        .set({ ...body, updatedAt: new Date() })
-        .where(eq(pricingConfig.id, 'default'));
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(pricingConfig.examType, examType));
     }
 
     // Bust pricing cache — pricing page reloads with fresh data

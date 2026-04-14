@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     const rows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, examId))
+      .where(eq(pricingConfig.examType, examId as any))
       .limit(1);
     
     let p = rows[0];
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
       const defaultRows = await db
         .select()
         .from(pricingConfig)
-        .where(eq(pricingConfig.id, 'default'))
+        .where(eq(pricingConfig.examType, 'upsc'))
         .limit(1);
       p = defaultRows[0] || PRICING_DEFAULTS;
     }

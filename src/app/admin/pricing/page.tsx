@@ -12,14 +12,15 @@ import { type PricingData, PRICING_DEFAULTS } from '@/config/pricing';
 import { API } from '@/config/endpoints';
 
 export default function AdminPricingPage() {
+  const [activeExam, setActiveExam] = useState<'upsc' | 'mppsc' | 'mppolice'>('upsc');
   const [data, setData] = useState<PricingData>(PRICING_DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const fetchPricing = async () => {
+  const fetchPricing = async (exam: string) => {
     setLoading(true);
     try {
-      const res = await fetch(API.PRICING, { cache: 'no-store' });
+      const res = await fetch(`${API.PRICING}?examType=${exam}`, { cache: 'no-store' });
       const json = await res.json();
       if (json.pricing) setData(json.pricing);
     } catch {
@@ -30,8 +31,8 @@ export default function AdminPricingPage() {
   };
 
   useEffect(() => {
-    fetchPricing();
-  }, []);
+    fetchPricing(activeExam);
+  }, [activeExam]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -39,11 +40,11 @@ export default function AdminPricingPage() {
       const res = await fetch(API.PRICING, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, examType: activeExam }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
-      toast.success(json.message || 'Pricing updated!');
+      toast.success(json.message || `Pricing updated for ${activeExam.toUpperCase()}!`);
     } catch (err: any) {
       toast.error(err.message || 'Failed to update');
     } finally {
@@ -76,12 +77,34 @@ export default function AdminPricingPage() {
             Pricing Manager
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Update UPSC Pro plan pricing — reflects immediately on /pricing
+            Manage pricing for UPSC, MPPSC, and MP Police platforms
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchPricing} disabled={loading}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => fetchPricing(activeExam)}
+          disabled={loading}
+        >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
         </Button>
+      </div>
+
+      {/* ── Exam Type Selector ───────────────────────────────── */}
+      <div className="flex p-1 bg-slate-100 rounded-xl">
+        {(['upsc', 'mppsc', 'mppolice'] as const).map((exam) => (
+          <button
+            key={exam}
+            onClick={() => setActiveExam(exam)}
+            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${
+              activeExam === exam
+                ? 'bg-white text-indigo-600 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            {exam.toUpperCase()}
+          </button>
+        ))}
       </div>
 
       {/* ── Pro Plan Card ──────────────────────────────────── */}

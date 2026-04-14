@@ -4,19 +4,22 @@ import { db } from '@/db';
 import { pricingConfig } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { PRICING_DEFAULTS, type PricingData } from '@/config/pricing';
+import { logger } from '@/lib/logger';
 
 /**
  * 💰 Get Pricing Data (Server Action)
  *
- * Fetches current pricing configuration from database.
+ * Fetches current pricing configuration from database for a specific exam.
  * Falls back to defaults if not found.
  */
-export async function getPricingData(examId: string = 'upsc'): Promise<{ pricing: PricingData }> {
+export async function getPricingData(
+  examType: 'upsc' | 'mppsc' | 'mppolice' = 'upsc'
+): Promise<{ pricing: PricingData }> {
   try {
     const pricingRows = await db
       .select()
       .from(pricingConfig)
-      .where(eq(pricingConfig.id, examId))
+      .where(eq(pricingConfig.examType, examType))
       .limit(1);
 
     if (pricingRows.length > 0) {
@@ -42,6 +45,7 @@ export async function getPricingData(examId: string = 'upsc'): Promise<{ pricing
 
     return { pricing: PRICING_DEFAULTS };
   } catch (error) {
+    logger.error('Get Pricing Data Error:', error);
     // Fallback to defaults on error
     return { pricing: PRICING_DEFAULTS };
   }

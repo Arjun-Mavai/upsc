@@ -50,7 +50,9 @@ export const getCachedPYQTests = unstable_cache(
     const pyqTests = await db
       .select()
       .from(tests)
-      .where(and(eq(tests.type, testType), eq(tests.isHidden, false)))
+      .where(
+        and(eq(tests.type, testType), eq(tests.examType, 'upsc'), eq(tests.isHidden, false))
+      )
       .orderBy(asc(tests.displayOrder), desc(tests.createdAt));
 
     return pyqTests.map((test) => ({
@@ -68,7 +70,9 @@ export const getCachedFLTTests = unstable_cache(
     return await db
       .select()
       .from(tests)
-      .where(and(eq(tests.type, testType), eq(tests.isHidden, false)))
+      .where(
+        and(eq(tests.type, testType), eq(tests.examType, 'upsc'), eq(tests.isHidden, false))
+      )
       .orderBy(asc(tests.displayOrder));
   },
   ['flt-tests-list'],
@@ -80,7 +84,9 @@ export const getCachedCSATTests = unstable_cache(
     return await db
       .select()
       .from(tests)
-      .where(and(eq(tests.type, 'CSAT'), eq(tests.isHidden, false)))
+      .where(
+        and(eq(tests.type, 'CSAT'), eq(tests.examType, 'upsc'), eq(tests.isHidden, false))
+      )
       .orderBy(asc(tests.displayOrder), desc(tests.createdAt));
   },
   ['csat-tests-list'],

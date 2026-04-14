@@ -83,6 +83,19 @@ export async function loginUserAction(formData: LoginParams) {
       return { error: 'Invalid credentials' };
     }
 
+    // ── Exam Type Isolation Check ────────────────────────────────
+    // Ensure MPPSC/MP Police users can't login to the UPSC site
+    if (user.examType !== 'upsc') {
+      logger.warn('Cross-platform login attempt blocked', {
+        category: 'auth',
+        metadata: { email, userExamType: user.examType },
+      });
+      return {
+        error: 'Your account is registered for another exam. Please use the correct site.',
+        code: 'WRONG_PLATFORM',
+      };
+    }
+
     // ── Soft Delete Check ──────────────────────────────────────
     if (user.deletedAt) {
       return {

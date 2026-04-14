@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { syllabusTopics } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { logger } from '@/lib/logger';
 
@@ -28,10 +28,14 @@ export async function uploadSyllabusData(jsonData: string, secretKey: string) {
       order: t.order,
       isFree: t.isFree ?? false,
       imgUrl: t.imgUrl || null,
+      examType: 'upsc' as const,
     }));
 
     // Delete existing topics for this unit to avoid order conflicts/duplicates on re-upload
-    await db.delete(syllabusTopics).where(eq(syllabusTopics.unitId, data.unitId));
+    // Filter by examType to prevent deleting other platform data if shared unitIds exist
+    await db
+      .delete(syllabusTopics)
+      .where(and(eq(syllabusTopics.unitId, data.unitId), eq(syllabusTopics.examType, 'upsc')));
 
     // Insert new
     if (topicsToInsert.length > 0) {

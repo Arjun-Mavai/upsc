@@ -17,12 +17,8 @@ export const getBlogCounts = cachedData(
         eq(contentBlogs.isHidden, false)
       ];
       
-      // Add exam type filtering
-      if (examType !== 'all') {
-        baseConditions.push(
-          sql`(${contentBlogs.examType} = ${examType} OR ${contentBlogs.examType} = 'all')`
-        );
-      }
+      // Add exam type filtering - strictly 'upsc' for this platform
+      baseConditions.push(eq(contentBlogs.examType, 'upsc'));
 
       // Get counts grouped by category (subjects) - UPSC doesn't use unit-wise filtering
       const categoryCounts = await db
@@ -51,11 +47,17 @@ export const getBlogCounts = cachedData(
         }
       });
 
-      // Simple sum of all published and non-hidden blogs
+      // Simple sum of all published and non-hidden blogs for this platform
       const allResult = await db
         .select({ count: count() })
         .from(contentBlogs)
-        .where(and(eq(contentBlogs.isPublished, true), eq(contentBlogs.isHidden, false)));
+        .where(
+          and(
+            eq(contentBlogs.isPublished, true),
+            eq(contentBlogs.isHidden, false),
+            eq(contentBlogs.examType, 'upsc')
+          )
+        );
 
       countsMap['All'] = allResult[0]?.count || 0;
       countsMap['Free'] = freeResult[0]?.count || 0;
@@ -81,7 +83,13 @@ export const getCachedBlogs = cachedData(
       return await db
         .select()
         .from(contentBlogs)
-        .where(and(eq(contentBlogs.isPublished, true), eq(contentBlogs.isHidden, false)))
+        .where(
+          and(
+            eq(contentBlogs.isPublished, true),
+            eq(contentBlogs.isHidden, false),
+            eq(contentBlogs.examType, 'upsc')
+          )
+        )
         .orderBy(desc(contentBlogs.createdAt));
     } catch (error) {
       logger.error('Get Blogs Error:', error);
@@ -146,12 +154,8 @@ export async function getBlogs({
       whereConditions.push(eq(contentBlogs.isFreeAccess, isFreeAccess));
     }
 
-    // Filter by Exam Type (UPSC/MPPSC segregation)
-    if (examType && examType !== 'all') {
-      whereConditions.push(
-        sql`(${contentBlogs.examType} = ${examType} OR ${contentBlogs.examType} = 'all')`
-      );
-    }
+    // Filter by Exam Type (Strict UPSC isolation)
+    whereConditions.push(eq(contentBlogs.examType, 'upsc'));
 
     const whereClause = and(...whereConditions);
 
@@ -205,7 +209,8 @@ export const getBlogBySlug = async (slug: string) => {
               and(
                 eq(contentBlogs.slug, slug),
                 eq(contentBlogs.isPublished, true),
-                eq(contentBlogs.isHidden, false)
+                eq(contentBlogs.isHidden, false),
+                eq(contentBlogs.examType, 'upsc')
               )
             )
             .get()) ?? null
