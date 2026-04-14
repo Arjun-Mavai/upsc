@@ -223,8 +223,14 @@ export function AppInstallGuideUPSC() {
                     {/* App Header */}
                     <div className="flex h-12 items-center justify-between px-6 border-b border-white/5">
                       <span className="text-xs font-black tracking-widest text-white uppercase">UPSC Zen</span>
-                      <div className="h-6 w-6 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                         <div className="h-2 w-2 rounded-full bg-amber-500" />
+                      <div className="h-7 w-7 rounded-lg bg-slate-950/50 flex items-center justify-center overflow-hidden">
+                         <Image
+                            src="/icons/upsc-logo.png"
+                            alt="UPSC Zen"
+                            width={24}
+                            height={24}
+                            className="object-contain"
+                          />
                       </div>
                     </div>
 
@@ -265,8 +271,14 @@ export function AppInstallGuideUPSC() {
                         className="space-y-4 rounded-t-[2.5rem] bg-[#161b22] p-5 pb-10 border-t border-white/10"
                       >
                         <div className="flex items-center gap-4 rounded-2xl bg-[#0d1117] p-4 border border-white/5">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-purple-700 shadow-lg">
-                            <span className="font-black text-white text-lg">U</span>
+                          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-slate-950/50 shadow-lg">
+                            <Image
+                              src="/icons/upsc-logo.png"
+                              alt="UPSC Zen Logo"
+                              width={48}
+                              height={48}
+                              className="object-contain"
+                            />
                           </div>
                           <div className="flex-1">
                             <h4 className="font-black text-sm text-white tracking-tight">UPSC Zen</h4>
@@ -304,8 +316,14 @@ export function AppInstallGuideUPSC() {
                     {/* App Header */}
                     <div className="z-10 flex h-14 items-center justify-between bg-[#080510] px-6 border-b border-white/5">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600">
-                           <span className="font-black text-white text-sm">U</span>
+                        <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-slate-950/50">
+                           <Image
+                              src="/icons/upsc-logo.png"
+                              alt="UPSC Zen"
+                              width={32}
+                              height={32}
+                              className="object-contain"
+                            />
                         </div>
                         <span className="text-xs font-black tracking-widest text-white uppercase">UPSC Zen</span>
                       </div>
@@ -328,8 +346,14 @@ export function AppInstallGuideUPSC() {
                         className="w-full rounded-3xl border border-white/10 bg-[#161b22] p-6 shadow-2xl"
                       >
                         <div className="mb-6 flex items-start gap-5">
-                          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-amber-500 shadow-xl shadow-amber-500/10">
-                             <span className="font-black text-black text-lg">U</span>
+                          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-950/50 shadow-xl">
+                             <Image
+                                src="/icons/upsc-logo.png"
+                                alt="UPSC Zen Logo"
+                                width={56}
+                                height={56}
+                                className="object-contain"
+                              />
                           </div>
                           <div className="flex-1">
                             <h4 className="text-base font-black tracking-tight text-white">

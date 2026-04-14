@@ -23,7 +23,7 @@ export function AppFooter() {
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 px-6 md:flex-row md:gap-6">
         {/* Brand Section */}
         <div className="order-last w-full text-center md:order-first md:w-auto md:text-left">
-          <p className="text-lg font-bold text-slate-900">UPSC Intelligence</p>
+          <p className="text-lg font-bold text-slate-900">UPSC Zen</p>
           <p className="mt-1 text-sm text-slate-500">© 2026 All rights reserved.</p>
           <p className="mt-2 text-[10px] font-medium text-slate-400">Made with ❤️ for aspirants</p>
         </div>

@@ -88,7 +88,7 @@ export default function LoginPage() {
           </motion.div>
           <div className="space-y-4">
             <h1 className="font-display text-4xl font-bold tracking-tight text-white">
-              UPSC Intelligence
+              UPSC Zen
             </h1>
             <p className="text-lg text-slate-400">
               Master UPSC Prelims with expert-level PYQ analysis. Access 6 years of curated questions
@@ -125,7 +125,7 @@ export default function LoginPage() {
           className="relative z-20 w-full max-w-md space-y-8 rounded-2xl border border-slate-100 bg-white p-6 shadow-xl shadow-slate-200/50 sm:p-8"
         >
           <div className="space-y-2 text-center">
-            <h2 className="text-2xl font-bold text-slate-900">Sign in to UPSC Intelligence</h2>
+            <h2 className="text-2xl font-bold text-slate-900">Sign in to UPSC Zen</h2>
             <p className="text-sm text-slate-500">
               Enter your credentials to access your dashboard
             </p>

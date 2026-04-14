@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     'Deep analysis of UPSC Previous Year Questions — subject distribution, trend analysis, and expert insights.',
 };
 
-// UPSC Intelligence is strictly dedicated to the 'upsc' exam target
+// UPSC Zen is strictly dedicated to the 'upsc' exam target
 const EXAM_ID = 'upsc';
 
 export default async function UPSCIntelligencePage() {

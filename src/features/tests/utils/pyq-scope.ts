@@ -1,4 +1,4 @@
-// UPSC Intelligence — PYQ Scope Configuration
+// UPSC Zen — PYQ Scope Configuration
 export const PYQ_SCOPE_START_YEAR = 2020;
 export const PYQ_SCOPE_END_YEAR = 2025;
 

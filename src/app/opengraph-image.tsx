@@ -180,7 +180,7 @@ export default async function Image() {
         }}
       >
         <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4f46e5' }} />
-        <span style={{ fontSize: 18, color: '#71717a', fontWeight: 500 }}>UPSC Intelligence</span>
+        <span style={{ fontSize: 18, color: '#71717a', fontWeight: 500 }}>UPSC Zen</span>
       </div>
     </div>,
     {

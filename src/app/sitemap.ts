@@ -4,7 +4,7 @@ import { contentBlogs } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
 /**
- * 🗺️ SITEMAP — UPSC Intelligence
+ * 🗺️ SITEMAP — UPSC Zen
  * Pages indexed for Google search — upsc.zenscroll.app
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

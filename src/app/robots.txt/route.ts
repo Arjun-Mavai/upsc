@@ -1,7 +1,7 @@
 export async function GET() {
   const baseUrl = 'https://upsc.zenscroll.app';
 
-  // 🤖 ROBOTS.TXT — UPSC Intelligence
+  // 🤖 ROBOTS.TXT — UPSC Zen
 
   const content = [
     'User-agent: *',

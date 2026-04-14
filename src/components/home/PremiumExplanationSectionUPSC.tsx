@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * PremiumExplanationSectionUPSC — "More Than Just Answers" for UPSC Intelligence
+ * PremiumExplanationSectionUPSC — "More Than Just Answers" for UPSC Zen
  * Shows our structured explanation approach: Core Logic, Exam Fact, Memory Tip, Scam Alert
  * Reference: syllabus-explanation/src/components/home/PremiumExplanationSection.tsx
  */

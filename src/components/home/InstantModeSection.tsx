@@ -228,7 +228,7 @@ export function InstantModeSection() {
                             <Brain className="h-7 w-7 text-white" />
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-[10px] font-black tracking-[0.3em] text-amber-100 uppercase">UPSC INTELLIGENCE</span>
+                            <span className="text-[10px] font-black tracking-[0.3em] text-amber-100 uppercase">UPSC ZEN</span>
                             <span className="text-2xl font-black tracking-tight">{hi ? 'प्रीमियम विशेषज्ञ व्याख्या' : 'Premium Expert Logic'}</span>
                           </div>
                         </div>

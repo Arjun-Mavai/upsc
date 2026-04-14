@@ -31,7 +31,7 @@ export default function AboutPage() {
           <p className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-600 md:text-xl">
             We don't just give you PYQs. We give you the{' '}
             <span className="font-semibold text-slate-800">expert logic</span> to crack them.
-            UPSC Intelligence is India's first expert-led PYQ analysis platform for Civil Services.
+            UPSC Zen is India's first expert-led PYQ analysis platform for Civil Services.
           </p>
         </div>
       </section>
@@ -41,7 +41,7 @@ export default function AboutPage() {
         <div className="mx-auto max-w-3xl">
           <div className="prose prose-lg prose-slate mx-auto">
             <h2 className="font-display mb-6 text-3xl font-bold text-slate-900">
-              Why UPSC Intelligence?
+              Why UPSC Zen?
             </h2>
             <p className="mb-6 text-slate-600">
               The UPSC Civil Services Prelims is one of the most competitive exams in India. 
@@ -52,7 +52,7 @@ export default function AboutPage() {
               They miss patterns, ignore logical constraints, and fail to prioritize high-yield topics.
             </p>
             <p className="mb-8 text-slate-600">
-              <strong>Enter UPSC Intelligence.</strong> We've analyzed 6 years of UPSC Prelims (2020-2025) 
+              <strong>Enter UPSC Zen.</strong> We've analyzed 6 years of UPSC Prelims (2020-2025) 
               with subject-wise segregation and expert-level explanations (Verdict, Logic Path, Trap Watch) 
               that tell you <em>how</em> to reach the correct answer.
             </p>
@@ -60,7 +60,7 @@ export default function AboutPage() {
             <div className="not-prose mb-10 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-slate-900">
                 <Brain className="h-5 w-5 text-amber-600" />
-                The UPSC Intelligence Advantage
+                The UPSC Zen Advantage
               </h3>
               <ul className="space-y-3">
                 {[

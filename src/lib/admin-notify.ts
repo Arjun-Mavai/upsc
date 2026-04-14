@@ -54,7 +54,7 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
 
     const resend = new Resend(apiKey);
 
-    const fromName = process.env.EMAIL_FROM_NAME || 'UPSC Intelligence';
+    const fromName = process.env.EMAIL_FROM_NAME || 'UPSC Zen';
     const fromAddress = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
@@ -69,10 +69,10 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
 
     const subject = subjects[type] || `Payment Event: ${userName}`;
 
-    // 📝 Simple HTML email for admin (UPSC Intelligence product)
+    // 📝 Simple HTML email for admin (UPSC Zen product)
     const html = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
-        <p style="font-size: 11px; color: #6366f1; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 8px 0;">UPSC Intelligence · Payments</p>
+        <p style="font-size: 11px; color: #6366f1; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 8px 0;">UPSC Zen · Payments</p>
         <h2 style="color: #111; margin-bottom: 8px;">
           ${type === 'new_payment' ? '💰 New Payment Received' : type === 'upgrade' ? '🚀 Plan Upgrade' : '⚠️ Payment Failed'}
         </h2>
@@ -158,7 +158,7 @@ export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) 
 
     const resend = new Resend(apiKey);
 
-    const fromName = process.env.EMAIL_FROM_NAME || 'UPSC Intelligence';
+    const fromName = process.env.EMAIL_FROM_NAME || 'UPSC Zen';
     const fromAddress = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
@@ -170,7 +170,7 @@ export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) 
         
         <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin: 16px 0;">
           <p style="margin: 0 0 8px; font-weight: 600;">Payment succeeded but the welcome email to the user failed.</p>
-          <p style="margin: 0; color: #666;">Send them the password setup link manually (UPSC Intelligence).</p>
+          <p style="margin: 0; color: #666;">Send them the password setup link manually (UPSC Zen).</p>
         </div>
         
         <div style="background: #f8f9fa; border-radius: 8px; padding: 16px; margin: 16px 0;">

@@ -38,7 +38,7 @@ export default function EmailTemplate({
             letterSpacing: '-0.5px',
           }}
         >
-          UPSC Intelligence
+          UPSC Zen
         </h1>
         <p
           style={{
@@ -84,7 +84,7 @@ export default function EmailTemplate({
 
         <p style={{ fontSize: '15px', marginBottom: '24px', color: '#374151' }}>
           Set your password below to unlock your full access — year-wise segregation, subject-wise trends,
-          expert-led logic explanations, and everything you need for UPSC intelligence.
+          expert-led logic explanations, and everything you need for UPSC zen.
         </p>
 
         {/* CTA Button */}
@@ -119,7 +119,7 @@ export default function EmailTemplate({
           }}
         >
           <p style={{ fontSize: '14px', color: '#475569', margin: '0', fontStyle: 'italic' }}>
-            &quot;Syllabus is the map, and PYQs are the compass.&quot; — Your UPSC Intelligence journey starts now.
+            &quot;Syllabus is the map, and PYQs are the compass.&quot; — Your UPSC Zen journey starts now.
             We&apos;re here to help you decode the patterns and score higher.
           </p>
         </div>
@@ -194,7 +194,7 @@ export default function EmailTemplate({
         }}
       >
         <p style={{ fontSize: '12px', color: '#6b7280', margin: '0 0 4px 0', fontWeight: '600' }}>
-          UPSC Intelligence — Smart Test Series
+          UPSC Zen — Smart Test Series
         </p>
         <p style={{ fontSize: '11px', color: '#9ca3af', margin: '0' }}>
           Secure • Trusted • Built for Serious UPSC Aspirants

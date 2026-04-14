@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
-  title: 'Offline | UPSC Intelligence',
+  title: 'Offline | UPSC Zen',
 };
 
 export default function OfflinePage() {

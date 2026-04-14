@@ -1,6 +1,6 @@
 import { getCurrentExam, ExamConfig } from '@/config/exams';
 
-// UPSC Intelligence — Dedicated platform for UPSC Civil Services preparation
+// UPSC Zen — Dedicated platform for UPSC Civil Services preparation
 // Subdomain: upsc.zenscroll.app
 
 /**
@@ -34,7 +34,7 @@ export async function generateExamMetadata(): Promise<any> {
       'UPSC PYQ',
       'Civil Services',
       'IAS Preparation',
-      'UPSC Intelligence',
+      'UPSC Zen',
     ],
     openGraph: {
       title: exam.title,

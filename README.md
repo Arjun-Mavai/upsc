@@ -4,7 +4,7 @@
 
 Zenscroll is a premium digital sanctuary designed to replace the cheap dopamine of social media with the serotonin of wisdom. Instead of endless feeds of noise, swipe through curated insights from history's greatest minds in Spirituality, Business, Philosophy, and Science.
 
-![UPSC Intelligence Demo](public/images/project-upscimage.png)
+![UPSC Zen Demo](public/images/project-upscimage.png)
 _(Note: Replace with actual screenshot)_
 
 ## ✨ Features

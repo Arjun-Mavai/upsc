@@ -5,6 +5,7 @@ import { usePwa } from '@/hooks/usePwa';
 import { X, Share, PlusSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 export function InstallPrompt() {
   const { isInstallable, installPwa, isPwaInstalled, isIos, isSafari } = usePwa();
@@ -76,12 +77,18 @@ export function InstallPrompt() {
         
         <div className="space-y-6">
           <div className="flex items-center gap-4">
-            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 shadow-xl shadow-orange-500/20">
-               <span className="text-xl font-black text-white">M</span>
+            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-950/50 shadow-xl shadow-orange-500/20">
+               <Image
+                  src="/icons/upsc-logo.png"
+                  alt="UPSC Zen Logo"
+                  width={56}
+                  height={56}
+                  className="object-contain"
+               />
                <div className="absolute -top-1 -right-1 h-3 w-3 animate-ping rounded-full bg-amber-400 opacity-75"></div>
             </div>
             <div>
-              <h3 className="text-lg font-black tracking-tight text-white">Install Mindful App</h3>
+              <h3 className="text-lg font-black tracking-tight text-white">Install UPSC Zen App</h3>
               <p className="text-xs text-slate-400">Essential for the best learning experience.</p>
             </div>
           </div>
@@ -151,11 +158,17 @@ export function InstallPrompt() {
         </button>
         
         <div className="flex items-center gap-5">
-          <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 shadow-xl shadow-orange-500/20">
-             <span className="text-xl font-black text-white">M</span>
+          <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-950/50 shadow-xl shadow-orange-500/20">
+             <Image
+                src="/icons/upsc-logo.png"
+                alt="UPSC Zen Logo"
+                width={56}
+                height={56}
+                className="object-contain"
+             />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-black tracking-tight text-white">App Experience</h3>
+            <h3 className="text-lg font-black tracking-tight text-white">UPSC Zen App</h3>
             <p className="text-xs text-slate-400">Faster access & full screen mode.</p>
           </div>
         </div>

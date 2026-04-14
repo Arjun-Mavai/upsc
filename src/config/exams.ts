@@ -1,5 +1,5 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// UPSC Intelligence — Dedicated Platform Configuration
+// UPSC Zen — Dedicated Platform Configuration
 // Subdomain: upsc.zenscroll.app
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -41,10 +41,10 @@ export interface ExamConfig {
 // UPSC Civil Services Exam Configuration
 const UPSC_CONFIG: ExamConfig = {
   id: 'upsc',
-  name: 'UPSC Intelligence',
-  nameHi: 'UPSC इंटेलिजेंस',
-  title: 'UPSC Intelligence — Master UPSC CSE PYQs (2020-2025)',
-  titleHi: 'UPSC इंटेलिजेंस — UPSC CSE PYQs में महारत',
+  name: 'UPSC Zen',
+  nameHi: 'UPSC जेन',
+  title: 'UPSC Zen — Master UPSC CSE PYQs (2020-2025)',
+  titleHi: 'UPSC जेन — UPSC CSE PYQs में महारत',
   subtitle: 'Decode the DNA of UPSC Prelims',
   subtitleHi: 'UPSC Prelims का DNA समझें',
   description:

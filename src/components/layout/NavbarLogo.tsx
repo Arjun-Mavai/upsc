@@ -31,7 +31,7 @@ export const NavbarLogo = memo(function NavbarLogo({ user }: NavbarLogoProps) {
       </div>
       <div className="flex flex-col">
         <span className="font-display text-lg leading-none font-bold text-slate-900 tracking-tight">
-          UPSC<span className="text-indigo-600">Intel</span>
+          UPSC<span className="text-indigo-600">Zen</span>
         </span>
         <span className="text-[10px] font-semibold tracking-[0.1em] text-slate-500 uppercase opacity-80">
           PYQ Intelligence

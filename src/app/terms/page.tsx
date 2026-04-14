@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { contactEmail } from '../contact/page';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | UPSC Intelligence',
+  title: 'Terms of Service | UPSC Zen',
   description:
-    'Terms of Service for UPSC Intelligence — the rules and guidelines for using our UPSC exam preparation platform.',
+    'Terms of Service for UPSC Zen — the rules and guidelines for using our UPSC exam preparation platform.',
 };
 
 export default function TermsOfServicePage() {
@@ -26,9 +26,9 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-xl font-semibold text-slate-900">1. Acceptance of Terms</h2>
             <p className="mt-3">
-              By accessing UPSC Intelligence (&ldquo;the Platform&rdquo;), you acknowledge that you have
+              By accessing UPSC Zen (&ldquo;the Platform&rdquo;), you acknowledge that you have
               read, understood, and agree to be bound by these Terms of Service. These terms
-              constitute a legally binding agreement between you and UPSC Intelligence. We reserve the
+              constitute a legally binding agreement between you and UPSC Zen. We reserve the
               right to amend these terms at our discretion; continued usage after such amendments
               constitutes formal acceptance of the revised terms.
             </p>
@@ -58,7 +58,7 @@ export default function TermsOfServicePage() {
             </h2>
             <p className="mt-3">
               All content hosted on the Platform—including but not limited to study materials, PYQ analysis,
-              explanations, and software—is the exclusive intellectual property of UPSC Intelligence.
+              explanations, and software—is the exclusive intellectual property of UPSC Zen.
               Unauthorized reproduction, distribution, or commercial exploitation of any
               material is strictly prohibited and may result in legal action.
             </p>
@@ -74,7 +74,7 @@ export default function TermsOfServicePage() {
                 access to digital content (PYQ papers, analysis, explanations), all purchases are final.
               </li>
               <li>
-                <strong>No Refunds:</strong> Under no circumstances shall UPSC Intelligence be liable to
+                <strong>No Refunds:</strong> Under no circumstances shall UPSC Zen be liable to
                 provide a refund once a subscription has been activated or digital content has been
                 accessed.
               </li>
@@ -88,7 +88,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-xl font-semibold text-slate-900">5. Limitation of Liability</h2>
             <p className="mt-3">
-              UPSC Intelligence provides educational tools on an &ldquo;as-is&rdquo; and
+              UPSC Zen provides educational tools on an &ldquo;as-is&rdquo; and
               &ldquo;as-available&rdquo; basis. While we strive for the highest degree of accuracy,
               we do not guarantee specific exam results or absolute factual error-freedom. To the
               maximum extent permitted by law, our liability is limited to the subscription fee paid

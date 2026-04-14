@@ -22,7 +22,7 @@ export function UPSCLanding({ exam }: UPSCLandingProps) {
   return (
     <main className="bg-white">
       <h1 className="sr-only">
-        UPSC Intelligence — Master UPSC CSE PYQs (2020-2025) with Expert Logic & Subject-Wise
+        UPSC Zen — Master UPSC CSE PYQs (2020-2025) with Expert Logic & Subject-Wise
         Analysis
       </h1>
 
@@ -43,12 +43,12 @@ export function UPSCLanding({ exam }: UPSCLandingProps) {
 
 
 
-      {/* 6. Why UPSC Intelligence? (4 Pillars) */}
+      {/* 6. Why UPSC Zen? (4 Pillars) */}
       <section className="relative overflow-hidden bg-slate-50 py-32 md:py-48">
         <div className="mx-auto max-w-7xl px-6">
           <div className="mb-20 text-center">
             <h2 className="text-3xl font-black tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
-              Why <span className="text-amber-600">UPSC Intelligence</span>?
+              Why <span className="text-amber-600">UPSC Zen</span>?
             </h2>
             <p className="mx-auto mt-6 max-w-2xl text-lg font-bold text-slate-500">
               The most organized platform to decode UPSC CSE General Studies (2020–2025) with expert

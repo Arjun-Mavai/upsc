@@ -1,10 +1,10 @@
 {
-  "name": "UPSC Intelligence",
-  "short_name": "UPSC Intel",
+  "name": "UPSC Zen",
+  "short_name": "UPSC Zen",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#4f46e5",
+  "background_color": "#0a0a0a",
+  "theme_color": "#f59e0b",
   "description": "Master UPSC CSE PYQs (2020-2025) with Expert Logic and Organized Analysis.",
   "icons": [
     {
