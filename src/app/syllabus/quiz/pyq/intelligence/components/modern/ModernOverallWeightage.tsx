@@ -218,64 +218,83 @@ export function ModernOverallWeightage({
                       transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                       className="overflow-hidden"
                     >
-                      <div className={cn("border-t p-1 sm:p-8 sm:pt-6", theme.border)}>
-                        <div className="flex items-center justify-between mb-4 px-2 sm:px-0">
-                          <h5 className="text-sm font-bold text-[#1D1D1F] uppercase tracking-wider opacity-60">
+                      <div className={cn("border-t", theme.border)}>
+                        {/* Toolbar - Same as ModernUnitCard */}
+                        <div className="flex items-center justify-between px-4 sm:px-8 py-4 border-b border-black/[0.03]">
+                          <span className="text-[11px] font-bold tracking-widest text-[#86868B] uppercase">
                             {isHindi ? 'टॉप प्रश्न' : 'Top Questions'}
-                          </h5>
+                          </span>
+                          {isUnlocked && (
+                            <div className="flex items-center gap-3">
+                              <TransitionLink
+                                href={`${baseUrl}/questions?subject=${encodeURIComponent(sub.name)}&source=subject`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1.5 rounded-full bg-[#1D1D1F] px-4 py-1.5 text-[11px] font-bold text-white transition-transform hover:scale-105 active:scale-95 shadow-lg shadow-black/10"
+                              >
+                                <ArrowRight className="h-3 w-3" />
+                                {isHindi ? 'सभी देखें' : 'View All'}
+                              </TransitionLink>
+                            </div>
+                          )}
                         </div>
-                        <div className="p-0.5 sm:p-2">
-                          {(() => {
-                            const subjectData = subjectQuestionsData.find(
-                              (data) => data.subject === sub.name || data.subject === sub.nameHi
-                            );
-                            const subjectQuestions = subjectData?.questions || [];
-                            const mappedQuestions: QuestionData[] = subjectQuestions.map((q) => ({
-                              id: q.id,
-                              text: q.text,
-                              textEn: q.textEn,
-                              year: q.year,
-                              qNo: q.qNo,
-                              testTitle: q.testTitle,
-                              subject: q.subject,
-                              options: q.options,
-                              correctAnswer: q.correctAnswer,
-                              extendedData: q.extendedData,
-                              explanation: q.explanation,
-                              explanationEn: q.explanationEn,
-                            }));
 
-                            return mappedQuestions.length > 0 ? (
-                              <div className="space-y-4">
-                                <ModernQuestionList
-                                  questions={mappedQuestions}
-                                  isHindi={isHindi}
-                                  maxVisible={5}
-                                  showYears={true}
-                                  examId={examId}
-                                  isPro={isPro}
-                                  onLockedClick={() => setLockModalOpen(true)}
-                                  variant="flat"
-                                />
-                              </div>
-                            ) : (
-                              <p className="py-8 text-center text-sm font-medium text-[#86868B]">
-                                {isHindi ? 'कोई प्रश्न नहीं मिले।' : 'No questions found.'}
-                              </p>
-                            );
-                          })()}
-                        </div>
-                        {isUnlocked && isPro && (
-                          <div className="mt-6 flex justify-center px-2 pb-2 sm:px-0">
-                            <TransitionLink
-                              href={`${baseUrl}/questions?subject=${encodeURIComponent(sub.name)}&source=subject`}
-                              className="group flex w-full items-center justify-center gap-2 rounded-2xl border border-[#E5E5EA] bg-white px-6 py-3.5 text-[14px] font-bold text-[#1D1D1F] shadow-sm transition-all hover:shadow-md active:scale-[0.98] sm:w-auto sm:min-w-[280px]"
-                            >
-                              {isHindi ? 'सभी विषय के प्रश्न देखें' : 'View All Subject Questions'}
-                              <ArrowRight className="ml-1 h-4 w-4 text-[#86868B] transition-transform group-hover:translate-x-1" />
-                            </TransitionLink>
+                        <div className="p-2 sm:p-8 sm:pt-6">
+                          <div className="p-0.5 sm:p-2">
+                            {(() => {
+                              const subjectData = subjectQuestionsData.find(
+                                (data) => data.subject === sub.name || data.subject === sub.nameHi
+                              );
+                              const subjectQuestions = subjectData?.questions || [];
+                              const mappedQuestions: QuestionData[] = subjectQuestions.map((q) => ({
+                                id: q.id,
+                                text: q.text,
+                                textEn: q.textEn,
+                                year: q.year,
+                                qNo: q.qNo,
+                                testTitle: q.testTitle,
+                                subject: q.subject,
+                                options: q.options,
+                                correctAnswer: q.correctAnswer,
+                                extendedData: q.extendedData,
+                                explanation: q.explanation,
+                                explanationEn: q.explanationEn,
+                              }));
+
+                              return mappedQuestions.length > 0 ? (
+                                <div className="space-y-4">
+                                  <ModernQuestionList
+                                    questions={mappedQuestions}
+                                    isHindi={isHindi}
+                                    maxVisible={5}
+                                    showYears={true}
+                                    examId={examId}
+                                    isPro={isPro}
+                                    onLockedClick={() => setLockModalOpen(true)}
+                                    variant="flat"
+                                  />
+                                </div>
+                              ) : (
+                                <p className="py-8 text-center text-sm font-medium text-[#86868B]">
+                                  {isHindi ? 'कोई प्रश्न नहीं मिले।' : 'No questions found.'}
+                                </p>
+                              );
+                            })()}
                           </div>
-                        )}
+                          
+                          {!isPro && sub.count > 5 && (
+                            <div className="mt-6 flex justify-center px-2 pb-2 sm:px-0">
+                               <button
+                                onClick={() => setLockModalOpen(true)}
+                                className="flex h-12 w-full items-center justify-center rounded-xl bg-[#1D1D1F] text-[13px] font-semibold text-white shadow-sm transition-all hover:scale-[1.01] active:scale-95 sm:max-w-md"
+                              >
+                                <Lock className="mr-2 h-4 w-4" />
+                                {isHindi
+                                  ? `${sub.count - 5} और प्रश्न अनलॉक करें`
+                                  : `Unlock ${sub.count - 5} More Questions`}
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </motion.div>
                   )}

@@ -1,45 +1,85 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { Sparkles, Zap, ChevronRight, ArrowLeft, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useTransition } from 'react';
+import { Sparkles, ArrowRight, Loader2, BrainCircuit } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 export function HeroSectionUPSC() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
+  const textVariants = {
+    hidden: { opacity: 0, y: 40 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.2, 0.65, 0.3, 0.9] } },
+  };
+
   return (
-    <section className="relative flex min-h-[80vh] flex-col justify-center overflow-hidden border-b border-amber-200/50 bg-[#fffdfa] px-4 pt-24 pb-12 md:min-h-screen md:px-6 md:pt-48 md:pb-32">
-      {/* 🎭 PREMIUM BACKGROUND LAYERS */}
+    <section className="relative flex min-h-[85vh] flex-col items-center justify-center overflow-hidden bg-[#0a0a0a] px-4 pt-20 pb-12 md:min-h-screen md:px-6">
+      {/* 🌌 DARK AMBER BACKGROUND EFFECTS */}
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] bg-center opacity-[0.08]"></div>
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-100/40 via-transparent to-transparent blur-3xl" />
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 bg-[url('/grid.svg')] [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] bg-center opacity-[0.03] invert"></div>
+        
+        {/* Deep amber glow from center-top */}
+        <div className="absolute -top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[radial-gradient(circle_at_center,rgba(217,119,6,0.15),transparent_60%)] blur-[100px]" />
+        <div className="absolute bottom-0 right-[-20%] w-[600px] h-[600px] bg-[radial-gradient(circle_at_center,rgba(217,119,6,0.08),transparent_60%)] blur-[100px]" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-6xl space-y-8 text-center md:space-y-14">
-        {/* Top Badge */}
-        <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-white/90 text-amber-700 shadow-amber-500/10 px-4 py-2 text-xs font-black shadow-xl backdrop-blur-md transition-all md:px-6 md:py-2.5 md:text-sm">
-          <Zap className="h-3.5 w-3.5 fill-amber-600 text-amber-600 md:h-4.5 md:w-4.5" />
-          Master the UPSC CSE Exam Pattern
-        </div>
-
-        <div className="space-y-4 md:space-y-8">
-          <div className="font-display flex flex-col justify-center text-4xl leading-[1.1] font-black tracking-tight text-slate-900 drop-shadow-sm sm:text-5xl md:text-9xl md:leading-[1.1]">
-            <span className="mb-1 md:mb-4 text-slate-800">UPSC Expert</span>
-            <span className="animate-gradient-x bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 bg-[length:200%_auto] bg-clip-text pb-2 text-transparent md:pb-4">
-              Intelligence.
-            </span>
+      <div className="relative z-10 mx-auto max-w-7xl space-y-6 text-center md:space-y-12">
+        
+        {/* 🚀 BADGE */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mx-auto flex w-fit"
+        >
+          <div className="inline-flex items-center gap-2.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-xs font-bold text-amber-300 backdrop-blur-md shadow-[0_0_20px_rgba(217,119,6,0.1)] md:px-5 md:py-2.5 md:text-sm">
+            <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(217,119,6,0.8)]"></span>
+            Decoding 2020-2025 PYQs
           </div>
+        </motion.div>
 
-          <p className="mx-auto max-w-4xl px-2 text-lg leading-relaxed font-bold text-slate-700 md:text-3xl">
-            Master 6 Years of Organized PYQs (2020-2025 <span className="text-xs font-medium opacity-60 ml-1 md:text-base">(More years coming...)</span>) with Verdict, Logic Path & Trap Watch. The smartest way to decode the UPSC CSE pattern.
-          </p>
+        {/* 📝 MASSIVE TYPOGRAPHY */}
+        <div className="flex flex-col items-center justify-center space-y-2 md:space-y-3">
+          <motion.h1 
+            className="flex flex-col text-center font-black tracking-tighter"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              visible: { transition: { staggerChildren: 0.15 } }
+            }}
+          >
+            <motion.span variants={textVariants} className="text-5xl text-slate-100 sm:text-7xl md:text-[6rem] lg:text-[8.5rem] leading-[0.85] drop-shadow-lg">
+              THINK LIKE
+            </motion.span>
+            <motion.span variants={textVariants} className="mt-1 text-5xl sm:text-7xl md:text-[6rem] lg:text-[8.5rem] leading-[0.85]">
+              <span className="text-slate-100 drop-shadow-lg">THE </span>
+              <span className="bg-gradient-to-br from-amber-300 via-amber-500 to-amber-700 bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(217,119,6,0.3)]">
+                EXAMINER.
+              </span>
+            </motion.span>
+          </motion.h1>
+          
+          <motion.p 
+            variants={textVariants}
+            initial="hidden"
+            animate="visible"
+            transition={{ delay: 0.4 }}
+            className="mx-auto mt-4 max-w-3xl px-2 text-base font-medium text-slate-400 sm:text-lg md:text-2xl leading-relaxed md:mt-6"
+          >
+            Beyond just answers. Master the <strong className="text-amber-200">Logic Path</strong>, decode <strong className="text-amber-200">Trap Watch</strong>, and understand the <strong className="text-amber-200">Verdict</strong> of every UPSC Prelims question.
+          </motion.p>
         </div>
 
-        <div className="mx-auto flex w-full max-w-[420px] flex-col items-center justify-center gap-6 px-4">
-          {/* GOOGLE-STYLE HERO BUTTON */}
+        {/* 🎯 ACTION BUTTONS */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="mx-auto flex w-full max-w-md flex-col items-center justify-center gap-6 px-4 pt-0 md:pt-6"
+        >
           <button
             onClick={() => {
               startTransition(() => {
@@ -49,45 +89,51 @@ export function HeroSectionUPSC() {
             onMouseEnter={() => router.prefetch('/upsc/intelligence')}
             className="group relative w-full focus:outline-none"
           >
-            <div className="relative flex h-14 w-full transform items-center justify-center overflow-hidden rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.2)] transition-all duration-500 group-hover:-translate-y-1 group-hover:scale-[1.03] group-hover:shadow-[0_40px_80px_rgba(245,158,11,0.2)] group-active:scale-[0.96] md:h-24">
-              {/* 🌈 PREMIUM MOVING GRADIENT */}
-              <div className="animate-gradient-x absolute inset-0 bg-gradient-to-r from-slate-950 via-amber-950 to-slate-950 bg-[length:200%_auto]" />
-
-              <div className="relative z-10 flex h-full w-full items-center justify-center gap-3 px-6 md:gap-6 md:px-14">
-                <div className="rounded-xl border border-white/10 bg-white/5 p-1.5 backdrop-blur-md transition-colors group-hover:bg-amber-500/20 md:rounded-2xl md:p-3">
+            {/* Outer Glow */}
+            <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-amber-600 to-amber-400 opacity-25 blur-lg transition duration-500 group-hover:opacity-60 group-hover:duration-200"></div>
+            
+            <div className="relative flex h-14 w-full items-center justify-center overflow-hidden rounded-full bg-[#050505] border border-amber-500/30 transition-all duration-300 group-hover:border-amber-400/80 group-hover:scale-[1.02] group-active:scale-[0.98] md:h-16">
+              {/* Premium Inner Shine */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full transition-transform duration-1000 group-hover:translate-x-full" />
+              
+              <div className="relative z-10 flex w-full items-center justify-between px-6 md:px-8">
+                <div className="flex items-center gap-3">
                   {isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-amber-400 md:h-8 md:w-8" />
+                    <Loader2 className="h-5 w-5 animate-spin text-amber-400" />
                   ) : (
-                    <Sparkles className="h-4 w-4 fill-amber-400 text-amber-400 md:h-8 md:w-8" />
+                    <BrainCircuit className="h-5 w-5 text-amber-400 transition-colors group-hover:text-amber-300" />
                   )}
+                  <span className="text-sm font-black tracking-widest uppercase text-slate-100 md:text-base">
+                    Enter Intelligence
+                  </span>
                 </div>
-
-                <span className="text-xs font-black tracking-widest whitespace-nowrap text-white uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] sm:text-sm md:text-xl md:tracking-[0.15em] lg:text-2xl">
-                  Explore UPSC Intelligence
-                </span>
-
-                <ChevronRight
-                  className="h-4 w-4 text-amber-400 transition-transform duration-500 group-hover:translate-x-2 md:h-8 md:w-8"
-                  strokeWidth={4}
-                />
+                <ArrowRight className="h-5 w-5 text-amber-400 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-amber-300" />
               </div>
             </div>
           </button>
-
-          {/* Secondary Action */}
-          <div className="flex w-full items-center justify-center gap-4 text-sm text-slate-600 md:text-lg">
-            <Link
-              href="/upsc/intelligence"
-              className="group flex items-center gap-2 font-bold transition-colors hover:text-amber-700"
-            >
-              <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-1 md:h-5 md:w-5" />
-              <span>Dashboard Analysis</span>
-            </Link>
-            <span className="text-slate-400">•</span>
-            <span className="font-bold">6 Years Data</span>
-          </div>
-        </div>
+        </motion.div>
       </div>
+      
+      {/* 🏅 STATS OR TRUST BADGES */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1, duration: 1 }}
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 hidden w-full max-w-4xl justify-between px-8 lg:flex opacity-70"
+      >
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-4xl font-black text-slate-100 tracking-tighter">600<span className="text-amber-500">+</span></span>
+          <span className="text-xs font-bold tracking-[0.2em] text-slate-500 uppercase">Decoded PYQs</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-4xl font-black text-slate-100 tracking-tighter">6 <span className="text-amber-500">Years</span></span>
+          <span className="text-xs font-bold tracking-[0.2em] text-slate-500 uppercase">Trend Analysis</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-4xl font-black text-slate-100 tracking-tighter">100<span className="text-amber-500">%</span></span>
+          <span className="text-xs font-bold tracking-[0.2em] text-slate-500 uppercase">Logic Focus</span>
+        </div>
+      </motion.div>
     </section>
   );
 }
