@@ -73,7 +73,6 @@ export function ModernQuestionItem({
 
   return (
     <motion.div
-      layout
       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
       className={cn(
         "group relative overflow-hidden transition-all duration-500",
@@ -134,8 +133,7 @@ export function ModernQuestionItem({
             </div>
           ) : (
             <>
-              <motion.div
-                layout="position"
+              <div
                 className={cn(
                   "text-[15px] leading-[1.6] sm:text-[18px] font-medium tracking-tight text-[#1D1D1F]",
                   "max-h-[9rem] overflow-y-auto pr-1 sm:max-h-[11rem]"
@@ -146,7 +144,7 @@ export function ModernQuestionItem({
                 }}
               />
 
-              <motion.div layout="position" className="mt-2.5 flex flex-wrap items-center gap-2 sm:mt-4 sm:gap-3">
+              <div className="mt-2.5 flex flex-wrap items-center gap-2 sm:mt-4 sm:gap-3">
                 {showYear && question.year && (
                   <div className="flex items-center gap-1.5">
                     <span className={cn(
@@ -181,7 +179,7 @@ export function ModernQuestionItem({
                     {isHindi ? `${repeatCount}x रिपीट` : `Repeated ${repeatCount}x`}
                   </span>
                 )}
-              </motion.div>
+              </div>
             </>
           )}
         </div>

@@ -43,10 +43,14 @@ export function ModernQuestionList({
   onLockedClick,
   variant = 'card',
 }: ModernQuestionListProps) {
-  const [showAll, setShowAll] = useState(false);
+  // Use a local state for incremental loading when there are many questions
+  const INITIAL_BATCH = maxVisible || 15;
+  const LOAD_MORE_BATCH = 20;
+  const [visibleCount, setVisibleCount] = useState(INITIAL_BATCH);
 
   if (groupByYear) {
-    // Group questions by year
+    // ... rest of groupByYear logic remains same but consider if it also needs limit
+    // For now, groupByYear is usually used for papers which have ~100 questions, still a lot but better grouped
     const byYear = questions.reduce(
       (acc, q) => {
         const y = q.year;
@@ -104,8 +108,8 @@ export function ModernQuestionList({
     );
   }
 
-  const visibleQuestions = maxVisible && !showAll ? questions.slice(0, maxVisible) : questions;
-  const hasMore = maxVisible && questions.length > maxVisible;
+  const visibleQuestions = questions.slice(0, visibleCount);
+  const hasMore = questions.length > visibleCount;
 
   return (
     <div className="grid gap-4">
@@ -131,17 +135,26 @@ export function ModernQuestionList({
         );
       })}
 
-      {hasMore && !showAll && (
+      {hasMore && (
         <div className="pt-2">
           <button
-            onClick={() => setShowAll(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#F5F5F7] py-3 text-[13px] font-semibold text-[#1D1D1F] transition-all hover:bg-[#E5E5EA]"
+            onClick={() => setVisibleCount(prev => Math.min(prev + LOAD_MORE_BATCH, questions.length))}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1D1D1F] py-4 text-[13px] font-bold text-white transition-all hover:bg-[#333336] active:scale-[0.98] shadow-md"
           >
             {isHindi
-              ? `सभी ${questions.length} प्रश्न देखें`
-              : `Show all ${questions.length} questions`}
+              ? `${questions.length - visibleCount} और प्रश्न देखें`
+              : `View ${questions.length - visibleCount} More Questions`}
             <ChevronDown className="h-4 w-4" />
           </button>
+          
+          {questions.length > 50 && (
+             <button
+              onClick={() => setVisibleCount(questions.length)}
+              className="mt-3 flex w-full items-center justify-center py-2 text-[11px] font-bold text-[#86868B] uppercase tracking-widest hover:text-[#1D1D1F] transition-colors"
+            >
+              {isHindi ? 'सभी एक साथ देखें' : 'Show All at Once'}
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -9,8 +9,9 @@ import { ModernPaperAnalysis } from './components/modern/ModernPaperAnalysis';
 import { TransitionLink } from '@/components/ui/transition-link';
 import { ChevronRight, Lock } from 'lucide-react';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
-import { useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
+import { useRouter } from 'next/navigation';
 
 interface PYQIntelligenceModernClientProps {
   examId?: string;
@@ -35,23 +36,31 @@ export default function PYQIntelligenceModernClient({
   isPro = false,
   onToggleMode,
 }: PYQIntelligenceModernClientProps) {
+  const router = useRouter();
   const { language } = useSettingsStore();
   const isHindi = language === 'hi';
   const exam = getCurrentExam(examId);
   const [lockModalOpen, setLockModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Trigger loader on navigation
-  const handleViewAllReady = useCallback(() => {
-    setIsLoading(true);
-  }, []);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const isUPSC = examId === 'upsc';
   const baseUrl = isUPSC ? '/upsc/intelligence' : '/syllabus/quiz/pyq/intelligence';
+  const viewAllUrl = `${baseUrl}/questions?subject=All&source=subject`;
+
+  // Prefetch for instant navigation and caching
+  useEffect(() => {
+    router.prefetch(viewAllUrl);
+  }, [router, viewAllUrl]);
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] pb-24 text-[#1D1D1F] selection:bg-[#000000] selection:text-white font-sans antialiased">
-      {isLoading && <GlobalLoader variant="overlay" theme="light" label={isHindi ? 'तैयार हो रहा है...' : 'Preparing analytics...'} />}
+      {isNavigating && (
+        <GlobalLoader 
+          variant="overlay" 
+          theme="light" 
+          label={isHindi ? 'तैयार हो रहा है...' : 'Preparing analytics...'} 
+        />
+      )}
       <SyllabusLockModal open={lockModalOpen} onOpenChange={setLockModalOpen} />
       {/* Header */}
       <ModernHeader
@@ -77,13 +86,22 @@ export default function PYQIntelligenceModernClient({
           <div className="mt-6 flex justify-center sm:justify-start">
             {isPro ? (
               <TransitionLink
-                href={`${baseUrl}/questions?subject=All&source=subject`}
-                onClick={handleViewAllReady}
+                href={viewAllUrl}
+                onClick={() => setIsNavigating(true)}
                 transitionTypes={['slide']}
                 className="group flex h-14 w-full items-center justify-center rounded-full bg-[#1D1D1F] px-8 text-sm font-semibold tracking-wide text-white shadow-md transition-all hover:scale-[1.02] hover:bg-[#333336] active:scale-95 sm:w-auto sm:min-w-[320px]"
               >
-                {isHindi ? 'सभी विषय के प्रश्न देखें' : 'View All Subject Questions'}
-                <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                {isNavigating ? (
+                  <div className="flex items-center gap-3">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                    <span>{isHindi ? 'लोड हो रहा है...' : 'Loading...'}</span>
+                  </div>
+                ) : (
+                  <>
+                    {isHindi ? 'सभी विषय के प्रश्न देखें' : 'View All Subject Questions'}
+                    <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </>
+                )}
               </TransitionLink>
             ) : (
               <button
