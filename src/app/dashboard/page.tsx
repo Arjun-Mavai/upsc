@@ -19,13 +19,15 @@ export default async function DashboardPage() {
   // Fetch Analytics & Progress concurrently for maximum performance
   const [analyticsData, syllabusProgress] = await Promise.all([
     getUserAnalytics(user.id, exam.id),
-    getUserSyllabusProgress()
+    exam.id !== 'upsc' ? getUserSyllabusProgress() : Promise.resolve(null)
   ]);
 
   // Total topics calculation (small loop, no need for intensive optimization)
-  const totalTopics = Object.values(syllabusData.units).reduce((acc: number, unit: any) => {
-    return acc + (unit.topics?.length || 0);
-  }, 0);
+  const totalTopics = exam.id !== 'upsc' 
+    ? Object.values(syllabusData.units).reduce((acc: number, unit: any) => {
+        return acc + (unit.topics?.length || 0);
+      }, 0)
+    : 0;
 
   return (
     <DashboardClient 

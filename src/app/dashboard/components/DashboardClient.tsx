@@ -53,7 +53,7 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
             
             <AnalyticsDashboardWrapper 
               analytics={analyticsData} 
-              actionCard={<DashboardActionCard totalTests={analyticsData?.totalTests || 0} />}
+              actionCard={exam.id !== 'upsc' ? <DashboardActionCard totalTests={analyticsData?.totalTests || 0} /> : null}
             />
           </div>
 
@@ -71,8 +71,8 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                 <SubjectMasteryWidget mastery={analyticsData?.mastery || []} />
               </div>
 
-              {/* Progress Pod — Only for UPSC */}
-              {exam.id === 'upsc' && (
+              {/* Progress Pod — REMOVED FOR UPSC as per user request */}
+              {exam.id !== 'upsc' && syllabusProgress && (
                 <div className="group relative">
                   <div className="mb-4 space-y-2">
                     <h3 className="text-xs font-black tracking-[0.2em] text-slate-500 uppercase">
