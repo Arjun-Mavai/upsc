@@ -112,7 +112,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
       const existing = await db
         .select({ title: tests.title })
         .from(tests)
-        .where(eq(tests.id, testId));
+        .where(eq(tests.id, testId!));
       testTitle = existing[0]?.title || 'Unknown Test';
     }
 
@@ -122,7 +122,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
       const maxOrderResult = await db
         .select({ maxOrder: sql<number>`MAX(${questions.order})` })
         .from(questions)
-        .where(eq(questions.testId, testId));
+        .where(eq(questions.testId, testId!));
       startOrder = maxOrderResult[0]?.maxOrder || 0;
     }
 
@@ -175,9 +175,13 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
         .where(eq(questions.testId, testId || ''));
       
       // Map by Hindi text; fallback to English if Hindi matches multiple times or if we need higher precision
-      const existingMap = new Map(existingQs.map((q) => [q.text?.trim().toLowerCase(), q]));
+      const existingMap = new Map<string, { id: string; text: string | null; textEn: string | null }>();
+      existingQs.forEach(q => {
+        const key = q.text?.trim().toLowerCase();
+        if (key) existingMap.set(key, q);
+      });
 
-      const finalQuestionsToInsert: any[] = [];
+      const finalQuestionsToInsert: (typeof questions.$inferInsert)[] = [];
 
       for (const newQ of questionsToInsert) {
         const key = newQ.questionText.trim().toLowerCase();
@@ -241,7 +245,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
             totalMarks: sql`${tests.totalMarks} + ${newMarksToAdd}`,
             totalQuestions: totalQ,
           })
-          .where(eq(tests.id, testId));
+          .where(eq(tests.id, testId!));
       }
     } else if (mode === 'new') {
       // If new test but 0 questions inserted (unlikely unless empty JSON), update count
