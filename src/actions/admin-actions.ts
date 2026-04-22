@@ -144,14 +144,14 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
 
     const overwrite = formData.get('overwrite') === 'true';
 
-    const questionsToInsert = parsedQuestions.map((q: any, idx: number) => ({
+    const questionsToInsert: (typeof questions.$inferInsert)[] = parsedQuestions.map((q: any, idx: number) => ({
       id: nanoid(),
-      testId: testId,
+      testId: testId!,
       questionText: q.questionText,
       questionTextEn: q.questionTextEn || null,
       options: typeof q.options === 'string' ? q.options : JSON.stringify(q.options),
       correctAnswer: q.correctAnswer,
-      explanation: typeof q.explanation === 'string' ? q.explanation : JSON.stringify(q.explanation),
+      explanation: typeof q.explanation === 'string' ? q.explanation : (q.explanation ? JSON.stringify(q.explanation) : null),
       explanationEn: q.explanationEn ? (typeof q.explanationEn === 'string' ? q.explanationEn : JSON.stringify(q.explanationEn)) : null,
       marks: q.marks || 2,
       negativeMarks: q.negativeMarks || 0,
