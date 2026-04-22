@@ -37,7 +37,7 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
   await requireAdmin();
   try {
     const mode = formData.get('mode') as 'new' | 'existing'; // 'new' or 'existing'
-    const existingTestId = formData.get('existingTestId') as string;
+    const existingTestId = formData.get('existingTestId') as string | null;
 
     const title = formData.get('title') as string;
     const type = formData.get('type') as 'FLT' | 'UNIT' | 'PYQ' | 'CSAT' | 'TOPIC' | 'MISC' | 'UPSC_PYQ' | 'UPSC_FLT' | 'UPSC_FREE_QUIZ';
@@ -112,9 +112,8 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
       const existing = await db
         .select({ title: tests.title })
         .from(tests)
-        .where(eq(tests.id, testId ? testId : 'invalid'))
-        .then((res) => res[0]);
-      testTitle = existing?.title || 'Unknown Test';
+        .where(eq(tests.id, testId));
+      testTitle = existing[0]?.title || 'Unknown Test';
     }
 
     // Determine starting order
@@ -143,44 +142,77 @@ export async function uploadTestFromJSON(prevState: any, formData: FormData) {
       }
     }
 
+    const overwrite = formData.get('overwrite') === 'true';
+
     const questionsToInsert = parsedQuestions.map((q: any, idx: number) => ({
       id: nanoid(),
       testId: testId,
-      questionText: q.questionText, // No fallback "Missing Text"
+      questionText: q.questionText,
       questionTextEn: q.questionTextEn || null,
-      options: JSON.stringify(q.options), // Store as JSON string
+      options: typeof q.options === 'string' ? q.options : JSON.stringify(q.options),
       correctAnswer: q.correctAnswer,
-      explanation: q.explanation,
-      explanationEn: q.explanationEn || null,
+      explanation: typeof q.explanation === 'string' ? q.explanation : JSON.stringify(q.explanation),
+      explanationEn: q.explanationEn ? (typeof q.explanationEn === 'string' ? q.explanationEn : JSON.stringify(q.explanationEn)) : null,
       marks: q.marks || 2,
       negativeMarks: q.negativeMarks || 0,
       idealTime: q.idealTime || 60,
-      order: startOrder + idx + 1, // Continue from last order
+      order: startOrder + idx + 1,
       subject: q.subject || 'General',
       type: q.type || 'standard',
-      matchPairs: q.matchPairs || null,
-      extendedData: q.extendedData || null,
-      examType: 'upsc' as const, // UPSC-only repo with proper typing
+      matchPairs: q.matchPairs ? (typeof q.matchPairs === 'string' ? q.matchPairs : JSON.stringify(q.matchPairs)) : null,
+      extendedData: q.extendedData ? (typeof q.extendedData === 'string' ? q.extendedData : JSON.stringify(q.extendedData)) : null,
+      examType: 'upsc' as const,
     }));
 
-    // Filter out duplicates (check against existing questions in this test)
+    // Filter or Update duplicates
+    let updatedCount = 0;
     let duplicatesCount = 0;
-    // ... (Duplicate logic remains same, skipping for brevity in replacement but preserving context)
+
     if (mode === 'existing') {
       const existingQs = await db
-        .select({ text: questions.questionText })
+        .select({ id: questions.id, text: questions.questionText, textEn: questions.questionTextEn })
         .from(questions)
         .where(eq(questions.testId, testId || ''));
-      const existingSet = new Set(existingQs.map((q) => q.text?.trim().toLowerCase()));
+      
+      // Map by Hindi text; fallback to English if Hindi matches multiple times or if we need higher precision
+      const existingMap = new Map(existingQs.map((q) => [q.text?.trim().toLowerCase(), q]));
 
-      const uniqueQuestions = questionsToInsert.filter((newQ: any) => {
-        const isDup = existingSet.has(newQ.questionText.trim().toLowerCase());
-        if (isDup) duplicatesCount++;
-        return !isDup;
-      });
+      const finalQuestionsToInsert: any[] = [];
+
+      for (const newQ of questionsToInsert) {
+        const key = newQ.questionText.trim().toLowerCase();
+        const existing = existingMap.get(key);
+
+        if (existing) {
+          // Fallback check: if English text exists and is significantly different, maybe it's not a duplicate
+          // But usually in this CMS, if Hindi matches, it's the same question.
+          // We'll proceed with update if overwrite is on.
+          if (overwrite) {
+            // Update existing question
+            await db.update(questions)
+              .set({
+                questionTextEn: newQ.questionTextEn,
+                options: newQ.options,
+                correctAnswer: newQ.correctAnswer,
+                explanation: newQ.explanation,
+                explanationEn: newQ.explanationEn,
+                extendedData: newQ.extendedData,
+                matchPairs: newQ.matchPairs,
+                subject: newQ.subject,
+                order: newQ.order, // Keep ordering fresh
+              })
+              .where(eq(questions.id, existing.id));
+            updatedCount++;
+          } else {
+            duplicatesCount++;
+          }
+        } else {
+          finalQuestionsToInsert.push(newQ);
+        }
+      }
 
       questionsToInsert.length = 0;
-      questionsToInsert.push(...uniqueQuestions);
+      questionsToInsert.push(...finalQuestionsToInsert);
     }
 
     // 3. Bulk Insert Questions
@@ -281,7 +313,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
     const totalQuestions = testsData.reduce((acc, t) => acc + (t.totalQuestions || 0), 0);
     const totalBlogs = blogsData.length;
 
-    const typeCount = {
+    const typeCount: Record<string, number> = {
       FLT: 0,
       UNIT: 0,
       TOPIC: 0,
@@ -311,8 +343,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
 
     testsData.forEach((t) => {
       const normalizedType = t.type?.toUpperCase();
-      if (normalizedType && typeCount.hasOwnProperty(normalizedType)) {
-        // @ts-ignore
+      if (normalizedType && normalizedType in typeCount) {
         typeCount[normalizedType]++;
       }
       if (normalizedType === 'TOPIC' && t.unitId && t.topicId) {

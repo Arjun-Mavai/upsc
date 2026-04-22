@@ -18,6 +18,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { uploadBlog } from '@/actions/blog-actions';
 import { uploadTestFromJSON, getExistingTests } from '@/actions/admin-actions';
 import { toast } from 'sonner';
+import { Switch } from '@/components/ui/switch';
 import {
   Loader2,
   FileJson,
@@ -77,6 +78,8 @@ export default function AdminUploadPage() {
     questionsJson: '',
   });
 
+  const [overwriteExisting, setOverwriteExisting] = useState(false);
+
   useEffect(() => {
     // Fetch existing tests on mount
     getExistingTests().then(setExistingTests);
@@ -85,8 +88,7 @@ export default function AdminUploadPage() {
   // Derived: Get Topics for selected Unit
   const availableTopics = useMemo(() => {
     if (!testData.unitId) return [];
-    // @ts-ignore
-    const unit = syllabusData.units[testData.unitId];
+    const unit = (syllabusData.units as Record<string, any>)[testData.unitId];
     // Handle language structure differences
     if (topicLang === 'hi') {
       return unit?.topics || [];
@@ -179,6 +181,7 @@ export default function AdminUploadPage() {
       const formData = new FormData();
       formData.append('mode', testMode);
       formData.append('jsonData', testData.questionsJson);
+      formData.append('overwrite', overwriteExisting.toString());
 
       if (testMode === 'new') {
         let finalTitle = testData.title;
@@ -562,6 +565,22 @@ export default function AdminUploadPage() {
                       placeholder='[{ "questionText": "Standard Question", "extendedData": { "layoutType": "table", ... }, "options": ["A", "B", "C", "D"], "correctAnswer": "A", "explanation": "..." }]'
                       required
                     />
+                  </div>
+
+                  <div className="flex items-center space-x-2 rounded-lg border border-red-100 bg-red-50/50 p-4 transition-all">
+                    <Switch
+                      id="overwrite-mode"
+                      checked={overwriteExisting}
+                      onCheckedChange={setOverwriteExisting}
+                    />
+                    <div className="space-y-0.5">
+                      <Label htmlFor="overwrite-mode" className="text-sm font-bold text-red-900 cursor-pointer">
+                        Overwrite questions if they exist?
+                      </Label>
+                      <p className="text-[10px] text-red-600/80">
+                        Fixes tables & lists for existing questions. Matches by Hindi text.
+                      </p>
+                    </div>
                   </div>
 
                   <Button

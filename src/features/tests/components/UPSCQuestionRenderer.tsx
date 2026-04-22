@@ -37,10 +37,16 @@ interface UPSCQuestionMetadata {
     hi?: { tableRows?: string[][]; tableHeaders?: string[] };
   };
   statementI?: string;
+  statementI_hi?: string;
+  statement_i?: string;
   statementIEn?: string;
   statementII?: string;
+  statementII_hi?: string;
+  statement_ii?: string;
   statementIIEn?: string;
   statementIII?: string;
+  statementIII_hi?: string;
+  statement_iii?: string;
   statementIIIEn?: string;
   questionPrompt?: string;
   questionPromptEn?: string;
@@ -176,8 +182,8 @@ function truncateDuplicateStatementTail(text: string): string {
   return text;
 }
 
-// Valid Roman numerals for list items (I through X)
-const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+// Valid Roman numerals for list items (I through XV)
+const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
 
 const DEVANAGARI = /[\u0900-\u097F]/;
 
@@ -458,29 +464,10 @@ function stripEmbeddedQuestionLineFromTail(itemText: string): { body: string; qu
 // PARSER - Robust pattern detection
 // ============================================================================
 
-function parseUPSCContent(rawText: string): ParsedContent {
-  if (!rawText) return { context: '', items: [], questionLine: '' };
-
-  // Clean and normalize
-  let text = cleanHtml(rawText);
-  text = text.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
-
-  // Step 1: Extract question line from end (avoid matching mid-statement phrases)
-  const extracted = extractClosingQuestionLine(text);
-  let mainContent = extracted.main;
-  let questionLine = extracted.questionLine;
-
-  const items: ParsedItem[] = [];
-  let context = mainContent;
-
-  // Step 2: Try Statement pattern first (highest priority)
-  // Pattern: "Statement I:", "Statement-I", "कथन I:", "कथन-I", etc.
-  // Support both English "Statement" and Hindi "कथन"
-  // Only match Roman numerals (I, II, III, IV, V) or numbers (1, 2, 3) - NOT single letters like "S"
+function tryStatementPattern(mainContent: string, questionLine: string): ParsedContent | null {
   const statementPattern = /(?:Statement|कथन)\s*[-:]?\s*(I{1,3}|IV|V|VI{0,3}|VII|VIII|IX|X|\d+)\s*[:.]?\s*/gi;
   const statementMatches = [...mainContent.matchAll(statementPattern)];
 
-  // CMS text often repeats "Statement I … III" then again "Statement-I …" — keep first occurrence per marker only.
   const seenStmtKeys = new Set<string>();
   const statementMatchesUnique = statementMatches.filter((m) => {
     const key = m[1].toUpperCase();
@@ -490,14 +477,12 @@ function parseUPSCContent(rawText: string): ParsedContent {
   });
 
   if (statementMatchesUnique.length >= 2) {
-    // Verify these are sequential (I, II, III or 1, 2, 3)
     const markers = statementMatchesUnique.map(m => m[1].toUpperCase());
     const isSequential = markers.every((m, i) => {
       if (i === 0) return true;
       const prevIdx = ROMAN_NUMERALS.indexOf(markers[i-1]);
       const currIdx = ROMAN_NUMERALS.indexOf(m);
       if (prevIdx >= 0 && currIdx >= 0) return currIdx > prevIdx;
-      // Check numeric sequence
       const prevNum = parseInt(markers[i-1]);
       const currNum = parseInt(m);
       if (!isNaN(prevNum) && !isNaN(currNum)) return currNum > prevNum;
@@ -505,7 +490,9 @@ function parseUPSCContent(rawText: string): ParsedContent {
     });
 
     if (isSequential) {
-      context = mainContent.substring(0, statementMatchesUnique[0].index ?? 0).trim();
+      const items: ParsedItem[] = [];
+      const context = mainContent.substring(0, statementMatchesUnique[0].index ?? 0).trim();
+      let currentQuestionLine = questionLine;
       
       for (let i = 0; i < statementMatchesUnique.length; i++) {
         const match = statementMatchesUnique[i];
@@ -516,11 +503,10 @@ function parseUPSCContent(rawText: string): ParsedContent {
         
         let itemText = mainContent.substring(startIdx, endIdx).trim();
         
-        // For last item, check if it contains a question line
-        if (i === statementMatchesUnique.length - 1 && !questionLine) {
+        if (i === statementMatchesUnique.length - 1 && !currentQuestionLine) {
           const stripped = stripEmbeddedQuestionLineFromTail(itemText);
           if (stripped.questionLine) {
-            questionLine = stripped.questionLine;
+            currentQuestionLine = stripped.questionLine;
             itemText = stripped.body;
           }
         }
@@ -529,7 +515,6 @@ function parseUPSCContent(rawText: string): ParsedContent {
           if (i === statementMatchesUnique.length - 1) {
             itemText = truncateDuplicateStatementTail(itemText);
           }
-          // Use the original word (Statement/कथन) from the match
           const originalWord = match[0].includes('कथन') ? 'कथन' : 'Statement';
           items.push({
             marker: `${originalWord} ${match[1].toUpperCase()}`,
@@ -539,13 +524,13 @@ function parseUPSCContent(rawText: string): ParsedContent {
         }
       }
       
-      return { context, items, questionLine };
+      return { context, items, questionLine: currentQuestionLine };
     }
   }
+  return null;
+}
 
-  // Step 3: Try Roman numeral pattern
-  // STRICT: Look for patterns like "I. Arunachal" - Roman numeral followed by period and capital letter
-  // Support both English (A-Z) and Hindi (Devanagari: \u0900-\u097F) scripts
+function tryRomanPattern(mainContent: string, questionLine: string): ParsedContent | null {
   const romanSplitPattern = /\s+(I{1,3}|IV|V|VI{0,3}|VII|VIII|IX|X)\.\s+(?=[A-Z\u0900-\u097F])/g;
   const romanMatches: RegExpMatchArray[] = [];
   let romanMatch;
@@ -556,11 +541,9 @@ function parseUPSCContent(rawText: string): ParsedContent {
     }
   }
   
-  // Validate roman numerals are in sequence
   const validRomanMatches = romanMatches.filter(m => ROMAN_NUMERALS.includes(m[1].toUpperCase()));
   
   if (validRomanMatches.length >= 2) {
-    // Check if they form a proper sequence (I, II, III...)
     const romanIndices = validRomanMatches.map(m => ROMAN_NUMERALS.indexOf(m[1].toUpperCase()));
     let isValidSequence = true;
     for (let i = 1; i < romanIndices.length; i++) {
@@ -571,7 +554,9 @@ function parseUPSCContent(rawText: string): ParsedContent {
     }
     
     if (isValidSequence) {
-      context = mainContent.substring(0, validRomanMatches[0].index ?? 0).trim();
+      const items: ParsedItem[] = [];
+      const context = mainContent.substring(0, validRomanMatches[0].index ?? 0).trim();
+      let currentQuestionLine = questionLine;
       
       for (let i = 0; i < validRomanMatches.length; i++) {
         const match = validRomanMatches[i];
@@ -582,11 +567,10 @@ function parseUPSCContent(rawText: string): ParsedContent {
         
         let itemText = mainContent.substring(startIdx, endIdx).trim();
         
-        // For last item, check if it contains a question line
-        if (i === validRomanMatches.length - 1 && !questionLine) {
+        if (i === validRomanMatches.length - 1 && !currentQuestionLine) {
           const stripped = stripEmbeddedQuestionLineFromTail(itemText);
           if (stripped.questionLine) {
-            questionLine = stripped.questionLine;
+            currentQuestionLine = stripped.questionLine;
             itemText = stripped.body;
           }
         }
@@ -600,13 +584,59 @@ function parseUPSCContent(rawText: string): ParsedContent {
         }
       }
       
-      return { context, items, questionLine };
+      return { context, items, questionLine: currentQuestionLine };
     }
   }
+  return null;
+}
 
-  // Step 4: Try number pattern (1. 2. 3.)
-  // STRICT: Number followed by period/paren and capital letter (English or Hindi)
-  const numberSplitPattern = /\s+(\d+)[.\)]\s+(?=[A-Z\u0900-\u097F])/g;
+function tryAlphaPattern(mainContent: string, questionLine: string): ParsedContent | null {
+  const alphaSplitPattern = /\s+[\(]?([a-e])[\)\.]\s+(?=[A-Z\u0900-\u097F])/gi;
+  const alphaMatches: RegExpMatchArray[] = [];
+  let alphaMatch;
+  const alphaRegex = new RegExp(alphaSplitPattern.source, 'gi');
+  while ((alphaMatch = alphaRegex.exec(mainContent)) !== null) {
+    alphaMatches.push(alphaMatch);
+  }
+
+  if (alphaMatches.length >= 2) {
+    const letters = alphaMatches.map(m => m[1].toLowerCase());
+    const isSequential = letters.every((l, i) => i === 0 ? l === 'a' : l.charCodeAt(0) === letters[i-1].charCodeAt(0) + 1);
+
+    if (isSequential && letters[0] === 'a') {
+      const items: ParsedItem[] = [];
+      const context = mainContent.substring(0, alphaMatches[0].index ?? 0).trim();
+      let currentQuestionLine = questionLine;
+      for (let i = 0; i < alphaMatches.length; i++) {
+        const match = alphaMatches[i];
+        const startIdx = (match.index ?? 0) + match[0].length;
+        const endIdx = i < alphaMatches.length - 1 
+          ? (alphaMatches[i + 1].index ?? mainContent.length)
+          : mainContent.length;
+        let itemText = mainContent.substring(startIdx, endIdx).trim();
+        if (i === alphaMatches.length - 1 && !currentQuestionLine) {
+          const stripped = stripEmbeddedQuestionLineFromTail(itemText);
+          if (stripped.questionLine) {
+            currentQuestionLine = stripped.questionLine;
+            itemText = stripped.body;
+          }
+        }
+        if (itemText) {
+          items.push({
+            marker: `${match[1].toLowerCase()}.`,
+            text: itemText,
+            type: 'alpha',
+          });
+        }
+      }
+      return { context, items, questionLine: currentQuestionLine };
+    }
+  }
+  return null;
+}
+
+function tryNumberPattern(mainContent: string, questionLine: string): ParsedContent | null {
+  const numberSplitPattern = /\s+[\(]?(\d+)[\)\.]\s+(?=[A-Z\u0900-\u097F])/g;
   const numberMatches: RegExpMatchArray[] = [];
   let numMatch;
   const numRegex = new RegExp(numberSplitPattern.source, 'g');
@@ -615,12 +645,13 @@ function parseUPSCContent(rawText: string): ParsedContent {
   }
   
   if (numberMatches.length >= 2) {
-    // Verify sequential numbers starting from 1
     const numbers = numberMatches.map(m => parseInt(m[1]));
     const isSequential = numbers.every((n, i) => i === 0 ? n === 1 : n === numbers[i-1] + 1);
     
     if (isSequential && numbers[0] === 1) {
-      context = mainContent.substring(0, numberMatches[0].index ?? 0).trim();
+      const items: ParsedItem[] = [];
+      const context = mainContent.substring(0, numberMatches[0].index ?? 0).trim();
+      let currentQuestionLine = questionLine;
       
       for (let i = 0; i < numberMatches.length; i++) {
         const match = numberMatches[i];
@@ -631,11 +662,10 @@ function parseUPSCContent(rawText: string): ParsedContent {
         
         let itemText = mainContent.substring(startIdx, endIdx).trim();
         
-        // For last item, check if it contains a question line
-        if (i === numberMatches.length - 1 && !questionLine) {
+        if (i === numberMatches.length - 1 && !currentQuestionLine) {
           const stripped = stripEmbeddedQuestionLineFromTail(itemText);
           if (stripped.questionLine) {
-            questionLine = stripped.questionLine;
+            currentQuestionLine = stripped.questionLine;
             itemText = stripped.body;
           }
         }
@@ -649,60 +679,64 @@ function parseUPSCContent(rawText: string): ParsedContent {
         }
       }
       
-      return { context, items, questionLine };
+      return { context, items, questionLine: currentQuestionLine };
     }
   }
+  return null;
+}
 
-  // Step 5: Handle "Consider the following" with inline items
+function parseUPSCContent(rawText: string): ParsedContent {
+  if (!rawText) return { context: '', items: [], questionLine: '' };
+
+  let text = cleanHtml(rawText);
+  text = text.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
+
+  const extracted = extractClosingQuestionLine(text);
+  const mainContent = extracted.main;
+  const questionLine = extracted.questionLine;
+
+  // Try different patterns in order of priority
+  const statementParsed = tryStatementPattern(mainContent, questionLine);
+  if (statementParsed) return statementParsed;
+
+  const romanParsed = tryRomanPattern(mainContent, questionLine);
+  if (romanParsed) return romanParsed;
+
+  const alphaParsed = tryAlphaPattern(mainContent, questionLine);
+  if (alphaParsed) return alphaParsed;
+
+  const numberParsed = tryNumberPattern(mainContent, questionLine);
+  if (numberParsed) return numberParsed;
+
+  // Handle "Consider the following" with inline items (existing fallback logic)
   const considerMatch = mainContent.match(/consider\s+the\s+following[^:]*:\s*/i);
   if (considerMatch && considerMatch.index !== undefined) {
     const afterColon = mainContent.substring(considerMatch.index + considerMatch[0].length);
-    context = mainContent.substring(0, considerMatch.index + considerMatch[0].length).trim();
-    
-    // Try to find inline numbered items: "1. item 2. item 3. item"
-    // Be careful not to match "a." articles - support both English and Hindi
-    const inlineItems = afterColon.split(/\s+(?=\d+\.\s+[A-Z\u0900-\u097F])/);
-    if (inlineItems.length >= 2) {
-      for (const item of inlineItems) {
-        const match = item.match(/^(\d+)\.\s+(.+)/);
-        if (match) {
-          items.push({
-            marker: `${match[1]}.`,
-            text: match[2].trim(),
-            type: 'number',
-          });
+    const context = mainContent.substring(0, considerMatch.index + considerMatch[0].length).trim();
+    const items: ParsedItem[] = [];
+
+    // Lower Roman inline (i) (ii) (iii)
+    const lowerRomanPattern = /\s+[\(]?(i{1,3}|iv|v)[\)\.]\s+(?=[A-Z\u0900-\u097F])/gi;
+    const lowerRomanMatches = [...afterColon.matchAll(lowerRomanPattern)];
+    if (lowerRomanMatches.length >= 2) {
+        for (let i = 0; i < lowerRomanMatches.length; i++) {
+            const match = lowerRomanMatches[i];
+            const startIdx = (match.index ?? 0) + match[0].length;
+            const endIdx = i < lowerRomanMatches.length - 1 ? (lowerRomanMatches[i+1].index ?? afterColon.length) : afterColon.length;
+            const itemText = afterColon.substring(startIdx, endIdx).trim();
+            if (itemText) {
+                items.push({
+                    marker: `${match[1].toLowerCase()}.`,
+                    text: itemText,
+                    type: 'roman',
+                });
+            }
         }
-      }
-      if (items.length >= 2) {
-        return { context, items, questionLine };
-      }
-      items.length = 0; // Reset if failed
+        return { context, items, questionLine: questionLine || extractClosingQuestionLine(afterColon).questionLine };
     }
-    
-    // Try Roman numerals inline - support both English and Hindi
-    const romanInlineItems = afterColon.split(/\s+(?=(?:I{1,3}|IV|V|VI{0,3})\.\s+[A-Z\u0900-\u097F])/i);
-    if (romanInlineItems.length >= 2) {
-      for (const item of romanInlineItems) {
-        const match = item.match(/^(I{1,3}|IV|V|VI{0,3})\.\s+(.+)/i);
-        if (match && ROMAN_NUMERALS.includes(match[1].toUpperCase())) {
-          items.push({
-            marker: `${match[1].toUpperCase()}.`,
-            text: match[2].trim(),
-            type: 'roman',
-          });
-        }
-      }
-      if (items.length >= 2) {
-        return { context, items, questionLine };
-      }
-      items.length = 0;
-    }
-    
-    // Reset context if no items found
-    context = mainContent;
   }
 
-  return { context, items, questionLine };
+  return { context: mainContent, items: [], questionLine };
 }
 
 // ============================================================================
@@ -792,10 +826,57 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
     return { parsed: fromPrimary, usedHindiRowFallback: false };
   }, [isHindi, question.text, question.textEn]);
 
+  const parsedStatementBlocks = useMemo(() => 
+    parsed.items.length >= 2 && parsed.items.every((it) => it.type === 'statement'),
+    [parsed.items]
+  );
+
+  const hasExtStatements = Boolean(
+    ext?.statementI || 
+    ext?.statement_i || 
+    (ext as any)?.statement_I || 
+    (ext as any)?.['statement-i'] ||
+    ext?.statementII
+  );
+
+  const unifiedStatements = useMemo(() => {
+    if (hasExtStatements) {
+      return [
+        { 
+          label: isHindi ? 'कथन-I' : 'Statement-I', 
+          text: isHindi 
+            ? (ext?.statementI || (ext as any)?.statement_i || (ext as any)?.statement_I)
+            : (ext?.statementIEn || (ext as any)?.statement_i_en || (ext as any)?.statement_I_en || ext?.statementI || (ext as any)?.statement_i)
+        },
+        { 
+          label: isHindi ? 'कथन-II' : 'Statement-II', 
+          text: isHindi 
+            ? (ext?.statementII || (ext as any)?.statement_ii || (ext as any)?.statement_II)
+            : (ext?.statementIIEn || (ext as any)?.statement_ii_en || (ext as any)?.statement_II_en || ext?.statementII || (ext as any)?.statement_ii)
+        },
+      ].filter(s => s.text);
+    }
+    
+    // If exactly 2 parsed statements that look like I/II or 1/2
+    if (parsedStatementBlocks && parsed.items.length === 2) {
+        const m1 = parsed.items[0].marker.toLowerCase();
+        const m2 = parsed.items[1].marker.toLowerCase();
+        if ((m1.includes('i') && m2.includes('ii')) || (m1.includes('1') && m2.includes('2'))) {
+            return [
+                { label: isHindi ? 'कथन-I' : 'Statement-I', text: parsed.items[0].text },
+                { label: isHindi ? 'कथन-II' : 'Statement-II', text: parsed.items[1].text },
+            ];
+        }
+    }
+    return [];
+  }, [ext, hasExtStatements, isHindi, parsed.items, parsedStatementBlocks]);
+
+  const showAssertionReasonBlock =
+    (ext?.layoutType === 'assertion_reason' || unifiedStatements.length === 2) && 
+    unifiedStatements.length > 0;
+
   // Determine display values
   const contextStr = useMemo(() => {
-    const parsedStatementBlocks =
-      parsed.items.length >= 2 && parsed.items.every((it) => it.type === 'statement');
     const fromExtStatementList =
       Boolean(
         ext?.listItems &&
@@ -806,14 +887,23 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
 
     // CMS often puts full stem+statements in contextStr while we also render statement cards → duplicate.
     if (structuredStatements) {
-      const stem = isHindi ? question.text : question.textEn || question.text;
+      const stem = (isHindi ? question.text : question.textEn || question.text) || '';
       let intro = (parsed.context || '').trim();
       const stemPlain = cleanHtml(stem).replace(/\s+/g, ' ');
       const stemLen = stemPlain.length || 1;
+      
+      // If intro is too long (implies failure to split), try specialized introBeforeFirstStatement
       if (!intro || intro.length > stemLen * 0.72) {
         const cut = introBeforeFirstStatement(stem);
         if (cut) intro = cut;
       }
+
+      // If we have extendedData contextStr, it might be cleaner than anything we parsed
+      const extIntro = isHindi ? ext?.contextStr : ext?.contextStrEn || ext?.contextStr;
+      if (extIntro && extIntro.length > 5 && extIntro.length < intro.length) {
+          return extIntro;
+      }
+
       return intro;
     }
 
@@ -821,11 +911,13 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
       return parsed.context;
     }
     const extIntro = isHindi ? ext.contextStr! : ext.contextStrEn || ext.contextStr!;
+    
+    // Check if extIntro is redundant with parsed items to avoid double rendering
     if (parsedStatementBlocks && extIntroEmbedsStatementLabels(extIntro)) {
       return parsed.context;
     }
     return extIntro;
-  }, [ext, isHindi, parsed.context, parsed.items, question.text, question.textEn]);
+  }, [ext, isHindi, parsed.context, parsed.items, question.text, question.textEn, parsedStatementBlocks]);
 
   const questionLine = ext?.questionPrompt 
     ? (isHindi ? ext.questionPrompt : ext.questionPromptEn || ext.questionPrompt) 
@@ -891,8 +983,13 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
       }));
     }
     
+    // If specialized block is shown, don't duplicate statements in the list
+    if (showAssertionReasonBlock) {
+        return [];
+    }
+
     return parsed.items;
-  }, [ext, extendedTableRows, question.matchPairs, question.type, parsed.items, isHindi]);
+  }, [ext, extendedTableRows, question.matchPairs, question.type, parsed.items, isHindi, showAssertionReasonBlock]);
 
   // Parse options
   const options = useMemo((): UpscQuestionOption[] => {
@@ -950,11 +1047,7 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
   const isStatementType = displayItems.some(item => 
     item.type === 'statement' || item.marker.toLowerCase().includes('statement')
   );
-
-  const parsedStatementBlocks =
-    parsed.items.length >= 2 && parsed.items.every((it) => it.type === 'statement');
-  const showAssertionReasonBlock =
-    ext?.layoutType === 'assertion_reason' && !parsedStatementBlocks;
+  
 
   return (
     <div className={cn('space-y-4 font-serif selection:bg-emerald-500/30', styles.container)}>
@@ -969,7 +1062,7 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
         />
       )}
 
-      {usedHindiRowFallback && (
+      {/* {usedHindiRowFallback && (
         <p
           className={cn(
             'rounded-lg border px-3 py-2 text-[12px] leading-snug sm:text-[13px]',
@@ -984,7 +1077,7 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
           <code className="rounded bg-black/10 px-1 text-[11px]">tableHeadersEn</code>,{' '}
           <code className="rounded bg-black/10 px-1 text-[11px]">i18n.en.tableRows</code>, or a full English stem.
         </p>
-      )}
+      )} */}
 
       {/* List Items - UPSC Paper Style */}
       {displayItems.length > 0 && (
@@ -1077,13 +1170,10 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
         </div>
       )}
 
-      {/* Assertion/Reason Layout — skip if stem already parsed as multi-statement (avoids I/II twice) */}
+      {/* Assertion/Reason Layout */}
       {showAssertionReasonBlock && (
         <div className="space-y-5 py-2">
-          {[
-            { label: isHindi ? 'कथन-I' : 'Statement-I', text: isHindi ? ext.statementI : ext.statementIEn || ext.statementI },
-            { label: isHindi ? 'कथन-II' : 'Statement-II', text: isHindi ? ext.statementII : ext.statementIIEn || ext.statementII },
-          ].filter(s => s.text).map((s, idx) => (
+          {unifiedStatements.map((s, idx) => (
             <div key={idx} className="flex flex-col gap-2">
               <span className={cn(
                 'text-[15px] sm:text-[16px] font-bold px-3 py-1 rounded-md border w-fit',
@@ -1127,6 +1217,13 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
               dangerouslySetInnerHTML={{ __html: questionLine }}
             />
           </div>
+        </div>
+      )}
+
+      {/* Diagnostic Warning for Broken Data (Internal use or subtle hint) */}
+      {!displayItems.length && !extendedTableRows?.length && !showAssertionReasonBlock && (questionLine?.toLowerCase().includes('rows') || contextStr?.toLowerCase().includes('rows') || questionLine?.includes('कथन') || contextStr?.includes('कथन')) && (
+        <div className="mt-4 rounded-lg border border-red-500/20 bg-red-500/5 p-3 text-[12px] text-red-300 italic opacity-60">
+          Note: This question appears to be missing its table or statement data in the database. 
         </div>
       )}
 
