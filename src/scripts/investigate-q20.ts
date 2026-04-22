@@ -24,7 +24,8 @@ async function main() {
     console.log(`SUBJECT: ${q20.subject}`);
     console.log(`HI TEXT: ${q20.questionText}`);
     console.log(`EN TEXT: ${q20.questionTextEn}`);
-    console.log(`EXTENDED DATA: ${JSON.stringify(JSON.parse(q20.extendedData || '{}'), null, 2)}`);
+    const ext = typeof q20.extendedData === 'string' ? JSON.parse(q20.extendedData) : q20.extendedData;
+    console.log(`EXTENDED DATA: ${JSON.stringify(ext || {}, null, 2)}`);
   }
 }
 

@@ -15,7 +15,8 @@ async function main() {
       console.log(`\n--- INVESTIGATING Q#177 (${q.id}) ---`);
       console.log(`HI TEXT: ${q.questionText}`);
       console.log(`EN TEXT: ${q.questionTextEn}`);
-      console.log(`EXTENDED DATA: ${JSON.stringify(JSON.parse(q.extendedData || '{}'), null, 2)}`);
+      const ext = typeof q.extendedData === 'string' ? JSON.parse(q.extendedData) : q.extendedData;
+      console.log(`EXTENDED DATA: ${JSON.stringify(ext || {}, null, 2)}`);
   }
 
   // Find another one that might be "double"
@@ -29,7 +30,8 @@ async function main() {
   if (potentialDouble) {
       console.log(`\n--- INVESTIGATING POTENTIAL DOUBLE (${potentialDouble.id}) ---`);
       console.log(`EN TEXT: ${potentialDouble.questionTextEn}`);
-      console.log(`EXTENDED DATA: ${JSON.stringify(JSON.parse(potentialDouble.extendedData || '{}'), null, 2)}`);
+      const ext = typeof potentialDouble.extendedData === 'string' ? JSON.parse(potentialDouble.extendedData) : potentialDouble.extendedData;
+      console.log(`EXTENDED DATA: ${JSON.stringify(ext || {}, null, 2)}`);
   }
 }
 

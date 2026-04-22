@@ -27,7 +27,8 @@ async function main() {
     console.log(`SUBJECT: ${q51.subject}`);
     console.log(`HI TEXT: ${q51.questionText}`);
     console.log(`EN TEXT: ${q51.questionTextEn}`);
-    console.log(`EXTENDED DATA: ${JSON.stringify(JSON.parse(q51.extendedData || '{}'), null, 2)}`);
+    const ext = typeof q51.extendedData === 'string' ? JSON.parse(q51.extendedData) : q51.extendedData;
+    console.log(`EXTENDED DATA: ${JSON.stringify(ext || {}, null, 2)}`);
   } else {
     console.log('Q51 not found');
   }

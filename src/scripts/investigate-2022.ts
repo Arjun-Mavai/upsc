@@ -27,7 +27,8 @@ async function main() {
     if (q) {
       console.log(`\n--- Q#${qNo} (${q.id}) ---`);
       console.log(`Text: ${q.questionTextEn}`);
-      console.log(`Ext: ${JSON.stringify(JSON.parse(q.extendedData || '{}'))}`);
+      const ext = typeof q.extendedData === 'string' ? JSON.parse(q.extendedData) : q.extendedData;
+      console.log(`Ext: ${JSON.stringify(ext || {})}`);
     } else {
       console.log(`Q#${qNo} not found`);
     }
