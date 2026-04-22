@@ -130,7 +130,7 @@ const toRoman = (num: number): string => {
   return result;
 };
 
-const cleanHtml = (text: string): string => {
+export const cleanHtml = (text: string): string => {
   return text
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/p>/gi, '\n')
@@ -144,14 +144,14 @@ const cleanHtml = (text: string): string => {
 };
 
 /** True if extended intro HTML already contains Statement / कथन labels (would duplicate parsed items). */
-function extIntroEmbedsStatementLabels(htmlOrText: string | undefined): boolean {
+export function extIntroEmbedsStatementLabels(htmlOrText: string | undefined): boolean {
   if (!htmlOrText) return false;
   const plain = cleanHtml(htmlOrText).replace(/\s+/g, ' ');
   return /(?:Statement|कथन)\s*[-:]?\s*(?:I{1,3}|IV|V|VI{0,3}|VII|VIII|IX|X|\d+)\b/i.test(plain);
 }
 
 /** Plain intro line only — everything before the first Statement / कथन marker (matches parseUPSCContent). */
-function introBeforeFirstStatement(rawText: string): string {
+export function introBeforeFirstStatement(rawText: string): string {
   if (!rawText) return '';
   const text = cleanHtml(rawText).replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
   const re = /(?:Statement|कथन)\s*[-:]?\s*(I{1,3}|IV|V|VI{0,3}|VII|VIII|IX|X|\d+)\s*[:.]?\s*/i;

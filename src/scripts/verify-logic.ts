@@ -1,5 +1,5 @@
 
-import { cleanHtml, introBeforeFirstStatement, extIntroEmbedsStatementLabels } from './src/features/tests/components/UPSCQuestionRenderer';
+import { cleanHtml, introBeforeFirstStatement, extIntroEmbedsStatementLabels } from '@/features/tests/components/UPSCQuestionRenderer';
 
 // Mocking the parseUPSCContent logic to verify markers
 function parseUPSCContent(rawText: string) {
