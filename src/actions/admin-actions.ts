@@ -5,7 +5,7 @@ import { tests, questions, contentBlogs, paymentExitReasons, guests } from '@/db
 import { nanoid } from 'nanoid';
 import { revalidatePath } from 'next/cache';
 import { eq, sql, desc } from 'drizzle-orm';
-import { AdminDashboardResponse } from '@/types/admin';
+import { AdminDashboardResponse, AdminDashboardStats } from '@/types/admin';
 import { logger } from '@/lib/logger';
 import { requireAdmin } from '@/lib/auth-admin';
 
@@ -317,7 +317,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardResponse> 
     const totalQuestions = testsData.reduce((acc, t) => acc + (t.totalQuestions || 0), 0);
     const totalBlogs = blogsData.length;
 
-    const typeCount: Record<string, number> = {
+    const typeCount: AdminDashboardStats['typeCount'] = {
       FLT: 0,
       UNIT: 0,
       TOPIC: 0,
