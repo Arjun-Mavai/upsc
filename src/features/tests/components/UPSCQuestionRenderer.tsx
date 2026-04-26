@@ -531,14 +531,14 @@ function tryStatementPattern(mainContent: string, questionLine: string): ParsedC
 }
 
 function tryRomanPattern(mainContent: string, questionLine: string): ParsedContent | null {
-  const romanSplitPattern = /\s+(I{1,3}|IV|V|VI{0,3}|VII|VIII|IX|X)\.\s+(?=[A-Z\u0900-\u097F])/g;
-  const romanMatches: RegExpMatchArray[] = [];
+  // Matches "I. ", "II. ", etc. at start of string or after whitespace/colon/period
+  // Lookahead allows any non-whitespace character (handles quotes like 'Kavach')
+  const romanSplitPattern = /(?:\s+|[:\.]|^)(I{1,3}|IV|V|VI{0,3}|VII|VIII|IX|X)\.\s+(?=\S)/g;
+  const romanMatches: RegExpExecArray[] = [];
   let romanMatch;
   const romanRegex = new RegExp(romanSplitPattern.source, 'g');
   while ((romanMatch = romanRegex.exec(mainContent)) !== null) {
-    if (ROMAN_NUMERALS.includes(romanMatch[1].toUpperCase())) {
-      romanMatches.push(romanMatch);
-    }
+    romanMatches.push(romanMatch);
   }
   
   const validRomanMatches = romanMatches.filter(m => ROMAN_NUMERALS.includes(m[1].toUpperCase()));
@@ -636,8 +636,10 @@ function tryAlphaPattern(mainContent: string, questionLine: string): ParsedConte
 }
 
 function tryNumberPattern(mainContent: string, questionLine: string): ParsedContent | null {
-  const numberSplitPattern = /\s+[\(]?(\d+)[\)\.]\s+(?=[A-Z\u0900-\u097F])/g;
-  const numberMatches: RegExpMatchArray[] = [];
+  // Matches "1. ", "(1) ", etc. at start of string or after whitespace/colon/period
+  // Lookahead allows any non-whitespace character
+  const numberSplitPattern = /(?:\s+|[:\.]|^)[\(]?(\d+)[\)\.]\s+(?=\S)/g;
+  const numberMatches: RegExpExecArray[] = [];
   let numMatch;
   const numRegex = new RegExp(numberSplitPattern.source, 'g');
   while ((numMatch = numRegex.exec(mainContent)) !== null) {
@@ -836,25 +838,33 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
     ext?.statement_i || 
     (ext as any)?.statement_I || 
     (ext as any)?.['statement-i'] ||
-    ext?.statementII
+    ext?.statementII ||
+    (ext as any)?.statementIII ||
+    (ext as any)?.statementIV
   );
 
   const unifiedStatements = useMemo(() => {
     if (hasExtStatements) {
-      return [
-        { 
-          label: isHindi ? 'कथन-I' : 'Statement-I', 
-          text: isHindi 
-            ? (ext?.statementI || (ext as any)?.statement_i || (ext as any)?.statement_I)
-            : (ext?.statementIEn || (ext as any)?.statement_i_en || (ext as any)?.statement_I_en || ext?.statementI || (ext as any)?.statement_i)
-        },
-        { 
-          label: isHindi ? 'कथन-II' : 'Statement-II', 
-          text: isHindi 
-            ? (ext?.statementII || (ext as any)?.statement_ii || (ext as any)?.statement_II)
-            : (ext?.statementIIEn || (ext as any)?.statement_ii_en || (ext as any)?.statement_II_en || ext?.statementII || (ext as any)?.statement_ii)
-        },
-      ].filter(s => s.text);
+      const stmts: {label: string, text: string}[] = [];
+      const keys = ['I', 'II', 'III', 'IV', 'V', 'VI'];
+      const hindiLabels = ['कथन-I', 'कथन-II', 'कथन-III', 'कथन-IV', 'कथन-V', 'कथन-VI'];
+      const engLabels = ['Statement-I', 'Statement-II', 'Statement-III', 'Statement-IV', 'Statement-V', 'Statement-VI'];
+
+      for (let i = 0; i < keys.length; i++) {
+        const k = keys[i];
+        const lowerK = k.toLowerCase();
+        const textHi = ext?.[`statement${k}` as keyof UPSCQuestionMetadata] || (ext as any)?.[`statement_${lowerK}`] || (ext as any)?.[`statement_${k}`];
+        const textEn = ext?.[`statement${k}En` as keyof UPSCQuestionMetadata] || (ext as any)?.[`statement_${lowerK}_en`] || (ext as any)?.[`statement_${k}_en`] || ext?.[`statement${k}` as keyof UPSCQuestionMetadata] || (ext as any)?.[`statement_${lowerK}`];
+
+        const text = isHindi ? textHi : textEn;
+        if (text) {
+          stmts.push({
+            label: isHindi ? hindiLabels[i] : engLabels[i],
+            text: text as string
+          });
+        }
+      }
+      return stmts;
     }
     
     // If exactly 2 parsed statements that look like I/II or 1/2
@@ -871,9 +881,10 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
     return [];
   }, [ext, hasExtStatements, isHindi, parsed.items, parsedStatementBlocks]);
 
-  const showAssertionReasonBlock =
-    (ext?.layoutType === 'assertion_reason' || unifiedStatements.length === 2) && 
-    unifiedStatements.length > 0;
+  const showStatementsBlock =
+    (ext?.layoutType === 'assertion_reason' || ext?.layoutType === 'statements' || unifiedStatements.length > 0) && 
+    unifiedStatements.length > 0 &&
+    unifiedStatements.length <= 3;
 
   // Determine display values
   const contextStr = useMemo(() => {
@@ -984,12 +995,22 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
     }
     
     // If specialized block is shown, don't duplicate statements in the list
-    if (showAssertionReasonBlock) {
+    if (showStatementsBlock) {
         return [];
     }
 
+    // If we have statements but we are NOT showing them as blocks (e.g. > 3 statements),
+    // render them as a standard inline list (like old Roman numerals layout).
+    if (unifiedStatements.length > 0) {
+      return unifiedStatements.map((s, idx) => ({
+        marker: `${idx + 1}.`,
+        text: s.text,
+        type: 'roman' as ParsedItem['type'],
+      }));
+    }
+
     return parsed.items;
-  }, [ext, extendedTableRows, question.matchPairs, question.type, parsed.items, isHindi, showAssertionReasonBlock]);
+  }, [ext, extendedTableRows, question.matchPairs, question.type, parsed.items, isHindi, showStatementsBlock]);
 
   // Parse options
   const options = useMemo((): UpscQuestionOption[] => {
@@ -1170,8 +1191,8 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
         </div>
       )}
 
-      {/* Assertion/Reason Layout */}
-      {showAssertionReasonBlock && (
+      {/* Explicit Statements Layout (Assertion/Reason or Multiple Statements) */}
+      {showStatementsBlock && (
         <div className="space-y-5 py-2">
           {unifiedStatements.map((s, idx) => (
             <div key={idx} className="flex flex-col gap-2">
@@ -1221,7 +1242,7 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
       )}
 
       {/* Diagnostic Warning for Broken Data (Internal use or subtle hint) */}
-      {!displayItems.length && !extendedTableRows?.length && !showAssertionReasonBlock && (questionLine?.toLowerCase().includes('rows') || contextStr?.toLowerCase().includes('rows') || questionLine?.includes('कथन') || contextStr?.includes('कथन')) && (
+      {!displayItems.length && !extendedTableRows?.length && !showStatementsBlock && (questionLine?.toLowerCase().includes('rows') || contextStr?.toLowerCase().includes('rows') || questionLine?.includes('कथन') || contextStr?.includes('कथन')) && (
         <div className="mt-4 rounded-lg border border-red-500/20 bg-red-500/5 p-3 text-[12px] text-red-300 italic opacity-60">
           Note: This question appears to be missing its table or statement data in the database. 
         </div>

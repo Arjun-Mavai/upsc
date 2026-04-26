@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronDown, Eye, ExternalLink, Lock, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -13,6 +13,11 @@ import { getCurrentExam } from '@/config/exams';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { FREE_SUBJECTS } from '@/lib/pyq-constants';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { submitIntelligenceLead } from '@/actions/intelligence-lead';
+import { toast } from 'sonner';
 
 interface ModernUnitCardProps {
   examId?: string;
@@ -53,12 +58,50 @@ export function ModernUnitCard({
 }: ModernUnitCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [lockModalOpen, setLockModalOpen] = useState(false);
+  const [freeIntroOpen, setFreeIntroOpen] = useState(false);
+  const [pendingToggle, setPendingToggle] = useState(false);
+  const [leadName, setLeadName] = useState('');
+  const [leadMobile, setLeadMobile] = useState('');
+  const [leadEmail, setLeadEmail] = useState('');
+  const [isSubmittingLead, setIsSubmittingLead] = useState(false);
 
   const { isSubscribed, user } = useSettingsStore();
   const isPro = isSubscribed || user?.role === 'admin';
-  const isFreeUnit = FREE_SUBJECTS.includes(unitId);
+  // Some UPSC unit IDs include descriptive suffixes, e.g. "History (Ancient, Medieval, Modern)".
+  // Treat History/Geography as free even if the string isn't an exact match.
+  const isFreeUnit =
+    FREE_SUBJECTS.includes(unitId) || /^(history|geography)\b/i.test(unitId.trim());
   const isUnlocked = isPro || isFreeUnit;
   const isFreeSubjectNotPro = !isPro && isFreeUnit;
+
+  const FREE_INTRO_KEY = 'upsc-intelligence';
+  const SNOOZE_KEY = 'upsc-intelligence:snoozeUntil';
+
+  const shouldShowFreeIntroNow = () => {
+    if (typeof window === 'undefined') return false;
+    const status = localStorage.getItem(FREE_INTRO_KEY); // 'submitted' | 'seen' | null
+    if (status === 'submitted') return false;
+    const snoozeUntil = Number(localStorage.getItem(SNOOZE_KEY) || 0);
+    if (snoozeUntil && Date.now() < snoozeUntil) return false;
+    return true;
+  };
+
+  useEffect(() => {
+    // Prefill using known guest info if present
+    if (typeof window === 'undefined') return;
+    const savedName = localStorage.getItem('mppsc_guest_name') || '';
+    if (savedName && !leadName) setLeadName(savedName);
+  }, [leadName]);
+
+  const normalizedName = leadName.trim().replace(/\s+/g, ' ');
+  const normalizedMobile = leadMobile.replace(/\D/g, '').slice(-10);
+  const isValidIndianMobile = /^[6-9]\d{9}$/.test(normalizedMobile);
+  const isValidName =
+    normalizedName.length >= 2 &&
+    normalizedName.length <= 60 &&
+    /^[A-Za-z][A-Za-z .'-]*$/.test(normalizedName) &&
+    !/\d/.test(normalizedName);
+  const canSubmitLead = isValidName && isValidIndianMobile && !isSubmittingLead;
 
   const percentage = totalQuestions > 0 ? Math.round((questionCount / totalQuestions) * 100) : 0;
   const exam = getCurrentExam(examId);
@@ -75,6 +118,14 @@ export function ModernUnitCard({
     if (!isUnlocked) {
       setLockModalOpen(true);
       return;
+    }
+    // One-time intro modal for free unlock experience (UPSC Intelligence only)
+    if (isFreeSubjectNotPro && typeof window !== 'undefined') {
+      if (shouldShowFreeIntroNow()) {
+        setPendingToggle(true);
+        setFreeIntroOpen(true);
+        return;
+      }
     }
     setIsExpanded(!isExpanded);
   };
@@ -94,6 +145,154 @@ export function ModernUnitCard({
         : "rounded-2xl border border-[#E5E5EA] bg-white text-[#1D1D1F] hover:border-[#D1D1D6] hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)]"
     )}>
       <SyllabusLockModal open={lockModalOpen} onOpenChange={setLockModalOpen} />
+
+      {/* One-time Free Intro (only for free users opening free units) */}
+      <Dialog open={freeIntroOpen} onOpenChange={setFreeIntroOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black tracking-tight text-slate-900">
+              {isHindi ? 'फ्री इंटेलिजेंस (Demo)' : 'Free Intelligence (Demo)'}
+            </DialogTitle>
+            <DialogDescription className="text-sm font-medium leading-relaxed text-slate-600">
+              {isHindi
+                ? 'आप अभी फ्री यूनिट खोल रहे हैं। यहाँ आपको स्टाइल और एनालिसिस का “डेमो” मिलेगा — बाकी विषय Pro में अनलॉक होते हैं।'
+                : 'You’re opening a free unit. This is a quick demo of the Intelligence format — full subjects unlock with Pro.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-2 space-y-3">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-xs font-bold tracking-widest text-slate-500 uppercase">
+                {isHindi ? 'टिप' : 'Tip'}
+              </p>
+              <p className="mt-1 text-sm font-medium text-slate-700">
+                {isHindi
+                  ? 'पहले 30 सेकंड में बस headings पढ़ो — फिर details।'
+                  : 'Scan the headings first (30s), then read details.'}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold tracking-widest text-slate-500 uppercase">
+                  {isHindi ? 'नाम' : 'Name'}
+                </label>
+                <Input
+                  value={leadName}
+                  onChange={(e) => setLeadName(e.target.value.slice(0, 60))}
+                  placeholder={isHindi ? 'अपना नाम लिखें' : 'Your name'}
+                  className="h-11"
+                  disabled={isSubmittingLead}
+                />
+                {!isValidName && normalizedName.length > 0 && (
+                  <p className="text-[11px] font-medium text-rose-600">
+                    {isHindi ? 'कृपया सही नाम लिखें (केवल अक्षर)' : 'Enter a valid name (letters only)'}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold tracking-widest text-slate-500 uppercase">
+                  {isHindi ? 'मोबाइल' : 'Mobile'}
+                </label>
+                <Input
+                  value={leadMobile}
+                  onChange={(e) => setLeadMobile(e.target.value.replace(/[^\d+ -]/g, '').slice(0, 14))}
+                  placeholder={isHindi ? '10 अंकों का नंबर' : '10-digit number'}
+                  className="h-11"
+                  inputMode="numeric"
+                  disabled={isSubmittingLead}
+                />
+                {!isValidIndianMobile && normalizedMobile.length > 0 && (
+                  <p className="text-[11px] font-medium text-rose-600">
+                    {isHindi
+                      ? 'वैध भारतीय मोबाइल डालें (6-9 से शुरू, 10 अंक)'
+                      : 'Enter a valid Indian mobile (starts 6-9, 10 digits)'}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+                  {isHindi ? 'ईमेल (optional)' : 'Email (optional)'}
+                </label>
+                <Input
+                  value={leadEmail}
+                  onChange={(e) => setLeadEmail(e.target.value)}
+                  placeholder={isHindi ? 'Optional' : 'Optional'}
+                  className="h-10"
+                  disabled={isSubmittingLead}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 rounded-xl"
+                onClick={() => {
+                  try {
+                    // Snooze for 24h (won't annoy user)
+                    localStorage.setItem(SNOOZE_KEY, String(Date.now() + 24 * 60 * 60 * 1000));
+                    localStorage.setItem(FREE_INTRO_KEY, 'seen');
+                  } catch {}
+                  setFreeIntroOpen(false);
+                  setPendingToggle(false);
+                }}
+              >
+                {isHindi ? 'अभी नहीं' : 'Not now'}
+              </Button>
+              <Button
+                className="flex-1 rounded-xl bg-slate-900 text-white hover:bg-slate-800"
+                disabled={!canSubmitLead}
+                onClick={async () => {
+                  if (!canSubmitLead) {
+                    toast.error(
+                      isHindi ? 'सही नाम और मोबाइल जरूरी है' : 'Valid name and mobile are required'
+                    );
+                    return;
+                  }
+                  setIsSubmittingLead(true);
+                  try {
+                    const source = typeof window !== 'undefined'
+                      ? localStorage.getItem('upsc_intelligence_entry_source') || ''
+                      : '';
+                    const res = await submitIntelligenceLead({
+                      name: normalizedName,
+                      mobile: normalizedMobile,
+                      email: leadEmail.trim() || undefined,
+                      unitId,
+                      source,
+                    });
+                    if (!res.success) {
+                      toast.error(isHindi ? 'सेव नहीं हुआ, फिर से try करें' : 'Failed to save, try again');
+                      return;
+                    }
+                    try {
+                      localStorage.setItem('mppsc_guest_name', leadName.trim());
+                      localStorage.setItem(FREE_INTRO_KEY, 'submitted');
+                      localStorage.removeItem(SNOOZE_KEY);
+                    } catch {}
+
+                    toast.success(isHindi ? 'Done! अब खोल रहे हैं…' : 'Done! Opening…');
+                    setFreeIntroOpen(false);
+                    if (pendingToggle) setIsExpanded(true);
+                    setPendingToggle(false);
+                  } finally {
+                    setIsSubmittingLead(false);
+                  }
+                }}
+              >
+                {isSubmittingLead
+                  ? isHindi
+                    ? 'सेव हो रहा है...'
+                    : 'Saving...'
+                  : isHindi
+                    ? 'ओपन करें'
+                    : 'Open'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {isFreeSubjectNotPro && (
         <div className="absolute top-0 right-8 z-20">

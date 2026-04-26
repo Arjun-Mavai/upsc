@@ -76,7 +76,7 @@ export function PricingCard({
   const discount = calcDiscount(price, originalPrice);
   const months = isLite ? p.liteMonths : isPro ? p.proMonths : 1; // months only relevant for full plans
   const monthly = calcMonthly(price, months);
-  const validityText = isLite ? p.liteValidityText : p.proValidityText;
+  // const validityText = isLite ? p.liteValidityText : p.proValidityText; // hidden for now
 
   // Card Specific Styling
   const cardClasses = cn(
@@ -181,10 +181,11 @@ export function PricingCard({
               </div>
             )}
 
-            <p className="mt-1.5 flex items-center gap-1 text-[11px] text-slate-400">
+            {/* Validity line hidden for now */}
+            {/* <p className="mt-1.5 flex items-center gap-1 text-[11px] text-slate-400">
               <Clock className="h-3 w-3" />
               {hi ? `एक बार भुगतान • ${validityText}` : `One-time payment • ${validityText}`}
-            </p>
+            </p> */}
           </div>
 
           <div className="mb-5 h-px w-full bg-slate-100" />
@@ -212,8 +213,8 @@ export function PricingCard({
                 </li>
               );
             })}
-            {/* Validity Item if not in features already */}
-            {!isUpgrade && (
+            {/* Validity item hidden for now */}
+            {/* {!isUpgrade && (
               <li
                 className={cn(
                   'flex items-start gap-3 text-sm font-medium',
@@ -227,14 +228,10 @@ export function PricingCard({
                   )}
                 />
                 <span>
-                  {hi
-                    ? isLite
-                      ? 'UPSC 2026 प्रीलिम्स तक वैध'
-                      : 'UPSC 2026 प्रीलिम्स तक वैध'
-                    : validityText}
+                  {hi ? 'UPSC 2026 प्रीलिम्स तक वैध' : validityText}
                 </span>
               </li>
-            )}
+            )} */}
           </ul>
 
           {/* Action Button */}

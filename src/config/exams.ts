@@ -55,10 +55,10 @@ const UPSC_CONFIG: ExamConfig = {
   canonicalTestIds: {
     2020: 'HlV9k4WU4baNG2RkTmJeC',
     2021: '1J4r7wY28DmgRoToapfGX',
-    2022: 'cwEeu6w5hSamXi4Sp3E-s',
-    2023: '_wfy3mo9T1KfsFNqwB4KV',
-    2024: 'AB72bLKMp_HTrZImFHL-w',
-    2025: 'hw8o4RHZOiZEI6Nx_d_Ek',
+    2022: '6qqqSGCLbSKL99FpsZeO2',
+    2023: 'YmGpGJ_XEMwRdO8mWbrer',
+    2024: 'PS0pMCOO4gOtoUTCMV_HH',
+    2025: '9YZzj61hPIg2AgtmQkE1e',
   },
   subjects: [
     'History (Ancient, Medieval, Modern)',
