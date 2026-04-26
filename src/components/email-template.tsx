@@ -155,9 +155,9 @@ export default function EmailTemplate({
               <tr>
                 <td style={{ padding: '4px 0' }}>✅ Personal Test History & Dashboard</td>
               </tr>
-              <tr>
+              {/* <tr>
                 <td style={{ padding: '4px 0' }}>✅ Premium PYQ Analysis & Insights</td>
-              </tr>
+              </tr> */}
             </tbody>
           </table>
         </div>

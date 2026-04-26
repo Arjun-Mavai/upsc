@@ -60,7 +60,7 @@ export const PRO_FEATURES: PlanFeatureWithIcon[] = [
   { en: 'Subject-Wise & Year-Wise Organised PYQs', hi: 'विषय-वार और वर्ष-वार व्यवस्थित PYQs', icon: 'LayoutGrid' },
   { en: 'Instant Mode: Logic Behind Every Option', hi: 'इंस्टेंट मोड: हर विकल्प के पीछे का तर्क', icon: 'Zap' },
   { en: 'Personal Test History & Dashboard', hi: 'व्यक्तिगत टेस्ट हिस्ट्री और डैशबोर्ड', icon: 'History' },
-  { en: 'Premium PYQ Analysis & Insights', hi: 'प्रीमियम PYQ विश्लेषण और इनसाइट्स', icon: 'TrendingUp' },
+  // { en: 'Premium PYQ Analysis & Insights', hi: 'प्रीमियम PYQ विश्लेषण और इनसाइट्स', icon: 'TrendingUp' }, // hidden for now
 ];
 
 // Helper: compute discount percentage
