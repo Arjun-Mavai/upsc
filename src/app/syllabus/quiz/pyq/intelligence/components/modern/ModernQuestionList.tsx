@@ -28,8 +28,12 @@ interface ModernQuestionListProps {
   variant?: 'card' | 'flat';
 }
 
-const FREE_SUBJECT = 'History';
 const FREE_LIMIT = 5;
+const isFreeSubject = (subject: string | null | undefined) => {
+  const s = (subject || '').trim();
+  if (!s) return false;
+  return /^(history|geography)\b/i.test(s);
+};
 
 export function ModernQuestionList({
   questions,
@@ -81,8 +85,8 @@ export function ModernQuestionList({
             
             <div className="grid gap-4">
               {byYear[year].map((q, idx) => {
-                const isHistory = q.subject === FREE_SUBJECT;
-                const isFreeAccess = !isPro && (idx < FREE_LIMIT || isHistory);
+                const freeBySubject = isFreeSubject(q.subject);
+                const isFreeAccess = !isPro && (idx < FREE_LIMIT || freeBySubject);
 
                 return (
                   <ModernQuestionItem
@@ -114,8 +118,8 @@ export function ModernQuestionList({
   return (
     <div className="grid gap-4">
       {visibleQuestions.map((q, idx) => {
-        const isHistory = q.subject === FREE_SUBJECT;
-        const isFreeAccess = !isPro && (idx < FREE_LIMIT || isHistory);
+        const freeBySubject = isFreeSubject(q.subject);
+        const isFreeAccess = !isPro && (idx < FREE_LIMIT || freeBySubject);
 
         return (
           <ModernQuestionItem

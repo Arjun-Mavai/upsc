@@ -54,14 +54,20 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
     return labels[key] || { en: '', hi: '' };
   };
 
-  const splitIntoSentences = (text: string) => {
+  const splitIntoSentences = (text: string, isHi: boolean) => {
     const t = text.replace(/\s+/g, ' ').trim();
     if (!t) return [];
     // Break at sentence end punctuation for scanability.
-    const parts = t
-      .split(/(?<=[.!?])\s+(?=[A-Z0-9(])/g)
-      .map((s) => s.trim())
-      .filter(Boolean);
+    // English: . ! ?   Hindi: । ! ?
+    const parts = isHi
+      ? t
+          .split(/(?<=[।!?])\s+/g)
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : t
+          .split(/(?<=[.!?])\s+(?=[A-Z0-9(])/g)
+          .map((s) => s.trim())
+          .filter(Boolean);
     return parts.length ? parts : [t];
   };
 
@@ -85,7 +91,7 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
     }
 
     // For longer single-line content, split into sentence chunks.
-    const sentences = splitIntoSentences(text);
+    const sentences = splitIntoSentences(text, finalLanguage === 'hi');
     if (sentences.length <= 2 && text.length < 220) {
       return (
         <p className="mb-0 leading-relaxed">
