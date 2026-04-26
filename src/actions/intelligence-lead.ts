@@ -15,19 +15,28 @@ interface IntelligenceLeadInput {
 
 export async function submitIntelligenceLead(input: IntelligenceLeadInput) {
   try {
-    const name = input.name?.trim();
-    const mobile = (input.mobile || '').trim();
+    const name = (input.name || '').trim().replace(/\s+/g, ' ');
+    const mobileRaw = (input.mobile || '').trim();
     const email = input.email?.trim();
 
-    if (!name || mobile.replace(/\D/g, '').length < 10) {
+    const mobileDigits = mobileRaw.replace(/\D/g, '');
+    const normalizedMobile = mobileDigits.slice(-10);
+
+    const isValidIndianMobile = /^[6-9]\d{9}$/.test(normalizedMobile);
+    const isValidName =
+      name.length >= 2 &&
+      name.length <= 60 &&
+      /^[A-Za-z][A-Za-z .'-]*$/.test(name) &&
+      !/\d/.test(name);
+
+    if (!isValidName || !isValidIndianMobile) {
       return { success: false as const, error: 'Missing required fields' };
     }
 
     // 1) Upsert guest entry (canonical guest store)
-    await createGuestEntry({ name, email, mobile });
+    await createGuestEntry({ name, email, mobile: normalizedMobile });
 
     // 2) Store an attribution event (using support_tickets as a lightweight lead inbox)
-    const normalizedMobile = mobile.replace(/\D/g, '').slice(-10);
     const message = [
       'INTELLIGENCE_LEAD',
       `unitId=${input.unitId || ''}`,

@@ -93,6 +93,16 @@ export function ModernUnitCard({
     if (savedName && !leadName) setLeadName(savedName);
   }, [leadName]);
 
+  const normalizedName = leadName.trim().replace(/\s+/g, ' ');
+  const normalizedMobile = leadMobile.replace(/\D/g, '').slice(-10);
+  const isValidIndianMobile = /^[6-9]\d{9}$/.test(normalizedMobile);
+  const isValidName =
+    normalizedName.length >= 2 &&
+    normalizedName.length <= 60 &&
+    /^[A-Za-z][A-Za-z .'-]*$/.test(normalizedName) &&
+    !/\d/.test(normalizedName);
+  const canSubmitLead = isValidName && isValidIndianMobile && !isSubmittingLead;
+
   const percentage = totalQuestions > 0 ? Math.round((questionCount / totalQuestions) * 100) : 0;
   const exam = getCurrentExam(examId);
   const isSubjectMode = exam.layoutMode === 'SUBJECT_WISE';
@@ -169,11 +179,16 @@ export function ModernUnitCard({
                 </label>
                 <Input
                   value={leadName}
-                  onChange={(e) => setLeadName(e.target.value)}
+                  onChange={(e) => setLeadName(e.target.value.slice(0, 60))}
                   placeholder={isHindi ? 'अपना नाम लिखें' : 'Your name'}
                   className="h-11"
                   disabled={isSubmittingLead}
                 />
+                {!isValidName && normalizedName.length > 0 && (
+                  <p className="text-[11px] font-medium text-rose-600">
+                    {isHindi ? 'कृपया सही नाम लिखें (केवल अक्षर)' : 'Enter a valid name (letters only)'}
+                  </p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold tracking-widest text-slate-500 uppercase">
@@ -181,12 +196,19 @@ export function ModernUnitCard({
                 </label>
                 <Input
                   value={leadMobile}
-                  onChange={(e) => setLeadMobile(e.target.value)}
+                  onChange={(e) => setLeadMobile(e.target.value.replace(/[^\d+ -]/g, '').slice(0, 14))}
                   placeholder={isHindi ? '10 अंकों का नंबर' : '10-digit number'}
                   className="h-11"
                   inputMode="numeric"
                   disabled={isSubmittingLead}
                 />
+                {!isValidIndianMobile && normalizedMobile.length > 0 && (
+                  <p className="text-[11px] font-medium text-rose-600">
+                    {isHindi
+                      ? 'वैध भारतीय मोबाइल डालें (6-9 से शुरू, 10 अंक)'
+                      : 'Enter a valid Indian mobile (starts 6-9, 10 digits)'}
+                  </p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold tracking-widest text-slate-400 uppercase">
@@ -220,11 +242,12 @@ export function ModernUnitCard({
               </Button>
               <Button
                 className="flex-1 rounded-xl bg-slate-900 text-white hover:bg-slate-800"
-                disabled={isSubmittingLead}
+                disabled={!canSubmitLead}
                 onClick={async () => {
-                  const mobileDigits = leadMobile.replace(/\D/g, '');
-                  if (!leadName.trim() || mobileDigits.length < 10) {
-                    toast.error(isHindi ? 'नाम और मोबाइल जरूरी है' : 'Name and mobile are required');
+                  if (!canSubmitLead) {
+                    toast.error(
+                      isHindi ? 'सही नाम और मोबाइल जरूरी है' : 'Valid name and mobile are required'
+                    );
                     return;
                   }
                   setIsSubmittingLead(true);
@@ -233,8 +256,8 @@ export function ModernUnitCard({
                       ? localStorage.getItem('upsc_intelligence_entry_source') || ''
                       : '';
                     const res = await submitIntelligenceLead({
-                      name: leadName.trim(),
-                      mobile: leadMobile,
+                      name: normalizedName,
+                      mobile: normalizedMobile,
                       email: leadEmail.trim() || undefined,
                       unitId,
                       source,
