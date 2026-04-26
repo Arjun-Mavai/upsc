@@ -3,7 +3,7 @@
 import React from 'react';
 import { CheckCircle2, Lightbulb, Brain, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 
 interface PremiumExplanationProps {
   explanation: string;
@@ -38,9 +38,13 @@ export const PremiumExplanation: React.FC<PremiumExplanationProps> = ({
     },
   };
 
-  const item = {
+  const item: Variants = {
     hidden: { opacity: 0, x: -12 },
-    show: { opacity: 1, x: 0, transition: { duration: 0.4, ease: [0.23, 1, 0.32, 1] } },
+    show: {
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.4, ease: [0.23, 1, 0.32, 1] as [number, number, number, number] },
+    },
   };
 
   // Helper for Section Labels
