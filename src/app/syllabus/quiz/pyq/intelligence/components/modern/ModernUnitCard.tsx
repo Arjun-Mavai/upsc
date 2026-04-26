@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronDown, Eye, ExternalLink, Lock, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -77,14 +77,14 @@ export function ModernUnitCard({
   const FREE_INTRO_KEY = 'upsc-intelligence';
   const SNOOZE_KEY = 'upsc-intelligence:snoozeUntil';
 
-  const shouldShowFreeIntro = useMemo(() => {
+  const shouldShowFreeIntroNow = () => {
     if (typeof window === 'undefined') return false;
     const status = localStorage.getItem(FREE_INTRO_KEY); // 'submitted' | 'seen' | null
     if (status === 'submitted') return false;
     const snoozeUntil = Number(localStorage.getItem(SNOOZE_KEY) || 0);
     if (snoozeUntil && Date.now() < snoozeUntil) return false;
     return true;
-  }, []);
+  };
 
   useEffect(() => {
     // Prefill using known guest info if present
@@ -121,7 +121,7 @@ export function ModernUnitCard({
     }
     // One-time intro modal for free unlock experience (UPSC Intelligence only)
     if (isFreeSubjectNotPro && typeof window !== 'undefined') {
-      if (shouldShowFreeIntro) {
+      if (shouldShowFreeIntroNow()) {
         setPendingToggle(true);
         setFreeIntroOpen(true);
         return;
