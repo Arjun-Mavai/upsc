@@ -6,12 +6,12 @@ import { getCurrentExam } from '@/config/exams';
 // ============================================
 
 export const CANONICAL_TEST_IDS: Record<number, string> = {
-  2020: '5KRVTgTIw07bWNxu20YNl',
-  2021: 'ix0FnJV496Rgvw0YHOEFj',
-  2022: 'o_rO3J1tSEACKENOLT9QI',
-  2023: 'mQ1a9hZoTdfSRfkz40K5C',
-  2024: '3XmZ0l700BJV3j2FLd0XZ',
-  2025: 'D0gf6bklgl3RT-sTnue2n',
+  2020: 'hWIXnF5yTUhrPdpYAQUBP',
+  2021: '9C03dS8AC3cTi1_veCJLv',
+  2022: '6qqqSGCLbSKL99FpsZeO2',
+  2023: 'YmGpGJ_XEMwRdO8mWbrer',
+  2024: 'PS0pMCOO4gOtoUTCMV_HH',
+  2025: '9YZzj61hPIg2AgtmQkE1e',
 };
 
 export const FREE_SUBJECTS = [

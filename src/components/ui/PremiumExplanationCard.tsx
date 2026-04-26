@@ -1,13 +1,21 @@
 import React from 'react';
-import { Lightbulb, Target, AlertTriangle, Link as LinkIcon, BookOpen, BrainCircuit } from 'lucide-react';
+import { Lightbulb, CheckCircle2, BookOpen, Brain, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface WisdomExplanation {
   quick_verdict?: string;
+  verdict?: string;
   core_concept?: string;
+  core_pillar?: string;
+  veteran_wisdom?: string;
+  wisdom?: string;
   elimination_wisdom?: string[];
+  logic_path?: string;
+  tips_tricks?: string;
   interlinking?: string;
+  interdisciplinary_link?: string;
   trap_alert?: string;
+  trap_watch?: string;
   source_mapping?: string;
 }
 
@@ -20,9 +28,7 @@ function parseWisdom(raw?: string | null): WisdomExplanation | string | null {
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object' && (parsed.quick_verdict || parsed.core_concept || parsed.elimination_wisdom)) {
-      return parsed as WisdomExplanation;
-    }
+    if (parsed && typeof parsed === 'object') return parsed as WisdomExplanation;
     return raw;
   } catch {
     return raw;
@@ -31,107 +37,110 @@ function parseWisdom(raw?: string | null): WisdomExplanation | string | null {
 
 export function PremiumExplanationCard({ explanationRaw, language = 'en' }: PremiumExplanationCardProps) {
   const data = parseWisdom(explanationRaw);
-
   if (!data) return null;
 
   // Fallback for simple string explanations
   if (typeof data === 'string') {
     return (
-      <div className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-100/80 leading-relaxed shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-        <div className="flex items-center gap-2 mb-2 font-medium text-emerald-400">
-          <Lightbulb className="w-4 h-4" />
-          <span>{language === 'hi' ? 'विस्तृत विवरण' : 'Detailed Explanation'}</span>
+      <div className="mt-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-3 text-emerald-500 font-bold">
+          <CheckCircle2 className="w-5 h-5" />
+          <span className="text-[12px] tracking-[0.2em] uppercase">{language === 'hi' ? 'फैसला' : 'VERDICT'}</span>
         </div>
-        <div className="whitespace-pre-wrap">{data}</div>
+        <div className="text-[17px] leading-[1.7] text-slate-200 font-medium tracking-tight whitespace-pre-wrap">{data}</div>
       </div>
     );
   }
 
-  // Premium JSON Wisdom Rendering
-  return (
-    <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-indigo-500/30 bg-slate-900 overflow-hidden shadow-2xl">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/10 px-5 py-3 border-b border-indigo-500/20 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-indigo-300 font-semibold tracking-wide text-sm">
-          <BrainCircuit className="w-5 h-5 text-indigo-400" />
-          {language === 'hi' ? 'विशेषाज्ञ दृष्टिकोण' : 'EXPERT WISDOM'}
+  const renderSection = (title: string, content: string | string[] | undefined, color: 'emerald' | 'amber' | 'indigo' | 'rose', icon: React.ReactNode) => {
+    if (!content) return null;
+    return (
+      <div className="relative pl-10">
+        <div className={cn("absolute left-0 top-0.5 bottom-0.5 w-[4px] rounded-full",
+          color === 'emerald' && 'bg-emerald-500/60',
+          color === 'amber' && 'bg-amber-500/60',
+          color === 'indigo' && 'bg-indigo-500/60',
+          color === 'rose' && 'bg-rose-500/60'
+        )} />
+        
+        <div className="mb-4 flex items-center gap-3">
+          <div className={cn(
+            color === 'emerald' && 'text-emerald-500',
+            color === 'amber' && 'text-amber-500',
+            color === 'indigo' && 'text-indigo-500',
+            color === 'rose' && 'text-rose-500'
+          )}>
+            {icon}
+          </div>
+          <h4 className={cn('text-[12px] font-black tracking-[0.25em] uppercase',
+            color === 'emerald' && 'text-emerald-600/90',
+            color === 'amber' && 'text-amber-600/90',
+            color === 'indigo' && 'text-indigo-600/90',
+            color === 'rose' && 'text-rose-600/90'
+          )}>
+            {title}
+          </h4>
         </div>
-      </div>
 
-      <div className="p-5 flex flex-col gap-4">
-        {/* Quick Verdict */}
-        {data.quick_verdict && (
-          <div className="flex items-start gap-3 bg-emerald-500/5 rounded-xl p-3 border border-emerald-500/20">
-            <Target className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
-            <div>
-              <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">
-                {language === 'hi' ? 'त्वरित निर्णय' : 'Quick Verdict'}
-              </h4>
-              <p className="text-sm text-slate-300 leading-relaxed">{data.quick_verdict}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Core Concept */}
-        {data.core_concept && (
-          <div className="flex items-start gap-3">
-            <Lightbulb className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" />
-            <div>
-              <h4 className="text-xs font-bold text-amber-500/90 uppercase tracking-wider mb-1">
-                {language === 'hi' ? 'मुख्य अवधारणा' : 'Core Concept'}
-              </h4>
-              <p className="text-sm text-slate-300 leading-relaxed">{data.core_concept}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Elimination Wisdom */}
-        {data.elimination_wisdom && data.elimination_wisdom.length > 0 && (
-          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-              {language === 'hi' ? 'एलिमिनेशन तकनीक' : 'Elimination Logic'}
-            </h4>
-            <ul className="space-y-2">
-              {data.elimination_wisdom.map((point, idx) => (
-                <li key={idx} className="flex gap-2 text-sm text-slate-300 items-start">
-                  <span className="text-rose-400 font-mono mt-0.5">✗</span>
+        <div className="text-[17px] leading-[1.75] font-medium text-slate-900 tracking-tight sm:text-[18px] dark:text-slate-200">
+          {Array.isArray(content) ? (
+            <ul className="space-y-4">
+              {content.map((point, idx) => (
+                <li key={idx} className="flex gap-3 items-start">
+                  <span className="text-slate-500 font-mono mt-1 shrink-0 dark:text-slate-500">•</span>
                   <span className="leading-relaxed">{point}</span>
                 </li>
               ))}
             </ul>
-          </div>
-        )}
+          ) : (
+            content.split('\n').filter(Boolean).map((line, i) => <p key={i} className="mb-4 last:mb-0">{line}</p>)
+          )}
+        </div>
+      </div>
+    );
+  };
 
-        {/* Trap Alert */}
-        {data.trap_alert && (
-          <div className="flex items-start gap-3 bg-rose-500/5 rounded-xl p-3 border border-rose-500/20">
-            <AlertTriangle className="w-5 h-5 text-rose-400 mt-0.5 shrink-0" />
-            <div>
-              <h4 className="text-xs font-bold text-rose-400 uppercase tracking-wider mb-1">
-                {language === 'hi' ? 'सतर्क रहें (ट्रैप)' : 'Examiner\'s Trap'}
-              </h4>
-              <p className="text-sm text-slate-300 leading-relaxed">{data.trap_alert}</p>
-            </div>
-          </div>
-        )}
+  return (
+    <div className="mt-6 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm backdrop-blur-xl dark:border-slate-800/50 dark:bg-slate-900/30 sm:p-10 dark:shadow-2xl">
+      <div className="flex flex-col gap-12">
+      {/* 1. Emerald -> Conceptual Core (extendedData.verdict) */}
+      {renderSection(
+        language === 'hi' ? 'अवधारणात्मक कोर' : 'CONCEPTUAL CORE',
+        data.verdict || data.quick_verdict,
+        'emerald',
+        <CheckCircle2 size={18} className="stroke-[2.5]" />
+      )}
 
-        {/* Footer (Interlinking & Source) */}
-        {(data.interlinking || data.source_mapping) && (
-          <div className="mt-2 pt-3 border-t border-slate-700/50 flex flex-col sm:flex-row gap-4 sm:items-center justify-between text-xs text-slate-400">
-            {data.interlinking && (
-              <div className="flex items-center gap-1.5">
-                <LinkIcon className="w-3.5 h-3.5" />
-                <span>{data.interlinking}</span>
-              </div>
-            )}
-            {data.source_mapping && (
-              <div className="flex items-center gap-1.5 text-indigo-300/80">
-                <BookOpen className="w-3.5 h-3.5" />
-                <span>{data.source_mapping}</span>
-              </div>
-            )}
-          </div>
-        )}
+      {/* 2. Amber -> Core Pillar (extendedData.core_pillar) */}
+      {renderSection(
+        language === 'hi' ? 'कोर पिलर' : 'CORE PILLAR',
+        data.core_pillar,
+        'amber',
+        <Lightbulb size={18} className="stroke-[2.5]" />
+      )}
+
+      {/* 3. Indigo -> Logic Path (extendedData.logic_path) */}
+      {renderSection(
+        language === 'hi' ? 'लॉजिक पाथ' : 'LOGIC PATH',
+        data.logic_path,
+        'indigo',
+        <Brain size={18} className="stroke-[2.5]" />
+      )}
+
+      {/* 4. Rose -> Trap Watch (extendedData.trap_watch) */}
+      {renderSection(
+        language === 'hi' ? 'ट्रैप वॉच' : 'TRAP WATCH',
+        data.trap_watch || data.trap_alert,
+        'rose',
+        <AlertTriangle size={18} className="stroke-[2.5]" />
+      )}
+
+      {data.source_mapping && (
+        <div className="mt-4 flex items-center gap-3 px-2 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500 border-t border-slate-200 pt-8 dark:border-slate-800">
+          <BookOpen size={14} className="text-indigo-500/70 dark:text-indigo-400" />
+          <span>Source: {data.source_mapping}</span>
+        </div>
+      )}
       </div>
     </div>
   );

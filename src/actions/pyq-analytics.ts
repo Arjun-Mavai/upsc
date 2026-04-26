@@ -6,7 +6,7 @@ import { questions, pyqQuestionTopics, pyqTopics, tests } from '@/db/schema';
 import { unstable_cache } from 'next/cache';
 import { syllabusData } from '@/data/syllabusData';
 import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
-import { getCanonicalTestIds, getYearFromTestId, FREE_SUBJECTS } from '@/lib/pyq-constants';
+import { getCanonicalTestIds, getYearFromTestId, FREE_SUBJECTS, CANONICAL_TEST_IDS } from '@/lib/pyq-constants';
 import { getCurrentExam } from '@/config/exams';
 import { getCurrentUser } from './auth-actions';
 import { logger } from '@/lib/logger';
@@ -245,10 +245,17 @@ export async function getOverallWeightageSubjectData(
       const testYearMap: Record<string, number> = {};
 
       if (examId === 'upsc') {
+        // 🔒 STRICT ID FILTERING: Only include questions from the canonical tests
+        const canonicalIds = Object.values(CANONICAL_TEST_IDS);
         const upscTests = await db
           .select({ id: tests.id, title: tests.title })
           .from(tests)
-          .where(and(eq(tests.type, 'UPSC_PYQ'), eq(tests.isHidden, false)));
+          .where(
+            and(
+              inArray(tests.id, canonicalIds),
+              eq(tests.isHidden, false)
+            )
+          );
         testIdsToQuery = upscTests.map((t) => t.id);
         upscTests.forEach((t) => {
           const match = t.title.match(/\b(20\d{2}|1[5-9]|2[0-5])\b/);
@@ -362,10 +369,17 @@ export async function getUnitDistributionStats(
         const testYearMap: Record<string, number> = {};
 
         if (examId === 'upsc') {
+          // 🔒 STRICT ID FILTERING: Only include questions from the canonical tests
+          const canonicalIds = Object.values(CANONICAL_TEST_IDS);
           const upscTests = await db
             .select({ id: tests.id, title: tests.title })
             .from(tests)
-            .where(and(eq(tests.type, 'UPSC_PYQ'), eq(tests.isHidden, false)));
+            .where(
+              and(
+                inArray(tests.id, canonicalIds),
+                eq(tests.isHidden, false)
+              )
+            );
           testIdsToQuery = upscTests.map((t) => t.id);
           upscTests.forEach((t) => {
             const match = t.title.match(/\b(20\d{2}|1[5-9]|2[0-5])\b/);

@@ -61,77 +61,87 @@ export function PremiumExplanationSection() {
 
               <div className="space-y-6 p-6 md:p-8">
                 {/* Answer Status */}
-                <div className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50 p-4">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500">
-                    <CheckCircle2 className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold tracking-wider text-emerald-700 uppercase">
-                      Correct Answer
+                <div className="flex flex-col gap-2 rounded-xl border border-emerald-200/60 bg-emerald-50/50 p-3 sm:p-4">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100/80 text-emerald-600">
+                      <CheckCircle2 className="h-3 w-3" />
                     </div>
-                    <div className="font-bold text-slate-900">Betwa (बेतवा)</div>
+                    <span className="text-[11px] font-semibold tracking-wider text-emerald-700 uppercase">
+                      Correct Answer
+                    </span>
+                  </div>
+                  <div className="text-[14px] font-bold leading-[1.5] tracking-[-0.01em] text-slate-900">
+                    Betwa (बेतवा)
                   </div>
                 </div>
 
                 {/* The 4 Gimmick Sections */}
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {/* 1. Logic */}
-                  <div className="flex gap-4">
-                    <div className="w-1 shrink-0 rounded-full bg-emerald-500"></div>
-                    <div className="flex-1">
-                      <h4 className="mb-1 flex items-center gap-2 text-sm font-bold text-emerald-700">
-                        <CheckCircle2 size={16} /> ✅ Core Logic
-                      </h4>
-                      <p className="text-sm leading-relaxed text-slate-700">
-                        Based on <span className="font-bold">pollution levels</span> like the
-                        Ganges, Betwa is called the Ganga of MP.
-                        <br />
-                        <span className="text-xs text-slate-500">
-                          (प्रदूषण के आधार पर इसे म.प्र. की गंगा कहा जाता है।)
-                        </span>
-                      </p>
+                  <div className="flex flex-col gap-2 rounded-xl border border-emerald-200/60 bg-emerald-50/50 p-3 sm:p-4">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100/80 text-emerald-600">
+                        <CheckCircle2 className="h-3 w-3" />
+                      </div>
+                      <span className="text-[11px] font-semibold tracking-wider text-emerald-700 uppercase">
+                        Core Logic
+                      </span>
+                    </div>
+                    <div className="text-[14px] font-medium leading-[1.5] tracking-[-0.01em] text-slate-700">
+                      Based on <span className="font-bold">pollution levels</span> like the
+                      Ganges, Betwa is called the Ganga of MP.
+                      <br />
+                      <span className="text-[12px] text-slate-500">
+                        (प्रदूषण के आधार पर इसे म.प्र. की गंगा कहा जाता है।)
+                      </span>
                     </div>
                   </div>
 
                   {/* 2. Exam Fact */}
-                  <div className="flex gap-4">
-                    <div className="w-1 shrink-0 rounded-full bg-slate-500"></div>
-                    <div className="flex-1">
-                      <h4 className="mb-1 flex items-center gap-2 text-sm font-bold text-slate-700">
-                        <Lightbulb size={16} /> 💡 Exam Fact
-                      </h4>
-                      <p className="text-sm leading-relaxed text-slate-700">
-                        Origin: <span className="font-bold">Kumra Gaon (Raisen)</span>. <br />
-                        Total Length: <span className="font-bold">480 km</span>.
-                      </p>
+                  <div className="flex flex-col gap-2 rounded-xl border border-blue-200/60 bg-blue-50/50 p-3 sm:p-4">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100/80 text-blue-600">
+                        <Lightbulb className="h-3 w-3" />
+                      </div>
+                      <span className="text-[11px] font-semibold tracking-wider text-blue-700 uppercase">
+                        Exam Fact
+                      </span>
+                    </div>
+                    <div className="text-[14px] font-medium leading-[1.5] tracking-[-0.01em] text-slate-700">
+                      Origin: <span className="font-bold">Kumra Gaon (Raisen)</span>. <br />
+                      Total Length: <span className="font-bold">480 km</span>.
                     </div>
                   </div>
 
                   {/* 3. Memory Tip */}
-                  <div className="flex gap-4">
-                    <div className="w-1 shrink-0 rounded-full bg-amber-500"></div>
-                    <div className="flex-1">
-                      <h4 className="mb-1 flex items-center gap-2 text-sm font-bold text-amber-700">
-                        <Brain size={16} /> 🧠 Memory Tip
-                      </h4>
-                      <p className="rounded-lg border border-amber-100 bg-amber-50 p-2 text-sm leading-relaxed text-slate-700 italic">
-                        "Betwa = Beta (Son) of Raisen" → Kumra Gaon.
-                      </p>
+                  <div className="flex flex-col gap-2 rounded-xl border border-purple-200/60 bg-purple-50/50 p-3 sm:p-4">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-100/80 text-purple-600">
+                        <Brain className="h-3 w-3" />
+                      </div>
+                      <span className="text-[11px] font-semibold tracking-wider text-purple-700 uppercase">
+                        Memory Tip
+                      </span>
+                    </div>
+                    <div className="text-[14px] font-medium leading-[1.5] tracking-[-0.01em] text-slate-700 italic">
+                      "Betwa = Beta (Son) of Raisen" → Kumra Gaon.
                     </div>
                   </div>
 
                   {/* 4. Scam Alert */}
-                  <div className="flex gap-4">
-                    <div className="w-1 shrink-0 rounded-full bg-red-500"></div>
-                    <div className="flex-1">
-                      <h4 className="mb-1 flex items-center gap-2 text-sm font-bold text-red-700">
-                        <AlertTriangle size={16} /> 🚫 Scam Alert
-                      </h4>
-                      <p className="text-sm leading-relaxed text-slate-700">
-                        Don't confuse with <span className="font-bold text-red-600">Narmada</span>.
-                        Narmada is the <span className="underline">Lifeline</span> of MP, not the
-                        Ganga (based on sanctity/pollution distinction).
-                      </p>
+                  <div className="flex flex-col gap-2 rounded-xl border border-rose-200/60 bg-rose-50/50 p-3 sm:p-4">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-rose-100/80 text-rose-600">
+                        <AlertTriangle className="h-3 w-3" />
+                      </div>
+                      <span className="text-[11px] font-semibold tracking-wider text-rose-700 uppercase">
+                        Scam Alert
+                      </span>
+                    </div>
+                    <div className="text-[14px] font-medium leading-[1.5] tracking-[-0.01em] text-slate-700">
+                      Don't confuse with <span className="font-bold text-rose-600">Narmada</span>.
+                      Narmada is the <span className="underline">Lifeline</span> of MP, not the
+                      Ganga (based on sanctity/pollution distinction).
                     </div>
                   </div>
                 </div>

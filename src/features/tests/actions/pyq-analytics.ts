@@ -5,6 +5,7 @@ import { questions, tests } from '@/db/schema';
 import { and, eq, or, inArray } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { normalizeSubject } from '@/features/tests/utils/pyq-subject';
+import { CANONICAL_TEST_IDS } from '@/lib/pyq-constants';
 
 // ------------------------------------------------------------------
 // 📊 Aggregation Action
@@ -16,13 +17,45 @@ export async function getSubjectWisePYQStats(examId?: string): Promise<Record<st
   return unstable_cache(
     async () => {
       // Step 1: Get all relevant PYQ Test IDs
-      // MPPSC uses type='PYQ', UPSC uses type='UPSC_PYQ'
-      const testType = examId === 'upsc' ? 'UPSC_PYQ' : 'PYQ';
-      
+      if (examId === 'upsc') {
+        // 🔒 STRICT ID FILTERING: Only include questions from the canonical tests
+        const canonicalIds = Object.values(CANONICAL_TEST_IDS);
+        const upscTests = await db
+          .select({ id: tests.id, title: tests.title })
+          .from(tests)
+          .where(
+            and(
+              inArray(tests.id, canonicalIds),
+              eq(tests.isHidden, false)
+            )
+          );
+        if (upscTests.length === 0) return {};
+        const pyqTestIds = upscTests.map((t) => t.id);
+        
+        // Skip Step 2 & 3 and go to question fetching directly (avoiding extra map if possible)
+        // Actually, let's keep it consistent for logic
+        const allQuestions = await db
+          .select({
+            id: questions.id,
+            subject: questions.subject,
+          })
+          .from(questions)
+          .where(and(inArray(questions.testId, pyqTestIds)));
+
+        const stats: Record<string, number> = {};
+        for (const q of allQuestions) {
+          const raw = q.subject?.trim() || 'General Studies';
+          const canonical = normalizeSubject(raw, true);
+          stats[canonical] = (stats[canonical] || 0) + 1;
+        }
+        return stats;
+      }
+
+      // MPPSC uses type='PYQ'
       const pyqTests = await db
         .select({ id: tests.id, title: tests.title })
         .from(tests)
-        .where(and(eq(tests.type, testType), eq(tests.isHidden, false)));
+        .where(and(eq(tests.type, 'PYQ'), eq(tests.isHidden, false)));
 
       if (pyqTests.length === 0) return {};
 

@@ -132,8 +132,11 @@ export function normalizeSubject(rawSubject: string | null, isUPSC: boolean = fa
 
   // 9. Strict UPSC Fallback
   // The user requested NO stray strings like "Subject" or "Misc" in UPSC views.
+  // "Bhai ne bola exact tag dikhao, toh fallback hatate hain"
   if (isUPSC) {
-    return 'Current Affairs';
+    // If it didn't match any pillars above, return the original capitalized tag
+    const capitalized = rawSubject.charAt(0).toUpperCase() + rawSubject.slice(1);
+    return capitalized;
   }
 
   // 10. General Catch-all (Capitalized) for MPPSC

@@ -1,6 +1,12 @@
 import type { Metadata, Viewport } from 'next';
-// import { Outfit, Playfair_Display } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+});
 import PwaRegistry from '@/components/PwaRegistry';
 import { Suspense } from 'react';
 import Providers from './Providers';
@@ -178,7 +184,7 @@ export default async function RootLayout({
         {/* End Facebook Pixel Code */}
       </head>
       <body
-        className={`bg-gray-50 font-sans text-gray-900 antialiased`}
+        className={`${inter.variable} bg-gray-50 font-sans text-gray-900 antialiased`}
       >
         <GlobalErrorBoundary>
           <PwaRegistry />
