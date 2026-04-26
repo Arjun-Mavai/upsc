@@ -11,7 +11,7 @@ import { ChevronRight, Lock } from 'lucide-react';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { useState, useEffect } from 'react';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface PYQIntelligenceModernClientProps {
   examId?: string;
@@ -37,6 +37,7 @@ export default function PYQIntelligenceModernClient({
   onToggleMode,
 }: PYQIntelligenceModernClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { language } = useSettingsStore();
   const isHindi = language === 'hi';
   const exam = getCurrentExam(examId);
@@ -51,6 +52,19 @@ export default function PYQIntelligenceModernClient({
   useEffect(() => {
     router.prefetch(viewAllUrl);
   }, [router, viewAllUrl]);
+
+  // Capture entry source (if user came from home/nav/etc.)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const source = searchParams.get('source');
+    if (!source) return;
+    try {
+      localStorage.setItem('upsc_intelligence_entry_source', source);
+      localStorage.setItem('upsc_intelligence_entry_ts', String(Date.now()));
+    } catch {
+      // ignore storage failures
+    }
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] pb-24 text-[#1D1D1F] selection:bg-[#000000] selection:text-white font-sans antialiased">

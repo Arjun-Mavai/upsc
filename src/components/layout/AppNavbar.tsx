@@ -307,6 +307,17 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
           {/* Right Section */}
 
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Home quick action (keeps Support bubble unobstructed, gives top visibility) */}
+            {pathname === '/' && (
+              <Link
+                href="/upsc/intelligence?source=home_nav"
+                className="hidden sm:inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-[11px] font-black tracking-widest text-white uppercase shadow-sm shadow-slate-900/20 transition-transform hover:scale-[1.02] active:scale-95"
+              >
+                <Sparkles size={14} className="text-amber-300" />
+                Intelligence
+              </Link>
+            )}
+
             {/* ✅ OPTIMIZED: Language Switcher Component */}
             <LanguageSwitcher language={language} setLanguage={setLanguage} />
 

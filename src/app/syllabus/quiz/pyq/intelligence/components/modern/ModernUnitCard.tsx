@@ -13,6 +13,8 @@ import { getCurrentExam } from '@/config/exams';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { SyllabusLockModal } from '@/features/syllabus/components/SyllabusLockModal';
 import { FREE_SUBJECTS } from '@/lib/pyq-constants';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface ModernUnitCardProps {
   examId?: string;
@@ -53,12 +55,16 @@ export function ModernUnitCard({
 }: ModernUnitCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [lockModalOpen, setLockModalOpen] = useState(false);
+  const [freeIntroOpen, setFreeIntroOpen] = useState(false);
+  const [pendingToggle, setPendingToggle] = useState(false);
 
   const { isSubscribed, user } = useSettingsStore();
   const isPro = isSubscribed || user?.role === 'admin';
   const isFreeUnit = FREE_SUBJECTS.includes(unitId);
   const isUnlocked = isPro || isFreeUnit;
   const isFreeSubjectNotPro = !isPro && isFreeUnit;
+
+  const FREE_INTRO_KEY = 'upsc-intelligence';
 
   const percentage = totalQuestions > 0 ? Math.round((questionCount / totalQuestions) * 100) : 0;
   const exam = getCurrentExam(examId);
@@ -75,6 +81,15 @@ export function ModernUnitCard({
     if (!isUnlocked) {
       setLockModalOpen(true);
       return;
+    }
+    // One-time intro modal for free unlock experience (UPSC Intelligence only)
+    if (isFreeSubjectNotPro && typeof window !== 'undefined') {
+      const seen = localStorage.getItem(FREE_INTRO_KEY) === 'seen';
+      if (!seen) {
+        setPendingToggle(true);
+        setFreeIntroOpen(true);
+        return;
+      }
     }
     setIsExpanded(!isExpanded);
   };
@@ -94,6 +109,61 @@ export function ModernUnitCard({
         : "rounded-2xl border border-[#E5E5EA] bg-white text-[#1D1D1F] hover:border-[#D1D1D6] hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)]"
     )}>
       <SyllabusLockModal open={lockModalOpen} onOpenChange={setLockModalOpen} />
+
+      {/* One-time Free Intro (only for free users opening free units) */}
+      <Dialog open={freeIntroOpen} onOpenChange={setFreeIntroOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black tracking-tight text-slate-900">
+              {isHindi ? 'फ्री इंटेलिजेंस (Demo)' : 'Free Intelligence (Demo)'}
+            </DialogTitle>
+            <DialogDescription className="text-sm font-medium leading-relaxed text-slate-600">
+              {isHindi
+                ? 'आप अभी फ्री यूनिट खोल रहे हैं। यहाँ आपको स्टाइल और एनालिसिस का “डेमो” मिलेगा — बाकी विषय Pro में अनलॉक होते हैं।'
+                : 'You’re opening a free unit. This is a quick demo of the Intelligence format — full subjects unlock with Pro.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-2 space-y-3">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-xs font-bold tracking-widest text-slate-500 uppercase">
+                {isHindi ? 'टिप' : 'Tip'}
+              </p>
+              <p className="mt-1 text-sm font-medium text-slate-700">
+                {isHindi
+                  ? 'पहले 30 सेकंड में बस headings पढ़ो — फिर details।'
+                  : 'Scan the headings first (30s), then read details.'}
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 rounded-xl"
+                onClick={() => {
+                  setFreeIntroOpen(false);
+                  setPendingToggle(false);
+                }}
+              >
+                {isHindi ? 'अभी नहीं' : 'Not now'}
+              </Button>
+              <Button
+                className="flex-1 rounded-xl bg-slate-900 text-white hover:bg-slate-800"
+                onClick={() => {
+                  try {
+                    localStorage.setItem(FREE_INTRO_KEY, 'seen');
+                  } catch {}
+                  setFreeIntroOpen(false);
+                  if (pendingToggle) setIsExpanded(true);
+                  setPendingToggle(false);
+                }}
+              >
+                {isHindi ? 'ओपन करें' : 'Open'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {isFreeSubjectNotPro && (
         <div className="absolute top-0 right-8 z-20">

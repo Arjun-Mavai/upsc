@@ -1,7 +1,7 @@
 'use client';
 
 import { useTransition } from 'react';
-import { Sparkles, ArrowRight, Loader2, BrainCircuit } from 'lucide-react';
+import { ArrowRight, BrainCircuit, Loader2, Sparkles, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { motion, Variants } from 'framer-motion';
 
@@ -85,15 +85,15 @@ export function HeroSectionUPSC() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="mx-auto flex w-full max-w-md flex-col items-center justify-center gap-6 px-4 pt-2 md:pt-6 pb-20 md:pb-0"
+          className="mx-auto flex w-full max-w-md flex-col items-center justify-center gap-4 px-4 pt-2 md:pt-6 pb-20 md:pb-0"
         >
           <button
             onClick={() => {
               startTransition(() => {
-                router.push('/upsc/intelligence');
+                router.push('/upsc/intelligence?source=home');
               });
             }}
-            onMouseEnter={() => router.prefetch('/upsc/intelligence')}
+            onMouseEnter={() => router.prefetch('/upsc/intelligence?source=home')}
             className="group relative w-full focus:outline-none"
           >
             {/* Outer Glow */}
@@ -115,6 +115,25 @@ export function HeroSectionUPSC() {
                   </span>
                 </div>
                 <ArrowRight className="h-5 w-5 text-amber-400 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-amber-300" />
+              </div>
+            </div>
+          </button>
+
+          {/* Secondary CTA: Practice Free Test (kept below Intelligence) */}
+          <button
+            onClick={() => router.push('/free-quiz?source=home')}
+            onMouseEnter={() => router.prefetch('/free-quiz?source=home')}
+            className="group relative w-full focus:outline-none"
+          >
+            <div className="relative flex h-14 w-full items-center justify-center overflow-hidden rounded-full bg-white/5 border border-white/10 transition-all duration-300 hover:bg-white/[0.08] hover:border-white/20 group-active:scale-[0.98] md:h-16">
+              <div className="relative z-10 flex w-full items-center justify-between px-6 md:px-8">
+                <div className="flex items-center gap-3">
+                  <Zap className="h-5 w-5 text-emerald-300 transition-colors group-hover:text-emerald-200" />
+                  <span className="text-sm font-black tracking-widest uppercase text-slate-100/90 md:text-base">
+                    Practice Free Test
+                  </span>
+                </div>
+                <ArrowRight className="h-5 w-5 text-slate-300 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-slate-200" />
               </div>
             </div>
           </button>
