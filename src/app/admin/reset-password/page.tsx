@@ -24,7 +24,7 @@ export default function AdminResetPasswordPage() {
     setIsLoading(true);
     setResult(null);
     try {
-      const res = await fetch('/api/auth/forgot-password', {
+      const res = await fetch('/api/admin/reset-user-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, newPassword }),
