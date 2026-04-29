@@ -1,21 +1,13 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { mppscUsers } from '@/db/schema';
-import { eq, isNull, and } from 'drizzle-orm';
-import bcrypt from 'bcryptjs';
-import { cookies } from 'next/headers';
+import { mppscUsers, verificationTokens } from '@/db/schema';
+import { eq, isNull, and, sql } from 'drizzle-orm';
+import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/lib/logger';
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 🔑 ADMIN PASSWORD RESET — Email + New Password → Direct DB update
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//
-// No email sending, no token — admin directly resets password
-// Flow: Admin auth → Find user by email → Hash new password → Update DB
-//
-// Simple aur seedha — admin ko email bhejne ki zaroorat nahi,
-// wo directly new password set kar deta h user ke liye
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import { Resend } from 'resend';
+import { render } from '@react-email/render';
+import ForgotPasswordEmail from '@/components/emails/ForgotPasswordEmail';
+import { appPath } from '@/lib/app-url';
 
 export async function POST(request: Request) {
   try {
@@ -27,68 +19,80 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Too many requests. Try again later.' }, { status: 429 });
     }
 
-    // ── Admin Auth Check ────────────────────────────────────────
-    const cookieStore = await cookies();
-    const token = cookieStore.get('mppsc_token')?.value;
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized: Admin session required' }, { status: 401 });
-    }
-
-    const { verifyToken } = await import('@/lib/jwt');
-    const decoded: any = verifyToken(token);
-    if (!decoded?.userId) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
-    }
-
-    const adminUser = await db.query.mppscUsers.findFirst({
-      where: (users, { eq }) => eq(users.id, decoded.userId),
-    });
-    if (!adminUser || adminUser.role !== 'admin') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
-    }
-
     // ── Parse Input ─────────────────────────────────────────────
-    const { email, newPassword } = await request.json();
-
-    if (!email || !newPassword) {
-      return NextResponse.json({ error: 'Email and new password required' }, { status: 400 });
+    const { email } = await request.json();
+    if (!email) {
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    // Password strength check
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (!passwordRegex.test(newPassword)) {
-      return NextResponse.json(
-        {
-          error: 'Password weak! Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char.',
-        },
-        { status: 400 }
-      );
-    }
+    const normalizedEmail = email.toLowerCase().trim();
 
     // ── Find Active User ────────────────────────────────────────
+    // Note: We return generic success even if user not found to avoid enumeration
     const users = await db
-      .select({ id: mppscUsers.id, name: mppscUsers.name })
+      .select({ id: mppscUsers.id, name: mppscUsers.name, email: mppscUsers.email })
       .from(mppscUsers)
-      .where(and(eq(mppscUsers.email, email.toLowerCase().trim()), isNull(mppscUsers.deletedAt)))
+      .where(and(eq(mppscUsers.email, normalizedEmail), isNull(mppscUsers.deletedAt)))
       .limit(1);
 
     const user = users[0];
-    if (!user) {
-      return NextResponse.json({ error: 'No active user found with this email' }, { status: 404 });
+
+    if (user) {
+      // ── Generate Token ──────────────────────────────────────────
+      const token = uuidv4();
+      const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      await db.insert(verificationTokens).values({
+        identifier: user.id,
+        token,
+        expires,
+      });
+
+      // ── Send Email ──────────────────────────────────────────────
+      const actionUrl = appPath(`auth/set-password?token=${token}`);
+      const emailHtml = await render(
+        ForgotPasswordEmail({
+          name: user.name || 'Aspirant',
+          actionUrl,
+        })
+      );
+
+      const resendApiKey = process.env.RESEND_API_KEY;
+      if (resendApiKey) {
+        const resend = new Resend(resendApiKey);
+        const fromName = process.env.EMAIL_FROM_NAME || 'UPSC Zen';
+        const fromAddress = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+
+        const { error: emailError } = await resend.emails.send({
+          from: `${fromName} <${fromAddress}>`,
+          to: [user.email],
+          subject: 'Password Reset Request — UPSC Zen',
+          html: emailHtml,
+        });
+
+        if (emailError) {
+          logger.error('Forgot password email failed', emailError, {
+            category: 'email',
+            userId: user.id,
+            metadata: { to: user.email },
+          });
+        }
+      } else {
+        logger.error('RESEND_API_KEY missing, cannot send forgot password email', undefined, {
+          category: 'email',
+          userId: user.id,
+          metadata: { to: user.email },
+        });
+      }
     }
 
-    // ── Hash + Update Password ──────────────────────────────────
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await db.update(mppscUsers).set({ password: hashedPassword }).where(eq(mppscUsers.id, user.id));
-
-    logger.info(`Password reset by admin for: ${email} (${user.id})`);
-
+    // Always return generic success
     return NextResponse.json({
       success: true,
-      message: `Password reset for ${user.name || email}. User can login with new password.`,
+      message: 'If an account exists with this email, you will receive reset instructions shortly.',
     });
   } catch (error: any) {
-    logger.error('Password reset error:', error);
+    logger.error('Forgot password error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

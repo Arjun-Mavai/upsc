@@ -62,6 +62,11 @@ export async function generateMetadata(): Promise<Metadata> {
       `${exam.name} Prelims Mock Test`,
       `${exam.name} Previous Year Papers`,
       `${exam.name} Analysis`,
+      `${exam.name} PYQ Intelligence`,
+      'Conceptual Core',
+      'Core Pillar',
+      'Logic Path',
+      'Trap Watch',
     ],
     metadataBase: new URL(baseUrl),
     openGraph: {
@@ -151,6 +156,60 @@ export default async function RootLayout({
     sameAs: [],
   };
 
+  const softwareApplicationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: exam.name,
+    applicationCategory: 'EducationalApplication',
+    operatingSystem: 'Web, Android, iOS, Desktop',
+    url: baseUrl,
+    description:
+      'UPSC-focused PYQ learning application with year-wise test practice, PYQ Intelligence analytics, and expert explanations.',
+    featureList: [
+      'UPSC CSE PYQ-focused preparation',
+      'Year-wise and subject-wise PYQ practice',
+      'PYQ Intelligence analytics for topics, units, and trends',
+      '4-point explanation framework: Conceptual Core, Core Pillar, Logic Path, Trap Watch',
+      'Hindi and English learning support',
+    ],
+  };
+
+  const pyqFrameworkSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'PYQ Intelligence 4-Point Explanation Framework',
+    description:
+      'The 4-point explanation model used in UPSC PYQ Intelligence to explain each question clearly.',
+    itemListOrder: 'https://schema.org/ItemListOrderAscending',
+    numberOfItems: 4,
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Conceptual Core',
+        description: 'The core concept and quick verdict behind the correct choice.',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Core Pillar',
+        description: 'The key foundational principle that anchors the concept.',
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: 'Logic Path',
+        description: 'Step-by-step reasoning used to reach the right answer.',
+      },
+      {
+        '@type': 'ListItem',
+        position: 4,
+        name: 'Trap Watch',
+        description: 'Common examiner traps and elimination cautions for the question.',
+      },
+    ],
+  };
+
   return (
     <html lang="en">
       <head>
@@ -163,6 +222,16 @@ export default async function RootLayout({
           id="schema-organization"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+        <Script
+          id="schema-software-application"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }}
+        />
+        <Script
+          id="schema-pyq-framework"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(pyqFrameworkSchema) }}
         />
         {/* Facebook Pixel Code */}
         <Script

@@ -125,20 +125,35 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
 
     // 🚀 NEW: Notify via Telegram (UPSC ZEN Branding)
     try {
-      const tgStatus = type === 'new_payment' ? '💰 <b>UPSC ZEN: New Payment</b>' : type === 'upgrade' ? '🚀 <b>UPSC ZEN: Plan Upgrade</b>' : '⚠️ <b>UPSC ZEN: Payment Failed</b>';
-      const tgMessage = `${tgStatus}\n\n` +
-        `👤 User: ${escapeHTML(userName)}\n` +
-        `📧 Email: ${escapeHTML(userEmail)}\n` +
-        `💵 Amount: <b>₹${amountInRupees}</b>\n` +
-        `🎟️ Plan: ${planTier.toUpperCase()}${isUpgrade ? ' (Upgrade)' : ''}\n\n` +
-        `🆔 Order: <code>${orderId}</code>\n` +
-        `🆔 Payment: <code>${paymentId}</code>\n` +
-        `⚡ <i>Action: Automated access granted.</i>`;
+      let tgStatus = '';
+      let tgEmoji = '';
+      
+      if (type === 'new_payment') {
+        tgStatus = '<b>UPSC ZEN: NEW SUCCESSFUL PAYMENT</b>';
+        tgEmoji = '💰 ✅';
+      } else if (type === 'upgrade') {
+        tgStatus = '<b>UPSC ZEN: PLAN UPGRADE</b>';
+        tgEmoji = '🚀 💎';
+      } else {
+        tgStatus = '<b>UPSC ZEN: PAYMENT FAILED</b>';
+        tgEmoji = '⚠️ ❌';
+      }
+
+      const tgMessage = `${tgEmoji} ${tgStatus}\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `👤 <b>User:</b> ${escapeHTML(userName)}\n` +
+        `📧 <b>Email:</b> ${escapeHTML(userEmail)}\n` +
+        `💵 <b>Amount:</b> <code>₹${amountInRupees}</code>\n` +
+        `🎟️ <b>Plan:</b> <code>${planTier.toUpperCase()}</code>${isUpgrade ? ' (Upgrade)' : ''}\n\n` +
+        `🆔 <b>Order ID:</b> <code>${orderId}</code>\n` +
+        `🆔 <b>Payment ID:</b> <code>${paymentId}</code>\n\n` +
+        `⚡ <b>Status:</b> <i>${type === 'failed' ? 'Failed Attempt' : 'Automated access granted'}</i>`;
 
       await sendTelegramNotification(tgMessage);
     } catch (tgErr) {
       logger.error('Failed to send admin Telegram notification', tgErr, { category: 'email' });
     }
+
   } catch (error) {
     // Non-blocking: Don't let email failure break payment flow
     logger.error('Admin notification error (non-blocking)', error, { category: 'email' });
@@ -152,77 +167,81 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
  * taaki manually contact kar sake!
  */
 export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) {
+  const { userName, userEmail, errorMessage, paymentId } = data;
+
   try {
     const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) return;
+    if (apiKey) {
+      const resend = new Resend(apiKey);
+      const fromName = process.env.EMAIL_FROM_NAME || 'UPSC Zen';
+      const fromAddress = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+      const fromEmail = `${fromName} <${fromAddress}>`;
 
-    const resend = new Resend(apiKey);
-
-    const fromName = process.env.EMAIL_FROM_NAME || 'UPSC Zen';
-    const fromAddress = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-    const fromEmail = `${fromName} <${fromAddress}>`;
-
-    const { userName, userEmail, errorMessage, paymentId } = data;
-
-    const html = `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #dc2626; margin-bottom: 8px;">🚨 User Email Failed — Manual Action Required!</h2>
-        
-        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin: 16px 0;">
-          <p style="margin: 0 0 8px; font-weight: 600;">Payment succeeded but the welcome email to the user failed.</p>
-          <p style="margin: 0; color: #666;">Send them the password setup link manually (UPSC Zen).</p>
-        </div>
-        
-        <div style="background: #f8f9fa; border-radius: 8px; padding: 16px; margin: 16px 0;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-            <tr>
-              <td style="padding: 6px 0; color: #666;">User</td>
-              <td style="padding: 6px 0; font-weight: 600;">${userName}</td>
-            </tr>
-            <tr>
-              <td style="padding: 6px 0; color: #666;">Email</td>
-              <td style="padding: 6px 0;"><a href="mailto:${userEmail}" style="color: #0066cc; font-weight: 600;">${userEmail}</a></td>
-            </tr>
-            <tr>
-              <td style="padding: 6px 0; color: #666;">Payment ID</td>
-              <td style="padding: 6px 0; font-family: monospace;">${paymentId}</td>
-            </tr>
-          </table>
-        </div>
-        
-        <div style="background: #fef3c7; border-radius: 6px; padding: 12px; margin: 16px 0;">
-          <p style="margin: 0; font-size: 13px; color: #92400e;">
-            <strong>Error:</strong> ${errorMessage}
+      const html = `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #dc2626; margin-bottom: 8px;">🚨 User Email Failed — Manual Action Required!</h2>
+          
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin: 16px 0;">
+            <p style="margin: 0 0 8px; font-weight: 600;">Payment succeeded but the welcome email to the user failed.</p>
+            <p style="margin: 0; color: #666;">Send them the password setup link manually (UPSC Zen).</p>
+          </div>
+          
+          <div style="background: #f8f9fa; border-radius: 8px; padding: 16px; margin: 16px 0;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr>
+                <td style="padding: 6px 0; color: #666;">User</td>
+                <td style="padding: 6px 0; font-weight: 600;">${userName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #666;">Email</td>
+                <td style="padding: 6px 0;"><a href="mailto:${userEmail}" style="color: #0066cc; font-weight: 600;">${userEmail}</a></td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #666;">Payment ID</td>
+                <td style="padding: 6px 0; font-family: monospace;">${paymentId}</td>
+              </tr>
+            </table>
+          </div>
+          
+          <div style="background: #fef3c7; border-radius: 6px; padding: 12px; margin: 16px 0;">
+            <p style="margin: 0; font-size: 13px; color: #92400e;">
+              <strong>Error:</strong> ${errorMessage}
+            </p>
+          </div>
+          
+          <p style="font-size: 13px; color: #666;">
+            <strong>Action:</strong> Admin → User management → find by email → send password / magic link.
           </p>
         </div>
-        
-        <p style="font-size: 13px; color: #666;">
-          <strong>Action:</strong> Admin → User management → find by email → send password / magic link.
-        </p>
-      </div>
-    `;
+      `;
 
-    await resend.emails.send({
-      from: fromEmail,
-      to: [ADMIN_EMAIL],
-      subject: `🚨 EMAIL FAILED: ${userName} (${userEmail}) — Payment ID: ${paymentId}`,
-      html,
-    });
+      await resend.emails.send({
+        from: fromEmail,
+        to: [ADMIN_EMAIL],
+        subject: `🚨 EMAIL FAILED: ${userName} (${userEmail}) — Payment ID: ${paymentId}`,
+        html,
+      });
+    } else {
+      logger.warn('RESEND_API_KEY missing, skipping admin failure email', { category: 'email' });
+    }
+
 
     // 🚀 NEW: Notify via Telegram (UPSC ZEN Branding - Critical)
     try {
-      const tgMessage = `🚨 <b>UPSC ZEN: USER EMAIL FAILED</b>\n\n` +
-        `Payment was successful but welcome email (Resend) failed.\n\n` +
-        `👤 User: ${escapeHTML(userName)}\n` +
-        `📧 Email: ${escapeHTML(userEmail)}\n` +
-        `🆔 Payment: <code>${paymentId}</code>\n\n` +
-        `⚠️ <b>Bhai, manual action lo:</b> Send setup link from admin panel.\n` +
-        `❌ Error: <i>${escapeHTML(errorMessage)}</i>`;
+      const tgMessage = `🚨 <b>UPSC ZEN: USER EMAIL FAILED</b>\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `Payment was successful but <b>Welcome Email</b> (Resend) failed.\n\n` +
+        `👤 <b>User:</b> ${escapeHTML(userName)}\n` +
+        `📧 <b>Email:</b> ${escapeHTML(userEmail)}\n` +
+        `🆔 <b>Payment ID:</b> <code>${paymentId}</code>\n\n` +
+        `❌ <b>Error:</b> <i>${escapeHTML(errorMessage)}</i>\n\n` +
+        `⚠️ <b>Bhai, manual action lo:</b> Send setup link from admin panel ASAP!`;
 
       await sendTelegramNotification(tgMessage);
     } catch (tgErr) {
       logger.error('Failed to send admin failure Telegram notification', tgErr, { category: 'email' });
     }
+
 
   } catch (error) {
     // Last resort: Log to DB if even this fails

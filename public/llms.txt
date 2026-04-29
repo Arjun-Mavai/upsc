@@ -1,0 +1,38 @@
+# llms.txt — AI discovery summary
+# Served at: https://upsc.zenscroll.app/llms.txt
+
+site: UPSC Zen
+url: https://upsc.zenscroll.app
+type: educational web application
+focus: UPSC CSE Prelims preparation through PYQ-first learning
+
+primary intention:
+  - Help aspirants decode UPSC PYQ patterns (2020-2025) and improve exam reasoning.
+  - Prioritize PYQ Intelligence over generic content browsing.
+  - Provide structured, expert-style explanations for each PYQ.
+
+pyq intelligence 4-point framework:
+  - Conceptual Core: the core concept and quick verdict behind the correct option.
+  - Core Pillar: the foundational principle that anchors the concept.
+  - Logic Path: stepwise reasoning to reach the right answer.
+  - Trap Watch: common UPSC traps and elimination cautions.
+
+core routes:
+  - Home: /
+  - PYQ Intelligence (primary): /upsc/intelligence
+  - PYQ Intelligence (alt route): /syllabus/quiz/pyq/intelligence
+  - UPSC PYQ Test Hub: /syllabus/quiz/pyq
+  - PYQ Question Explorer: /upsc/intelligence/questions
+  - Syllabus: /syllabus
+  - Free Quiz: /free-quiz
+  - Pricing: /pricing
+
+app basics for AI tools:
+  - Audience: UPSC CSE aspirants (Hindi + English support).
+  - Product intent: exam-focused practice and explanation, not a generic blog app.
+  - Core value: reasoning quality and pattern recognition from official PYQs.
+  - Platform: web app (mobile + desktop usage).
+
+discovery endpoints:
+  - sitemap: /sitemap.xml
+  - robots: /robots.txt

@@ -12,7 +12,12 @@ import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import { z } from 'zod';
 import { sendTelegramNotification, escapeHTML } from '@/lib/tg-notify';
-import { notifyAdminOnPayment } from '@/lib/admin-notify';
+import { notifyAdminOnPayment, notifyAdminOnEmailFailure } from '@/lib/admin-notify';
+import { verificationTokens } from '@/db/schema';
+import { render } from '@react-email/render';
+import WelcomeSetPasswordEmail from '@/components/emails/WelcomeSetPasswordEmail';
+import { appPath } from '@/lib/app-url';
+import { Resend } from 'resend';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 💳 START PAYMENT (Register + Create Order)
@@ -262,6 +267,21 @@ export async function verifyPayment(input: VerifyPaymentInput) {
     if (amountInPaise === proPaise || amountInPaise === upgradePaise) {
       planTier = 'pro';
     } else {
+      // 🚨 Notify Admin: Amount Mismatch
+      const user = await db.query.mppscUsers.findFirst({
+        where: eq(mppscUsers.id, userId),
+      });
+
+      notifyAdminOnPayment({
+        type: 'failed',
+        userName: user?.name || 'Unknown',
+        userEmail: user?.email || 'N/A',
+        planTier: 'pro',
+        amountInRupees: amountInPaise / 100,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+      }).catch(() => {});
+
       return { error: 'Payment amount does not match any valid plan' };
     }
 
@@ -309,13 +329,91 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         orderId: razorpay_order_id,
         paymentId: razorpay_payment_id,
       });
+
+      // 📧 Step 7: Send Welcome Email + Set Password Link (For New Users)
+      const isUpgrade = order.notes?.planType === 'upgrade';
+      if (!isUpgrade && user) {
+        const token = uuidv4();
+        const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+        // Store token
+        await db.insert(verificationTokens).values({
+          identifier: userId,
+          token,
+          expires,
+        });
+
+        const actionUrl = appPath(`auth/set-password?token=${token}`);
+        const emailHtml = await render(
+          WelcomeSetPasswordEmail({
+            name: user.name || 'Aspirant',
+            actionUrl,
+            planTier,
+          })
+        );
+
+        const resendApiKey = process.env.RESEND_API_KEY;
+        if (!resendApiKey) {
+          logger.error('RESEND_API_KEY missing, cannot send welcome email', undefined, {
+            category: 'email',
+            userId,
+            metadata: { to: user.email },
+          });
+          
+          // Notify admin so they can manually handle it
+          await notifyAdminOnEmailFailure({
+            userName: user.name || 'Unknown',
+            userEmail: user.email,
+            errorMessage: 'RESEND_API_KEY is missing in environment variables',
+            paymentId: razorpay_payment_id,
+          });
+        } else {
+          const resend = new Resend(resendApiKey);
+          const fromName = process.env.EMAIL_FROM_NAME || 'UPSC Zen';
+          const fromAddress = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+          
+          const { error: emailError } = await resend.emails.send({
+            from: `${fromName} <${fromAddress}>`,
+            to: [user.email],
+            subject: 'Welcome to UPSC Zen Premium! 🚀',
+            html: emailHtml,
+          });
+
+          if (emailError) {
+            logger.error('Welcome email failed', emailError, {
+              category: 'email',
+              userId,
+              metadata: { to: user.email },
+            });
+
+            await notifyAdminOnEmailFailure({
+              userName: user.name || 'Unknown',
+              userEmail: user.email,
+              errorMessage: emailError.message,
+              paymentId: razorpay_payment_id,
+            });
+          }
+        }
+      }
     } catch (err) {
-      logger.error('Centralized notification failed for payment', { err });
+      logger.error('Post-payment notification/email flow failed', err, { category: 'email' });
     }
 
     return { success: true, planTier };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Verification failed';
+    
+    // 🚨 Notify Admin: Unexpected Verification Failure
+    notifyAdminOnPayment({
+      type: 'failed',
+      userName: 'System Error / Unexpected',
+      userEmail: 'N/A',
+      planTier: 'pro',
+      amountInRupees: 0,
+      orderId: input.razorpay_order_id,
+      paymentId: input.razorpay_payment_id,
+    }).catch(() => {});
+
     return { error: message };
   }
 }

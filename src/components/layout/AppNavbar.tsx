@@ -39,7 +39,6 @@ import {
   Download,
   LogOut,
   LayoutDashboard,
-  BookOpen,
   GraduationCap,
   Zap,
   History,
@@ -124,7 +123,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
         color: 'text-amber-600',
       },
       { name: 'Free Daily Quiz', href: '/free-quiz', icon: Zap, color: 'text-orange-500' },
-      { name: 'Blogs', href: '/blogs', icon: BookOpen, color: 'text-sky-600' },
+      // { name: 'Blogs', href: '/blogs', icon: BookOpen, color: 'text-sky-600' },
       {
         name: 'Test History',
         href: '/syllabus/test-history',
