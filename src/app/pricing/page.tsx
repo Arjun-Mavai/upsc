@@ -54,6 +54,20 @@ const faqData = [
   },
 ];
 
+// JSON-LD FAQ schema so LLM/AI crawlers can read FAQs without needing JS.
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqData.map((item) => ({
+    '@type': 'Question',
+    name: item.q.en,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: item.a.en,
+    },
+  })),
+};
+
 // ── Feature lists from centralized config ───────────────
 // Icon mapping for pricing page
 const ICON_MAP: Record<string, any> = {
@@ -138,6 +152,10 @@ export default function PricingPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white pt-24 pb-20">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
         <div className="mx-auto max-w-5xl px-4">
           <div className="mb-12 space-y-4 text-center">
             <Skeleton className="mx-auto h-8 w-48 rounded-full" />
@@ -152,6 +170,10 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-[#fffdfa] font-sans selection:bg-amber-100 selection:text-amber-900 overflow-hidden relative">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       {/* Background Decoration */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-500/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-orange-500/5 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2" />
