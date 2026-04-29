@@ -13,6 +13,7 @@ import { Suspense } from 'react';
 import LoadingSkeleton from './loading';
 import type { Metadata, ResolvingMetadata } from 'next';
 import { getExamContext, generateExamMetadata } from '@/lib/exam-context';
+import Script from 'next/script';
 
 export async function generateMetadata(): Promise<Metadata> {
   const exam = await getExamContext();
@@ -26,6 +27,27 @@ export async function generateMetadata(): Promise<Metadata> {
 
 // Focus dynamic rendering because page determines access based on cookies (getUserAccess)
 export const dynamic = 'force-dynamic';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://upsc.zenscroll.app';
+
+const pyqIntelligencePageSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'UPSC PYQ Intelligence',
+  url: `${BASE_URL}/syllabus/quiz/pyq/intelligence`,
+  description:
+    'UPSC PYQ Intelligence page with subject trends, repeated topics, and a 4-point explanation system.',
+  mainEntity: {
+    '@type': 'ItemList',
+    name: 'PYQ Intelligence Explanation Model',
+    numberOfItems: 4,
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Conceptual Core' },
+      { '@type': 'ListItem', position: 2, name: 'Core Pillar' },
+      { '@type': 'ListItem', position: 3, name: 'Logic Path' },
+      { '@type': 'ListItem', position: 4, name: 'Trap Watch' },
+    ],
+  },
+};
 
 // ── Cached analytics functions (unique stable keys) ─────────────────────────
 // Note: getRepeatedQuestions is already wrapped with unstable_cache internally,
@@ -91,8 +113,15 @@ export default async function PYQIntelligencePage() {
   const exam = await getExamContext();
 
   return (
-    <Suspense fallback={<LoadingSkeleton />}>
-      <IntelligenceDataFetcher examId={exam.id} />
-    </Suspense>
+    <>
+      <Script
+        id="schema-syllabus-pyq-intelligence-page"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(pyqIntelligencePageSchema) }}
+      />
+      <Suspense fallback={<LoadingSkeleton />}>
+        <IntelligenceDataFetcher examId={exam.id} />
+      </Suspense>
+    </>
   );
 }
