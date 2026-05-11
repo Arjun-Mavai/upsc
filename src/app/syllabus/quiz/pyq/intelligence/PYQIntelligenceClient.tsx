@@ -1,7 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { SubjectDistributionStats, UnitDistributionStats, RepeatedQuestion, TopicStat, OverallWeightageSubjectData } from '@/actions/pyq-analytics';
+import {
+  SubjectDistributionStats,
+  UnitDistributionStats,
+  RepeatedQuestion,
+  OverallWeightageSubjectData,
+} from '@/actions/pyq-analytics';
 import PYQIntelligenceModernClient from './PYQIntelligenceModernClient';
 import PYQIntelligenceClassicClient from './PYQIntelligenceClassicClient';
 
@@ -10,7 +15,6 @@ interface PYQIntelligenceClientProps {
   subjectStats: SubjectDistributionStats[];
   stats: UnitDistributionStats[];
   repeatedQuestions: RepeatedQuestion[];
-  topicStats: Record<string, TopicStat[]>;
   simpleSubjectStats: Record<string, number>;
   subjectQuestionsData: OverallWeightageSubjectData[];
   isPro?: boolean;

@@ -6,6 +6,7 @@ import { eq, desc } from 'drizzle-orm';
 import { verifyAuth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { logger } from '@/lib/logger';
+import { sendTelegramNotification, escapeHTML } from '@/lib/tg-notify';
 
 export async function submitSupportTicket(data: any) {
   try {
@@ -27,6 +28,24 @@ export async function submitSupportTicket(data: any) {
       createdAt: new Date(),
       examType: 'upsc', // UPSC-only for this platform
     });
+
+    // Send Telegram Notification (Graceful & Non-blocking)
+    try {
+      const tgMessage = `🎫 <b>UPSC ZEN: NEW SUPPORT TICKET</b>\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `👤 <b>Student:</b> ${escapeHTML(name)}\n` +
+        `📧 <b>Email:</b> ${escapeHTML(email)}\n` +
+        `📞 <b>Phone:</b> ${phone ? `<code>${escapeHTML(phone)}</code>` : '<i>Not provided</i>'}\n` +
+        `🏷️ <b>Category:</b> <code>${escapeHTML(category || 'general').toUpperCase()}</code>\n\n` +
+        `📝 <b>Query Message:</b>\n` +
+        `<i>${escapeHTML(message)}</i>\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `⚡ <i>Ticket saved in Database. Please respond soon!</i>`;
+
+      await sendTelegramNotification(tgMessage);
+    } catch (tgError) {
+      logger.error('Failed to send support ticket Telegram notification:', tgError);
+    }
 
     // revalidatePath('/admin/dashboard'); // If we show tickets there
     return { success: true };

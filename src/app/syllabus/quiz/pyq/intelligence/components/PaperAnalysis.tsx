@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { TrendingUp, ChevronDown, ChevronUp, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -36,7 +36,32 @@ export function PaperAnalysis({
   const { isSubscribed, user } = useSettingsStore();
   const isPro = isProProp || isSubscribed || user?.role === 'admin';
 
-  const years = Array.from(new Set(stats.map((s) => s.year))).sort((a, b) => b - a);
+  const exam = useMemo(() => getCurrentExam(examId), [examId]);
+  const subjectOrder = useMemo(
+    () => new Map(exam.subjects.map((subject, index) => [subject, index])),
+    [exam.subjects]
+  );
+  const statsByYear = useMemo(() => {
+    const grouped = new Map<number, { stats: UnitDistributionStats[]; totalQuestions: number }>();
+    for (const unitStat of stats) {
+      const existing = grouped.get(unitStat.year);
+      if (existing) {
+        existing.stats.push(unitStat);
+        existing.totalQuestions += unitStat.count;
+      } else {
+        grouped.set(unitStat.year, { stats: [unitStat], totalQuestions: unitStat.count });
+      }
+    }
+    return grouped;
+  }, [stats]);
+  const years = useMemo(() => Array.from(statsByYear.keys()).sort((a, b) => b - a), [statsByYear]);
+  const repeatCountByQuestionId = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const repeated of repeatedQuestions) {
+      map.set(repeated.questionId, repeated.count);
+    }
+    return map;
+  }, [repeatedQuestions]);
 
   const toggleYear = (year: number) => {
     const isUnlocked = isPro || year === FREE_YEAR;
@@ -50,10 +75,7 @@ export function PaperAnalysis({
   };
 
   // Helper to find repeat count
-  const getRepeatCount = (questionId: string): number => {
-    const match = repeatedQuestions.find((rq) => rq.questionId === questionId);
-    return match?.count || 0;
-  };
+  const getRepeatCount = (questionId: string): number => repeatCountByQuestionId.get(questionId) || 0;
 
   return (
     <div className="space-y-6">
@@ -71,9 +93,10 @@ export function PaperAnalysis({
 
       <div className="space-y-4">
         {years.map((year) => {
-          const yearStats = stats.filter((s) => s.year === year);
-          const totalQuestions = yearStats.reduce((acc, curr) => acc + curr.count, 0);
-          const exam = getCurrentExam(examId);
+          const yearBucket = statsByYear.get(year);
+          if (!yearBucket) return null;
+          const yearStats = yearBucket.stats;
+          const totalQuestions = yearBucket.totalQuestions;
           const isUnlocked = isPro || year === FREE_YEAR;
 
           const sortedSections = [...yearStats];
@@ -88,9 +111,9 @@ export function PaperAnalysis({
           } else {
             // Sort by subject list order in config
             sortedSections.sort((a, b) => {
-              const orderA = exam.subjects.indexOf(a.unitId);
-              const orderB = exam.subjects.indexOf(b.unitId);
-              return (orderA === -1 ? 99 : orderA) - (orderB === -1 ? 99 : orderB);
+              const orderA = subjectOrder.get(a.unitId) ?? 99;
+              const orderB = subjectOrder.get(b.unitId) ?? 99;
+              return orderA - orderB;
             });
           }
 

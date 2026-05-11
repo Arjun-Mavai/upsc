@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { RenderTableQuestion } from '@/features/tests/utils/questionFormatter';
 import type { Question as QuizQuestion } from '@/types/quiz';
+import { getCorrectAnswerIndex } from '@/lib/quiz-scoring';
 
 // ============================================================================
 // TYPES
@@ -1031,37 +1032,7 @@ export const UPSCQuestionRenderer: React.FC<UPSCQuestionRendererProps> = ({
   const isShortOptions = options.every((o) => upscOptionDisplayLength(o) < 45);
   
   const correctIndex = useMemo(() => {
-    const ans = question.correctAnswer;
-    if (ans === undefined || ans === null) return -1;
-    if (typeof ans === 'number') return ans;
-    
-    // String matching
-    if (typeof ans === 'string') {
-      const upper = ans.trim().toUpperCase();
-      if (['A','B','C','D'].includes(upper)) return upper.charCodeAt(0) - 65;
-      
-      // Try finding by ID or Text in options
-      if (options && Array.isArray(options)) {
-        const idx = options.findIndex((opt: UpscQuestionOption) => {
-          if (typeof opt === 'string') {
-             return opt.trim().toLowerCase() === ans.trim().toLowerCase();
-          }
-          if (opt && typeof opt === 'object') {
-             if (String(opt.id) === String(ans) || String(opt.id).toUpperCase() === upper) return true;
-             if (opt.text && String(opt.text).trim().toLowerCase() === ans.trim().toLowerCase()) return true;
-             if (opt.textEn && String(opt.textEn).trim().toLowerCase() === ans.trim().toLowerCase()) return true;
-          }
-          return false;
-        });
-        if (idx !== -1) return idx;
-      }
-
-      // Check numeric strings '1', '2', '3', '4'
-      const num = parseInt(ans);
-      if (!isNaN(num) && num >= 1 && num <= 4) return num - 1;
-    }
-    
-    return -1;
+    return getCorrectAnswerIndex(question.correctAnswer as any, options);
   }, [question.correctAnswer, options]);
 
   // Check if items are statements

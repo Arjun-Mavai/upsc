@@ -1,7 +1,12 @@
 'use client';
 
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { UnitDistributionStats, RepeatedQuestion, TopicStat, SubjectDistributionStats, OverallWeightageSubjectData } from '@/actions/pyq-analytics';
+import {
+  UnitDistributionStats,
+  RepeatedQuestion,
+  SubjectDistributionStats,
+  OverallWeightageSubjectData,
+} from '@/actions/pyq-analytics';
 import { getCurrentExam } from '@/config/exams';
 import { ModernHeader } from './components/modern/ModernHeader';
 import { ModernOverallWeightage } from './components/modern/ModernOverallWeightage';
@@ -18,7 +23,6 @@ interface PYQIntelligenceModernClientProps {
   subjectStats: SubjectDistributionStats[];
   stats: UnitDistributionStats[];
   repeatedQuestions: RepeatedQuestion[];
-  topicStats: Record<string, TopicStat[]>;
   simpleSubjectStats: Record<string, number>;
   subjectQuestionsData: OverallWeightageSubjectData[];
   isPro?: boolean;
@@ -27,10 +31,8 @@ interface PYQIntelligenceModernClientProps {
 
 export default function PYQIntelligenceModernClient({
   examId,
-  subjectStats: _subjectStats,
   stats,
   repeatedQuestions,
-  topicStats: _topicStats,
   simpleSubjectStats,
   subjectQuestionsData,
   isPro = false,

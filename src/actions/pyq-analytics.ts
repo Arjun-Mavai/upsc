@@ -82,26 +82,6 @@ export interface UnitDistributionStats {
   }[];
 }
 
-export interface TopicStat {
-  unitId: string;
-  topicId: string;
-  topicSlug: string;
-  topicTitle: string;
-  topicTitleEn?: string | null;
-  count: number;
-  years: number[];
-  questions: {
-    id: string;
-    text: string;
-    textEn?: string | null;
-    year: number;
-    qNo: number;
-    subject?: string;
-    explanation?: string | null;
-    explanationEn?: string | null;
-  }[];
-}
-
 // ── LOCKING CONSTANTS ──────────────────────────────────────────
 const FREE_YEAR = 2025;
 const FREE_SUBJECT = 'History & Culture';
@@ -503,136 +483,65 @@ export interface UnifiedSubjectStats {
 }
 
 export async function getUnifiedSubjectStats(examId?: string): Promise<UnifiedSubjectStats[]> {
-  try {
-    const testIds = getCanonicalTestIds(examId);
-    if (testIds.length === 0) return [];
-
-    const questionTopics = await db
-      .select({
-        questionId: pyqQuestionTopics.questionId,
-        testId: questions.testId,
-        topicTitle: pyqTopics.topicTitle,
-        questionText: questions.questionText,
-        questionTextEn: questions.questionTextEn,
-        questionOrder: questions.order,
-      })
-      .from(pyqQuestionTopics)
-      .leftJoin(questions, eq(pyqQuestionTopics.questionId, questions.id))
-      .leftJoin(pyqTopics, eq(pyqQuestionTopics.topicId, pyqTopics.id))
-      .where(inArray(questions.testId, testIds));
-
-    const subjectGroups: Record<string, UnifiedSubjectStats> = {};
-    for (const mapping of questionTopics) {
-      if (!mapping.testId || !mapping.topicTitle) continue;
-      const year = getYearFromTestId(mapping.testId, examId);
-      if (!year) continue;
-      const normalizedSubject = normalizeSubject(mapping.topicTitle, examId === 'upsc');
-      if (!subjectGroups[normalizedSubject]) {
-        subjectGroups[normalizedSubject] = {
-          subject: normalizedSubject,
-          totalQuestions: 0,
-          yearBreakdown: {},
-          questionsByYear: {},
-        };
-      }
-      const stats = subjectGroups[normalizedSubject];
-      stats.totalQuestions += 1;
-      stats.yearBreakdown[year] = (stats.yearBreakdown[year] || 0) + 1;
-      if (!stats.questionsByYear[year]) stats.questionsByYear[year] = [];
-      stats.questionsByYear[year].push({
-        id: mapping.questionId,
-        text: mapping.questionText || '',
-        textEn: mapping.questionTextEn,
-        order: mapping.questionOrder || 0,
-      });
-    }
-    for (const stats of Object.values(subjectGroups)) {
-      for (const year of Object.keys(stats.questionsByYear)) {
-        stats.questionsByYear[Number(year)].sort((a, b) => a.order - b.order);
-      }
-    }
-    return Object.values(subjectGroups).sort((a, b) => b.totalQuestions - a.totalQuestions);
-  } catch (error) {
-    console.error('Error in Unified Subject Stats:', error);
-    return [];
-  }
-}
-
-export async function getMostRepeatedTopics(examId?: string): Promise<Record<string, TopicStat[]>> {
-  const cacheKey = `most-repeated-topics-${examId || 'mppsc'}`;
+  const cacheKey = `unified-subject-stats-${examId || 'mppsc'}`;
 
   return unstable_cache(
     async () => {
       try {
         const testIds = getCanonicalTestIds(examId);
-        if (testIds.length === 0) return {};
+        if (testIds.length === 0) return [];
 
-        const topicData = await db
+        const questionTopics = await db
           .select({
+            questionId: pyqQuestionTopics.questionId,
             testId: questions.testId,
-            questionId: questions.id,
+            topicTitle: pyqTopics.topicTitle,
             questionText: questions.questionText,
             questionTextEn: questions.questionTextEn,
             questionOrder: questions.order,
-            questionSubject: questions.subject,
-            topicId: pyqTopics.id,
-            topicSlug: pyqTopics.topicSlug,
-            topicTitle: pyqTopics.topicTitle,
-            topicTitleEn: pyqTopics.topicTitleEn,
-            explanation: questions.explanation,
-            explanationEn: questions.explanationEn,
           })
-          .from(questions)
-          .innerJoin(pyqQuestionTopics, eq(questions.id, pyqQuestionTopics.questionId))
-          .innerJoin(pyqTopics, eq(pyqQuestionTopics.topicId, pyqTopics.id))
+          .from(pyqQuestionTopics)
+          .leftJoin(questions, eq(pyqQuestionTopics.questionId, questions.id))
+          .leftJoin(pyqTopics, eq(pyqQuestionTopics.topicId, pyqTopics.id))
           .where(inArray(questions.testId, testIds));
 
-        const unitTopics: Record<string, Map<string, TopicStat>> = {};
-        for (const row of topicData) {
-          const year = getYearFromTestId(row.testId, examId);
-          const unitId = normalizeSubject(row.questionSubject || 'General Studies', examId === 'upsc');
-          if (!unitTopics[unitId]) unitTopics[unitId] = new Map();
-          if (!unitTopics[unitId].has(row.topicId)) {
-            unitTopics[unitId].set(row.topicId, {
-              unitId,
-              topicId: row.topicId,
-              topicSlug: row.topicSlug,
-              topicTitle: row.topicTitle,
-              topicTitleEn: row.topicTitleEn,
-              count: 0,
-              years: [],
-              questions: [],
-            });
+        const subjectGroups: Record<string, UnifiedSubjectStats> = {};
+        for (const mapping of questionTopics) {
+          if (!mapping.testId || !mapping.topicTitle) continue;
+          const year = getYearFromTestId(mapping.testId, examId);
+          if (!year) continue;
+          const normalizedSubject = normalizeSubject(mapping.topicTitle, examId === 'upsc');
+          if (!subjectGroups[normalizedSubject]) {
+            subjectGroups[normalizedSubject] = {
+              subject: normalizedSubject,
+              totalQuestions: 0,
+              yearBreakdown: {},
+              questionsByYear: {},
+            };
           }
-          const stat = unitTopics[unitId].get(row.topicId)!;
-          stat.count++;
-          if (!stat.years.includes(year)) stat.years.push(year);
-          if (!stat.questions.some((q) => q.id === row.questionId)) {
-            stat.questions.push({
-              id: row.questionId,
-              text: row.questionText || '',
-              textEn: row.questionTextEn,
-              year,
-              qNo: row.questionOrder,
-              subject: row.questionSubject || undefined,
-              explanation: row.explanation,
-              explanationEn: row.explanationEn,
-            });
+          const stats = subjectGroups[normalizedSubject];
+          stats.totalQuestions += 1;
+          stats.yearBreakdown[year] = (stats.yearBreakdown[year] || 0) + 1;
+          if (!stats.questionsByYear[year]) stats.questionsByYear[year] = [];
+          stats.questionsByYear[year].push({
+            id: mapping.questionId,
+            text: mapping.questionText || '',
+            textEn: mapping.questionTextEn,
+            order: mapping.questionOrder || 0,
+          });
+        }
+        for (const stats of Object.values(subjectGroups)) {
+          for (const year of Object.keys(stats.questionsByYear)) {
+            stats.questionsByYear[Number(year)].sort((a, b) => a.order - b.order);
           }
         }
-        const result: Record<string, TopicStat[]> = {};
-        for (const [unitId, map] of Object.entries(unitTopics)) {
-          result[unitId] = Array.from(map.values())
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 10);
-        }
-        return result;
+        return Object.values(subjectGroups).sort((a, b) => b.totalQuestions - a.totalQuestions);
       } catch (error) {
-        console.error('Error in Most Repeated Topics Analysis:', error);
-        return {};
+        console.error('Error in Unified Subject Stats:', error);
+        return [];
       }
     },
-    [cacheKey, 'v3'],
+    [cacheKey, 'v1'],
     { revalidate: 3600, tags: ['pyq-stats'] }
   )();
 }

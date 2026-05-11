@@ -1,7 +1,6 @@
 import {
   getUnitDistributionStats,
   getRepeatedQuestions,
-  getMostRepeatedTopics,
   getSubjectDistributionStats,
   getOverallWeightageSubjectData,
   getUserAccess,
@@ -12,6 +11,7 @@ import { Suspense } from 'react';
 import LoadingSkeleton from '@/app/syllabus/quiz/pyq/intelligence/loading';
 import type { Metadata } from 'next';
 import Script from 'next/script';
+import { unstable_cache } from 'next/cache';
 
 export const metadata: Metadata = {
   title: 'UPSC Civil Services Intelligence | Premium Analytics',
@@ -43,6 +43,26 @@ const pyqIntelligencePageSchema = {
   },
 };
 
+const getCachedSubjectStats = unstable_cache(
+  async (examId: string) => getSubjectDistributionStats(examId),
+  ['intelligence-subject-stats-v8'],
+  { revalidate: 21600 }
+);
+
+const getCachedUnitStats = unstable_cache(
+  async (limit: number | undefined, examId: string, isPro: boolean) =>
+    getUnitDistributionStats(limit, examId, isPro),
+  ['intelligence-unit-stats-v8'],
+  { revalidate: 21600 }
+);
+
+const getCachedSubjectQuestionsData = unstable_cache(
+  async (limit: number | undefined, examId: string, isPro: boolean) =>
+    getOverallWeightageSubjectData(limit, examId, isPro),
+  ['intelligence-subject-questions-v8'],
+  { revalidate: 21600 }
+);
+
 export default async function UPSCIntelligencePage() {
   return (
     <>
@@ -61,22 +81,31 @@ export default async function UPSCIntelligencePage() {
 }
 
 async function IntelligenceDataFetcher() {
-  const { isPro } = await getUserAccess();
+  const userAccessPromise = getUserAccess();
+  const subjectStatsPromise = getCachedSubjectStats(EXAM_ID);
+  const repeatedQuestionsPromise = getRepeatedQuestions(EXAM_ID);
+  const simpleSubjectStatsPromise = getSubjectWisePYQStats(EXAM_ID);
+  const unitStatsPromise = userAccessPromise.then(({ isPro }) =>
+    getCachedUnitStats(undefined, EXAM_ID, isPro)
+  );
+  const subjectQuestionsDataPromise = userAccessPromise.then(({ isPro }) =>
+    getCachedSubjectQuestionsData(undefined, EXAM_ID, isPro)
+  );
 
   const [
+    { isPro },
     subjectStats,
     unitStats,
     repeatedQuestions,
-    topicStats,
     simpleSubjectStats,
     subjectQuestionsData,
   ] = await Promise.all([
-    getSubjectDistributionStats(EXAM_ID),
-    getUnitDistributionStats(undefined, EXAM_ID, isPro),
-    getRepeatedQuestions(EXAM_ID),
-    getMostRepeatedTopics(EXAM_ID),
-    getSubjectWisePYQStats(EXAM_ID),
-    getOverallWeightageSubjectData(undefined, EXAM_ID, isPro),
+    userAccessPromise,
+    subjectStatsPromise,
+    unitStatsPromise,
+    repeatedQuestionsPromise,
+    simpleSubjectStatsPromise,
+    subjectQuestionsDataPromise,
   ]);
 
   return (
@@ -85,7 +114,6 @@ async function IntelligenceDataFetcher() {
       subjectStats={subjectStats}
       stats={unitStats}
       repeatedQuestions={repeatedQuestions}
-      topicStats={topicStats}
       simpleSubjectStats={simpleSubjectStats}
       subjectQuestionsData={subjectQuestionsData}
       isPro={isPro}

@@ -1,7 +1,6 @@
 import {
   getUnitDistributionStats,
   getRepeatedQuestions,
-  getMostRepeatedTopics,
   getSubjectDistributionStats,
   getOverallWeightageSubjectData,
   getUserAccess,
@@ -11,7 +10,7 @@ import PYQIntelligenceClient from './PYQIntelligenceClient';
 import { unstable_cache } from 'next/cache';
 import { Suspense } from 'react';
 import LoadingSkeleton from './loading';
-import type { Metadata, ResolvingMetadata } from 'next';
+import type { Metadata } from 'next';
 import { getExamContext, generateExamMetadata } from '@/lib/exam-context';
 import Script from 'next/script';
 
@@ -54,45 +53,48 @@ const pyqIntelligencePageSchema = {
 // but we use a page-level wrapper for an extra stable route-scoped layer.
 const getCachedSubjectStats = unstable_cache(
   async (examId?: string) => getSubjectDistributionStats(examId),
-  ['intelligence-subject-stats-v7'],
+  ['intelligence-subject-stats-v8'],
   { revalidate: 21600 }
 );
 const getCachedUnitStats = unstable_cache(
   async (limit?: number, examId?: string, isPro: boolean = false) =>
     getUnitDistributionStats(limit, examId, isPro),
-  ['intelligence-unit-stats-v7'],
-  { revalidate: 21600 }
-);
-const getCachedTopicStats = unstable_cache(
-  async (examId?: string) => getMostRepeatedTopics(examId),
-  ['intelligence-topics-v7'],
+  ['intelligence-unit-stats-v8'],
   { revalidate: 21600 }
 );
 const getCachedSubjectQuestionsData = unstable_cache(
   async (limit?: number, examId?: string, isPro: boolean = false) =>
     getOverallWeightageSubjectData(limit, examId, isPro),
-  ['intelligence-subject-questions-v7'],
+  ['intelligence-subject-questions-v8'],
   { revalidate: 21600 }
 );
 
 async function IntelligenceDataFetcher({ examId }: { examId: string }) {
-  const { isPro } = await getUserAccess();
+  const userAccessPromise = getUserAccess();
+  const subjectStatsPromise = getCachedSubjectStats(examId);
+  const repeatedQuestionsPromise = getRepeatedQuestions(examId);
+  const simpleSubjectStatsPromise = getSubjectWisePYQStats(examId);
+  const unitStatsPromise = userAccessPromise.then(({ isPro }) =>
+    getCachedUnitStats(undefined, examId, isPro)
+  );
+  const subjectQuestionsDataPromise = userAccessPromise.then(({ isPro }) =>
+    getCachedSubjectQuestionsData(undefined, examId, isPro)
+  );
 
-  // 🚀 All 5 heavy queries run in parallel — Promise.all for max speed
   const [
+    { isPro },
     subjectStats,
     unitStats,
     repeatedQuestions,
-    topicStats,
     simpleSubjectStats,
     subjectQuestionsData,
   ] = await Promise.all([
-    getCachedSubjectStats(examId),
-    getCachedUnitStats(undefined, examId, isPro),
-    getRepeatedQuestions(examId), // Already has its own unstable_cache internally
-    getCachedTopicStats(examId),
-    getSubjectWisePYQStats(examId), // Already has its own unstable_cache internally
-    getCachedSubjectQuestionsData(undefined, examId, isPro),
+    userAccessPromise,
+    subjectStatsPromise,
+    unitStatsPromise,
+    repeatedQuestionsPromise,
+    simpleSubjectStatsPromise,
+    subjectQuestionsDataPromise,
   ]);
 
   return (
@@ -101,7 +103,6 @@ async function IntelligenceDataFetcher({ examId }: { examId: string }) {
       subjectStats={subjectStats}
       stats={unitStats}
       repeatedQuestions={repeatedQuestions}
-      topicStats={topicStats}
       simpleSubjectStats={simpleSubjectStats}
       subjectQuestionsData={subjectQuestionsData}
       isPro={isPro}

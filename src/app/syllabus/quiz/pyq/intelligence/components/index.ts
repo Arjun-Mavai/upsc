@@ -3,7 +3,6 @@ export { PYQHeader } from './PYQHeader';
 export { PYQMenu } from './PYQMenu';
 export { OverallWeightage } from './OverallWeightage';
 export { PaperAnalysis } from './PaperAnalysis';
-export { MostRepeatedTopics } from './MostRepeatedTopics';
 export { UnitCard } from './UnitCard';
 export { SubjectCard } from './SubjectCard';
 export { QuestionItem, QuestionList } from './QuestionItem';
