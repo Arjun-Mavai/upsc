@@ -107,12 +107,12 @@ export function SupportChat() {
   if (pathname !== '/') return null;
 
   const handleWhatsApp = () => {
-    const message = 'I just bought the Pro plan and need help getting started';
+    const message = 'Hello UPSC ZenScroll team, I need some help!';
     window.open(`https://wa.me/918766451748?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const handleTelegram = () => {
-    window.open('https://t.me/upsc_zen', '_blank');
+    window.open('https://t.me/upsc_zenscroll_support_agent_bot', '_blank');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

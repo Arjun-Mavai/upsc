@@ -18,6 +18,7 @@ import { render } from '@react-email/render';
 import WelcomeSetPasswordEmail from '@/components/emails/WelcomeSetPasswordEmail';
 import { appPath } from '@/lib/app-url';
 import { Resend } from 'resend';
+import { serializeAccessGrants } from '@/lib/access-grants';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 💳 START PAYMENT (Register + Create Order)
@@ -28,7 +29,7 @@ const startPaymentSchema = z.object({
   email: z.string().email('Invalid email address'),
   phone: z.string().min(10, 'Phone must be at least 10 digits').max(20),
   source: z.string().optional(),
-  planType: z.enum(['pro', 'upgrade']),
+  planType: z.enum(['pro', 'upgrade', 'combo', 'mains']),
   examId: z.string().default('upsc'), // Added examId
 });
 
@@ -64,7 +65,7 @@ export async function startPayment(input: StartPaymentInput) {
     if (existingUser) {
       const tier = String(existingUser.planTier ?? 'free').toLowerCase();
       const isSubscribed = Boolean(existingUser.isSubscribed);
-      const hasPaidPlan = tier === 'pro' || isSubscribed;
+      const hasPaidPlan = tier === 'pro' || tier === 'combo' || isSubscribed;
 
       if (hasPaidPlan) {
         if (!currentSession || currentSession.id !== existingUser.id) {
@@ -120,6 +121,8 @@ export async function startPayment(input: StartPaymentInput) {
     const PLAN_AMOUNTS: Record<string, number> = {
       pro: (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100,
       upgrade: (p.upgradePrice ?? PRICING_DEFAULTS.upgradePrice) * 100,
+      combo: ((p as any).comboPrice ?? PRICING_DEFAULTS.comboPrice) * 100,
+      mains: ((p as any).mainsPrice ?? PRICING_DEFAULTS.mainsPrice) * 100,
     };
 
     const amount = PLAN_AMOUNTS[planType];
@@ -262,9 +265,11 @@ export async function verifyPayment(input: VerifyPaymentInput) {
 
     const proPaise = (p.proPrice ?? PRICING_DEFAULTS.proPrice) * 100;
     const upgradePaise = (p.upgradePrice ?? PRICING_DEFAULTS.upgradePrice) * 100;
+    const comboPaise = ((p as any).comboPrice ?? PRICING_DEFAULTS.comboPrice) * 100;
+    const mainsPaise = ((p as any).mainsPrice ?? PRICING_DEFAULTS.mainsPrice) * 100;
 
     let planTier: 'pro';
-    if (amountInPaise === proPaise || amountInPaise === upgradePaise) {
+    if (amountInPaise === proPaise || amountInPaise === upgradePaise || amountInPaise === comboPaise || amountInPaise === mainsPaise) {
       planTier = 'pro';
     } else {
       // 🚨 Notify Admin: Amount Mismatch
@@ -310,6 +315,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
           isSubscribed: true,
           isActive: true,
           examType: nextExamType,
+          accessGrants: serializeAccessGrants(['upsc_pre', 'upsc_mains']),
         })
         .where(eq(mppscUsers.id, userId));
     });

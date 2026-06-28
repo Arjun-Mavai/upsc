@@ -5,6 +5,7 @@ import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { sendTelegramNotification, escapeHTML } from '@/lib/tg-notify';
+import { sendHumanRequestTelegramNotification } from '@/lib/telegram';
 
 /**
  * 📧 ADMIN NOTIFICATION SYSTEM
@@ -149,7 +150,7 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
         `🆔 <b>Payment ID:</b> <code>${paymentId}</code>\n\n` +
         `⚡ <b>Status:</b> <i>${type === 'failed' ? 'Failed Attempt' : 'Automated access granted'}</i>`;
 
-      await sendTelegramNotification(tgMessage);
+      await sendHumanRequestTelegramNotification(tgMessage);
     } catch (tgErr) {
       logger.error('Failed to send admin Telegram notification', tgErr, { category: 'email' });
     }
@@ -237,7 +238,7 @@ export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) 
         `❌ <b>Error:</b> <i>${escapeHTML(errorMessage)}</i>\n\n` +
         `⚠️ <b>Bhai, manual action lo:</b> Send setup link from admin panel ASAP!`;
 
-      await sendTelegramNotification(tgMessage);
+      await sendHumanRequestTelegramNotification(tgMessage);
     } catch (tgErr) {
       logger.error('Failed to send admin failure Telegram notification', tgErr, { category: 'email' });
     }

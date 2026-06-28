@@ -113,7 +113,7 @@ export default function PricingPage() {
   // Payment Modal State
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState({
-    planType: 'pro' as 'pro' | 'upgrade',
+    planType: 'combo' as 'pro' | 'upgrade' | 'combo',
     name: '',
   });
 
@@ -139,11 +139,11 @@ export default function PricingPage() {
     }
   }, [isProUser, router]);
 
-  const handleBuy = (plan: 'pro' | 'upgrade') => {
-    if (plan === 'pro') {
-      setSelectedPlan({ planType: 'pro', name: `Pro Plan — ₹${p.proPrice}` });
+  const handleBuy = (plan: 'combo' | 'upgrade') => {
+    if (plan === 'combo') {
+      setSelectedPlan({ planType: 'combo', name: `Pro+ Plan — ₹${p.comboPrice}` });
     } else if (plan === 'upgrade') {
-      setSelectedPlan({ planType: 'upgrade', name: `Pro Upgrade — ₹${p.upgradePrice}` });
+      setSelectedPlan({ planType: 'upgrade', name: `Pro+ Upgrade — ₹${p.upgradePrice}` });
     }
     setShowPaymentModal(true);
   };
@@ -322,14 +322,13 @@ export default function PricingPage() {
             </div>
           </div>
 
-          {/* ── Pricing Cards ────────────────────────────── */}
           <div className="mx-auto max-w-md">
             <PricingCard
-              planType="pro"
+              planType="combo"
               pricing={p}
               features={proFeatures}
               language={language}
-              onBuy={() => handleBuy('pro')}
+              onBuy={() => handleBuy('combo')}
               isPopular
             />
           </div>

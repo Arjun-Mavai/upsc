@@ -77,7 +77,7 @@ export async function updateUserName(newName: string): Promise<UpdateNameResult>
     await db.insert(mppscUserActivities).values({
       id: uuidv4(),
       userId: authUser.id,
-      userEmail: authUser.email,
+      userEmail: authUser.email || '',
       userName: trimmedName,
       action: 'UPDATE',
       details: {
@@ -185,7 +185,7 @@ export async function updateUserPassword(
     await db.insert(mppscUserActivities).values({
       id: uuidv4(),
       userId: authUser.id,
-      userEmail: authUser.email,
+      userEmail: authUser.email || '',
       userName: authUser.name,
       action: 'UPDATE',
       details: {

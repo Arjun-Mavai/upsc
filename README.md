@@ -626,6 +626,7 @@ npm run db:migrate
 ```
 
 Why:
+
 - `drizzle-kit push` can try to drop tables that exist in DB but are not represented in `schema.ts` (for example FTS virtual tables like `questions_fts*`).
 - `migrate` only runs explicit SQL migration files, so unmanaged tables are not dropped unless you intentionally write a drop statement.
 
@@ -663,10 +664,12 @@ npm run db:push
 ## 🧠 Migration Kya Hai?
 
 Migration ek SQL instruction file hoti hai jo batati hai:
+
 - kaunsa table/column add hua
 - kaunsa index/constraint change hua
 
 Simple words:
+
 - `db:generate` = instruction banana
 - `db:migrate` = instruction chalana
 
@@ -1471,3 +1474,11 @@ It was a simple fix of re-routing the import using your root alias!
 typescript
 // ✅ FIXED
 import { CANONICAL_TEST_IDS } from "@/lib/pyq-constants";
+
+1. Don’t assume. Don’t hide confusion. Surface tradeoffs.
+
+2. Minimum code that solves the problem. Nothing speculative..
+
+3. Touch only what you must. Clean up only your own mess.
+
+4. Define success criteria. Loop until verified.

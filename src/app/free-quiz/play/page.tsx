@@ -113,7 +113,7 @@ async function FreeQuizDataFetcher({ searchParams }: { searchParams: Promise<{ t
           user
             ? {
                 name: user.name || 'Guest',
-                email: user.email,
+                email: user.email || '',
                 mobile: user.phone,
               }
             : null

@@ -26,6 +26,8 @@ interface SettingsState {
   authCheckStatus: 'idle' | 'loading' | 'checked';
   setAuthCheckStatus: (status: 'idle' | 'loading' | 'checked') => void;
   setUser: (user: User | null, isSubscribed: boolean) => void;
+  guestLead: { name: string; phone: string; email?: string } | null;
+  setGuestLead: (lead: { name: string; phone: string; email?: string } | null) => void;
   // We can add more settings here like 'theme'
 }
 
@@ -40,6 +42,8 @@ export const useSettingsStore = create<SettingsState>()(
       authCheckStatus: 'idle',
       setAuthCheckStatus: (status) => set({ authCheckStatus: status }),
       setLockModalOpen: (isOpen) => set({ isLockModalOpen: isOpen }),
+      guestLead: null,
+      setGuestLead: (lead) => set({ guestLead: lead }),
       // On logout: caller must also localStorage.removeItem('settings-storage')
       // to trigger cross-tab sync via the 'storage' event in AppNavbar
       setUser: (user, isSubscribed) => set({ user, isSubscribed, authCheckStatus: 'checked' }),

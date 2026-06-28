@@ -77,7 +77,7 @@ async function PYQPageData({ mode }: { mode?: string }) {
       user
     );
 
-  const enrichedTests = tests.map((test) => {
+  const enrichedTests = tests.map((test: typeof tests[0]) => {
     const hasAccess =
       user?.role === 'admin' ||
       hasAccessToContent(

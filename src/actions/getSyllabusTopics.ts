@@ -62,28 +62,25 @@ export async function getSyllabusTopics() {
     const maxRetries = attemptLimits['TOPIC'] ?? null;
 
     // 1. Create a map of topicId -> test info
-    const topicTestMap = relatedTests.reduce(
-      (acc, curr) => {
-        if (curr.topicId) {
-          acc[curr.topicId] = {
-            testId: curr.id,
-            isFreeAccess: !!curr.isFreeAccess,
-            isLiteAccess: !!curr.isLiteAccess,
-            isProAccess: curr.isProAccess ?? true, // Default true for pro
-          };
-        }
-        return acc;
-      },
-      {} as Record<
-        string,
-        { testId: string; isFreeAccess: boolean; isLiteAccess: boolean; isProAccess: boolean }
-      >
-    );
+    const topicTestMap: Record<
+      string,
+      { testId: string; isFreeAccess: boolean; isLiteAccess: boolean; isProAccess: boolean }
+    > = {};
+    for (const curr of relatedTests) {
+      if (curr.topicId) {
+        topicTestMap[curr.topicId] = {
+          testId: curr.id,
+          isFreeAccess: !!curr.isFreeAccess,
+          isLiteAccess: !!curr.isLiteAccess,
+          isProAccess: curr.isProAccess ?? true, // Default true for pro
+        };
+      }
+    }
 
     // 2. Fetch attempts ONLY if user exists
     let userAttemptsMap: Record<string, number> = {};
     if (user && relatedTests.length > 0) {
-      const testIds = relatedTests.map((rt) => rt.id);
+      const testIds = relatedTests.map((rt: { id: string }) => rt.id);
       const attempts = await db
         .select({
           testId: userAttemptsTable.testId,
@@ -96,7 +93,7 @@ export async function getSyllabusTopics() {
         .groupBy(userAttemptsTable.testId);
 
       userAttemptsMap = attempts.reduce(
-        (acc, curr) => {
+        (acc: Record<string, number>, curr: { testId: string; count: number }) => {
           acc[curr.testId] = Number(curr.count);
           return acc;
         },
@@ -107,7 +104,7 @@ export async function getSyllabusTopics() {
     // 3. Group and Enrich
     const grouped: Record<string, any[]> = {};
 
-    topics.forEach((topic) => {
+    topics.forEach((topic: any) => {
       if (!grouped[topic.unitId]) {
         grouped[topic.unitId] = [];
       }

@@ -1,94 +1,198 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { syllabusData } from '@/data/syllabusData';
-import { Button } from '@/components/ui/button';
-import { Copy } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { SyllabusMasterPrompt } from './components/SyllabusMasterPrompt';
+import { SyllabusTrackAndBatch } from './components/SyllabusTrackAndBatch';
+import { SyllabusImportSection } from './components/SyllabusImportSection';
 import { logger } from '@/lib/logger';
+import { parseLooseJSON } from './components/utils';
 
-export default function ExportTool() {
-  // State for fetched data
-  const [dbData, setDbData] = React.useState<any>(null);
-  const [loading, setLoading] = React.useState(true);
+type SyllabusDbTopic = {
+  id: string;
+  unit_id?: string;
+  unit?: string;
+  unit_title?: string;
+  title_hindi?: string;
+  title_english?: string;
+  topic_title?: string;
+  topic_title_en?: string;
+  content_hindi?: unknown;
+  content_english?: unknown;
+  hasAiContent?: boolean;
+};
 
-  // Fetch real DB data on mount
-  React.useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch('/api/admin/enrich-syllabus');
-        if (res.ok) {
-          const data = await res.json();
-          setDbData(data.units);
-        }
-      } catch (err) {
-        logger.error('Failed to fetch DB syllabus:', err);
-        toast.error('Failed to fetch DB syllabus');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+type SyllabusDbUnit = {
+  title: string;
+  topics: SyllabusDbTopic[];
+};
 
-  // Use DB data if available, else static (but static IDs are wrong now, so mostly rely on DB)
-  // We'll map unitKeys from the DB Data
-  const units = dbData || {}; // formatted from API
+type SyllabusDbResponse = {
+  data?: SyllabusDbTopic[] | Record<string, SyllabusDbUnit>;
+  units?: SyllabusDbTopic[] | Record<string, SyllabusDbUnit>;
+};
 
-  // Sort keys (unit_1, unit_2...)
-  const unitKeys = Object.keys(units).sort((a, b) => {
-    const numA = parseInt(a.replace('unit_', '')) || 0;
-    const numB = parseInt(b.replace('unit_', '')) || 0;
-    return numA - numB;
+const MASTER_PROMPT = `# Role: Elite UPSC Prelims Specialist & Chief Mentor
+
+## Context
+You are an Elite UPSC Prelims Specialist and Chief Mentor for ZenScroll, a premium UPSC preparation platform. You have surgically reverse-engineered every UPSC Prelims paper from the past decade, giving you an unparalleled, in-depth mastery of the commission's changing patterns. Your goal is to decode the examiner's mind and provide hyper-targeted, authentic, and actionable mentorship. By bridging the gap between a dry syllabus and ruthless exam strategy, your insights must directly maximize a student's probability of clearing the Prelims cutoff.
+
+## Tone & Language Instructions (CRITICAL)
+- **Zero Fluff/Marketing:** Do not use salesy, hyped-up, or exaggerated language. Be realistic, factual, and strictly focused on exam clearance. The premium feel comes from deep academic intelligence.
+- **English Output:** Professional, empathetic, and highly strategic. Write like a senior guiding a junior.
+- **Hindi Output:** Use natural, respectful, and highly readable Hindi (similar to top-tier offline coaching mentors in Indore/Bhopal). Use terms like 'Focus', 'Trend', or 'Sequence' naturally in Hinglish if it improves readability. The tone must be serious yet supportive.
+- **No Hallucinations:** Only provide PYQs if they actually exist for this topic. Do not invent fake questions. Use your knowledge base of past State PCS exams (strictly UPSC, UPPCS, BPSC, RPSC, etc. - DO NOT INCLUDE UPSC). Prefer questions from the year 2020 onwards up until now.
+
+## Content Depth, Format & Exhaustiveness (CRITICAL INSTRUCTION)
+- **DO NOT BE BRIEF.** The content must act as **COMPLETE COMPREHENSIVE REVISION NOTES** for the student. It must be exhaustive, extremely deep, and highly informative. 
+- A student reading this should feel 100% confident to solve any objective question on this topic. 
+- Cover all dimensions: historical background, current relevance, core facts, exceptions, and conceptual nuances. Give them a deep understanding of the syllabus.
+- **FORMATTING / READABILITY:** Content dumping is strictly prohibited. If any section, bullet point, or paragraph exceeds 1-2 lines, YOU MUST break it down using clear line breaks (\\n\\n) or sub-bullets. Make it highly engaging, skimmable, and easy to parse visually.
+
+## The "Flow of Learning" (Your Core Task)
+For EACH UPSC Prelims topic provided in the JSON array, structure your insights following this psychological journey:
+0. **The Spark:** A highly meaningful, relevant quote that connects to the syllabus topic to refresh the student's mind before they begin. (Mapped to "quote")
+1. **The Basics:** Exhaustive coverage of what the topic is, its core concepts, and its weightage. Provide enough depth to build a solid foundation. (Mapped to introduction & key_concepts)
+2. **The Strategy & Shift:** What does the examiner want, how is the pattern changing, and what are the common mistakes? (Mapped to details)
+3. **The Action & Validation:** Exhaustive list of exact facts to memorize, how to remember them, and a self-check "Litmus Test". (Mapped to facts_for_prelims)
+4. **The Proof:** Exact PYQs and Mains linkage. For each topic, provide EXACTLY 8 Prelims Questions and EXACTLY 4 Mains Questions that are most relevant to the topic. **CRITICAL: Prioritize UPSC.** Out of the 8 prelims questions, aim to have at least 5-6 UPSC questions. If 5-6 UPSC questions do not exist, fall back to UPPCS or BPSC questions. (Mapped to pyq_pre_examples & potential_mains_questions)
+
+**CRITICAL ANSWER FORMATTING RULE FOR PRELIMS PYQs:** You MUST include the correct answer in brackets at the very end of every prelims question string.
+- For Hindi (content_hindi), use the exact format: (उत्तर: <सही उत्तर>). Example: "1. [UPSC] गुरु शिखर चोटी किस राज्य में स्थित है? (उत्तर: राजस्थान)"
+- For English (content_english), use the exact format: (Answer: <Correct Answer>). Example: "1. [UPSC] In which state is the Guru Shikhar peak located? (Answer: Rajasthan)"
+This is critical for our automated frontend parser to render the "Check Answer" toggle button.
+
+## Output Format (STRICT JSON ARRAY)
+You must output a valid JSON array of objects. Do NOT use markdown code formatting inside or around the JSON keys. Ensure perfectly valid JSON. 
+
+## Strictest JSON Validation & Escaping Rules (MANDATORY):
+- **NEVER use unescaped double quotes inside string values.** If you want to use double quotes around any phrase or word (e.g. \"ज्ञानं परमं बलम्\" or \"Knowledge is power\"), you **MUST** escape them using a single backslash: \`\\"\`.
+- **NEVER output consecutive unescaped double quotes** (like \`""\` or \`""quote""\`).
+- If you quote any phrase or book, write: \`\\"your quoted phrase\\"\`.
+- **IF you need a line break inside a string, you MUST use the literal characters "\\n".** Do NOT press Enter to create a new line inside a string.
+- **ABSOLUTELY CRITICAL:** The output MUST be a completely valid, fully closed JSON array. Do NOT truncate or cut off the output mid-way. Ensure every object is properly closed with '}' and the array with ']'.
+- The output array MUST have exactly the same number of objects as the input array, keeping the "id" exactly as provided. All content must be in crisp, structured bullet points. Avoid huge paragraphs.
+
+[
+  {
+    "id": "<keep the exact id from input>",
+    "content_hindi": {
+      "quote": "A meaningful, relevant quote related to the topic...",
+      "introduction": "Exhaustive, impactful conceptual intro in bullet points...",
+      "key_concepts": ["Concept 1 explained deeply\\n\\nWith clear spacing...", "Concept 2 with full details...", "Concept 3..."],
+      "details": "Comprehensive point-wise details covering strategy, changing patterns, and common mistakes...",
+      "facts_for_prelims": ["Extensive Fact 1 to memorize...", "Fact 2...", "Fact 3...", "Fact 4..."],
+      "pyq_pre_examples": [
+        "1. [UPSC] गुरु शिखर चोटी किस राज्य में स्थित है? (उत्तर: राजस्थान)",
+        "2. [UPSC] प्रायद्वीपीय भारत की सबसे ऊंची चोटी कौन सी है? (उत्तर: अनामुडी)",
+        "3. [UPSC] ... (उत्तर: ...)",
+        "4. [UPSC] ... (उत्तर: ...)",
+        "5. [UPSC] ... (उत्तर: ...)",
+        "6. [UPSC] ... (उत्तर: ...)",
+        "7. [UPPCS] ... (उत्तर: ...)",
+        "8. [BPSC] ... (उत्तर: ...)"
+      ],
+      "potential_mains_questions": [
+        "1. [UPSC] Question...",
+        "2. [UPSC] Question...",
+        "3. [BPSC] Question...",
+        "4. Expected Question..."
+      ]
+    },
+    "content_english": {
+      "quote": "A meaningful, relevant quote related to the topic...",
+      "introduction": "Exhaustive, impactful conceptual intro in bullet points...",
+      "key_concepts": ["Concept 1 explained deeply\\n\\nWith clear spacing...", "Concept 2 with full details...", "Concept 3..."],
+      "details": "Comprehensive point-wise details covering strategy, changing patterns, and common mistakes...",
+      "facts_for_prelims": ["Extensive Fact 1 to memorize...", "Fact 2...", "Fact 3...", "Fact 4..."],
+      "pyq_pre_examples": [
+        "1. [UPSC] In which state is the Guru Shikhar peak located? (Answer: Rajasthan)",
+        "2. [UPSC] Which is the highest peak of peninsular India? (Answer: Anamudi)",
+        "3. [UPSC] ... (Answer: ...)",
+        "4. [UPSC] ... (Answer: ...)",
+        "5. [UPSC] ... (Answer: ...)",
+        "6. [UPSC] ... (Answer: ...)",
+        "7. [UPPCS] ... (Answer: ...)",
+        "8. [BPSC] ... (Answer: ...)"
+      ],
+      "potential_mains_questions": ["1. [UPSC] Question...", "2. [UPSC] Question...", "3. [BPSC] Question...", "4. Expected Question..."]
+    }
+  }
+]`;
+
+export default function SyllabusEnrichmentPage() {
+  const [dbData, setDbData] = useState<SyllabusDbTopic[] | Record<string, SyllabusDbUnit>>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Tools & State
+  const [adminKey, setAdminKey] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    return localStorage.getItem('syllabus-admin-key') ?? '';
   });
+  const [targetUnit, setTargetUnit] = useState('auto');
+  const [targetTopic, setTargetTopic] = useState('auto');
+  const [importJson, setImportJson] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [expandedUnit, setExpandedUnit] = useState<string | null>(null);
 
-  const getUnitJson = (unitId: string) => {
-    const unit = units[unitId];
-    if (!unit || !unit.topics) return '[]';
-
-    // Enriched Export Structure
-    const exportData = unit.topics.map((t: any) => ({
-      id: t.id, // THE KEY FOR MAPPING
-      unit: unit.title || unitId,
-      title_hindi: t.topic_title || '',
-      title_english: t.topic_title_en || '',
-    }));
-
-    return JSON.stringify(exportData, null, 2);
+  const fetchData = async (secret?: string) => {
+    try {
+      const res = await fetch('/api/admin/enrich-syllabus', {
+        headers: secret ? { 'x-admin-secret': secret } : undefined,
+      });
+      if (res.ok) {
+        const data = (await res.json()) as SyllabusDbResponse;
+        setDbData(data.data || data.units || []);
+      }
+    } catch (err) {
+      logger.error('Failed to fetch DB syllabus:', err);
+      toast.error('Failed to load data');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success(`Copied ${label} to clipboard!`);
-  };
-
-  // Import Logic
-  const [importJson, setImportJson] = React.useState('');
-  const [adminKey, setAdminKey] = React.useState('');
-  const [isUploading, setIsUploading] = React.useState(false);
-
-  // ... (handleUpload stays same)
-  const handleUpload = async () => {
-    if (!importJson || !adminKey) {
-      toast.error('Please provide both JSON and Admin Secret Key');
+  useEffect(() => {
+    if (!adminKey) {
+      queueMicrotask(() => setLoading(false));
       return;
     }
 
+    queueMicrotask(() => {
+      localStorage.setItem('syllabus-admin-key', adminKey);
+      void fetchData(adminKey);
+    });
+  }, [adminKey]);
+
+  const handleUpload = async () => {
+    if (!adminKey) return toast.error('Admin key required');
+    if (!importJson.trim()) return toast.error('No JSON provided');
+
+    setIsUploading(true);
     try {
-      setIsUploading(true);
-      let parsed;
+      let payload;
+      
       try {
-        // Fix trailing commas which are common in AI JSON
-        const sanitized = importJson.replace(/,\s*([\]}])/g, '$1');
-        parsed = JSON.parse(sanitized);
-      } catch (e) {
-        logger.error('JSON Parse Error:', e);
-        toast.error('Invalid JSON format. Check for trailing commas or syntax errors.');
+        const parsed = parseLooseJSON(importJson);
+        if (targetTopic !== 'auto') {
+          if (Array.isArray(parsed)) {
+            toast.error("You selected a specific topic but provided a JSON array. Please provide just the object with 'content_hindi' and 'content_english'.");
+            return;
+          }
+          payload = [{
+            id: targetTopic,
+            content_hindi: parsed.content_hindi,
+            content_english: parsed.content_english
+          }];
+        } else {
+          if (!Array.isArray(parsed)) throw new Error("Auto mode requires a JSON array.");
+          payload = parsed;
+        }
+      } catch (e: unknown) {
+        console.error("JSON parse error:", e);
+        toast.error("Invalid JSON format: " + (e instanceof Error ? e.message : 'Unknown error'));
         return;
       }
-
-      // Handle both: Array directly OR { topics: [...] }
-      const payload = Array.isArray(parsed) ? { topics: parsed } : parsed;
 
       const res = await fetch('/api/admin/enrich-syllabus', {
         method: 'POST',
@@ -96,135 +200,141 @@ export default function ExportTool() {
           'Content-Type': 'application/json',
           'x-admin-secret': adminKey,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ topics: payload }),
       });
 
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update');
 
-      if (!res.ok) throw new Error(data.error || 'Upload failed');
-
-      toast.success(data.message || 'Upload successful!');
-      setImportJson(''); // Clear on success
-    } catch (error: any) {
-      toast.error(error.message);
+      toast.success(data.message);
+      setImportJson('');
+      fetchData(adminKey); // refresh list
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Upload failed');
     } finally {
       setIsUploading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="space-y-4 text-center">
-          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
-          <p className="font-medium text-slate-500">Loading Live Syllabus Data...</p>
-        </div>
-      </div>
-    );
+  const handleClearTopic = async (topicId: string) => {
+    if (!adminKey) return toast.error('Admin key required');
+    if (!confirm('Are you sure you want to delete AI content for this topic?')) return;
+
+    try {
+      const res = await fetch(`/api/admin/enrich-syllabus?topicId=${topicId}`, {
+        method: 'DELETE',
+        headers: {
+          'x-admin-secret': adminKey,
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to clear');
+
+      toast.success(data.message);
+      fetchData(adminKey);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to clear');
+    }
+  };
+
+  if (loading) return <div className="p-8">Loading...</div>;
+
+  // dbData format might be an array of topics or an object of units. 
+  // Let's handle if it's already units object or array:
+  const units: Record<string, SyllabusDbUnit> = {};
+  
+  if (Array.isArray(dbData)) {
+    dbData.forEach(item => {
+      const uId = item.unit_id || item.unit; // support both
+      if (!uId) return;
+      if (!units[uId]) {
+        units[uId] = {
+          title: item.unit_title || uId,
+          topics: []
+        };
+      }
+      units[uId].topics.push({
+        ...item,
+        hasAiContent: !!(item.content_hindi && item.content_english)
+      });
+    });
+  } else {
+    // If it's already an object of units
+    Object.assign(units, dbData);
   }
 
+  const unitKeys = Object.keys(units).sort((a, b) => {
+    const numA = parseInt(a.replace('unit_', '')) || 0;
+    const numB = parseInt(b.replace('unit_', '')) || 0;
+    return numA - numB;
+  });
+
+  let totalGlobal = 0;
+  let completedGlobal = 0;
+  unitKeys.forEach(u => {
+    totalGlobal += units[u].topics.length;
+    completedGlobal += units[u].topics.filter((t) => t.hasAiContent).length;
+  });
+
+  const getUnitJson = (unitId: string) => {
+    const u = units[unitId];
+    if (!u) return '';
+    const mapped = u.topics.map((t) => ({
+      id: t.id,
+      unit: u.title,
+      title_hindi: t.topic_title || t.title_hindi,
+      title_english: t.topic_title_en || t.title_english,
+    }));
+    return JSON.stringify(mapped, null, 2);
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 p-8 pb-32">
-      <div className="mx-auto max-w-6xl space-y-12">
-        {/* Header */}
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+      <div className="mx-auto max-w-5xl space-y-8">
+        
+        {/* HEADER */}
         <div>
-          <h1 className="font-display mb-2 text-4xl font-black text-slate-900">Syllabus Manager</h1>
-          <p className="text-slate-500">
-            Export context for AI, generate content, and import it back.
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">AI Syllabus Enrichment</h1>
+          <p className="mt-2 text-slate-500">
+            Generate and import dual-language structured content for all UPSC topics.
           </p>
         </div>
 
-        {/* 1. EXPORT SECTION */}
-        <section className="space-y-6">
-          <div className="mb-6 flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">
-              1
-            </span>
-            <h2 className="text-2xl font-bold text-slate-800">Export Context (For AI)</h2>
-          </div>
+        {/* 1. MASTER PROMPT */}
+        <SyllabusMasterPrompt masterPrompt={MASTER_PROMPT} />
 
-          <div className="grid gap-6">
-            {unitKeys.map((unitId) => {
-              const unit = units[unitId];
-              const json = getUnitJson(unitId);
-              const count = unit.topics.length;
+        {/* 2. TRACK & BATCH EXPORT */}
+        <SyllabusTrackAndBatch 
+          units={units}
+          unitKeys={unitKeys}
+          expandedUnit={expandedUnit}
+          setExpandedUnit={setExpandedUnit}
+          totalGlobal={totalGlobal}
+          completedGlobal={completedGlobal}
+          masterPrompt={MASTER_PROMPT}
+          setTargetUnit={setTargetUnit}
+          setTargetTopic={setTargetTopic}
+          handleClearTopic={handleClearTopic}
+          getUnitJson={getUnitJson}
+        />
 
-              return (
-                <div
-                  key={unitId}
-                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
-                >
-                  <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 p-4 px-6">
-                    <div>
-                      <h3 className="text-sm font-bold tracking-wide text-slate-800 uppercase">
-                        {unitId.replace('_', ' ')}: {unit.title}
-                      </h3>
-                      <p className="mt-0.5 text-xs text-slate-400">{count} Topics</p>
-                    </div>
-                    <Button
-                      onClick={() => copyToClipboard(json, unitId)}
-                      variant="outline"
-                      className="gap-2 border-slate-200 hover:border-indigo-100 hover:bg-indigo-50 hover:text-indigo-600"
-                    >
-                      <Copy size={14} /> Copy JSON
-                    </Button>
-                  </div>
-                  <div className="bg-slate-900 p-0">
-                    <pre className="custom-scrollbar h-[150px] overflow-auto p-4 font-mono text-[10px] leading-relaxed text-emerald-400">
-                      {json}
-                    </pre>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+        {/* 3. IMPORT SECTION */}
+        <SyllabusImportSection 
+          adminKey={adminKey}
+          setAdminKey={setAdminKey}
+          targetUnit={targetUnit}
+          setTargetUnit={setTargetUnit}
+          targetTopic={targetTopic}
+          setTargetTopic={setTargetTopic}
+          importJson={importJson}
+          setImportJson={setImportJson}
+          isUploading={isUploading}
+          handleUpload={handleUpload}
+          units={units}
+          unitKeys={unitKeys}
+        />
 
-        {/* 2. IMPORT SECTION */}
-        <section className="space-y-6 border-t border-slate-200 pt-8">
-          <div className="mb-6 flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">
-              2
-            </span>
-            <h2 className="text-2xl font-bold text-slate-800">Import AI Content</h2>
-          </div>
-
-          <div className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50 md:p-8">
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700">Admin Secret Key</label>
-              <input
-                type="password"
-                value={adminKey}
-                onChange={(e) => setAdminKey(e.target.value)}
-                className="w-full max-w-md rounded-xl border border-slate-200 px-4 py-2 font-mono text-sm transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
-                placeholder="Enter the backend admin secret..."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700">Paste AI JSON Output</label>
-              <textarea
-                value={importJson}
-                onChange={(e) => setImportJson(e.target.value)}
-                className="h-[300px] w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 font-mono text-xs transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none"
-                placeholder='[ { "id": "...", "content_hindi": { ... } } ]'
-              />
-              <p className="text-xs text-slate-400">
-                Paste the JSON array you got from ChatGPT exactly as is.
-              </p>
-            </div>
-
-            <div className="flex pt-2">
-              <Button
-                onClick={handleUpload}
-                disabled={isUploading}
-                className="h-12 w-full rounded-xl bg-emerald-600 px-8 font-bold text-white shadow-lg shadow-emerald-600/20 transition-all hover:scale-105 hover:bg-emerald-700 active:scale-95 md:w-auto"
-              >
-                {isUploading ? 'Uploading...' : 'Upload & Enrich Syllabus'}
-              </Button>
-            </div>
-          </div>
-        </section>
       </div>
     </div>
   );

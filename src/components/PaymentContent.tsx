@@ -127,7 +127,7 @@ Thank you,
   };
 
   const openTelegramBot = () => {
-    window.open('https://t.me/UPSC_Support_Bot', '_blank');
+    window.open('https://t.me/upsc_zenscroll_support_agent_bot', '_blank');
   };
 
   return (

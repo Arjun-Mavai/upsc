@@ -39,7 +39,7 @@ const formSchema = z.object({
 interface PaymentModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  planType?: 'pro' | 'upgrade';
+  planType?: 'pro' | 'upgrade' | 'combo' | 'mains';
   planName?: string;
   examId?: string;
 }
@@ -292,6 +292,7 @@ export function PaymentModal({
                 role: meData.user.role ?? undefined,
                 isSubscribed: meData.user.isSubscribed ?? undefined,
                 planTier: meData.user.planTier ?? undefined,
+                examType: (meData.user.examType as 'upsc' | 'mppsc' | 'mppolice' | 'all') || 'upsc',
               };
               setUser(u, true);
             }

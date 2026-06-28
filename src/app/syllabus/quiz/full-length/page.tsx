@@ -32,7 +32,7 @@ async function FLTPageData() {
   const tier = getUserTier(user);
   const maxRetries = attemptLimits['FLT'] ?? null;
 
-  const enrichedTests: TestWithAccess[] = tests.map((test) => {
+  const enrichedTests: TestWithAccess[] = tests.map((test: typeof tests[0]) => {
     const hasAccess =
       user?.role === 'admin' ||
       hasAccessToContent(

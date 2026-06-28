@@ -23,7 +23,6 @@ const PROTECTED_ROUTES = ['/profile'];
 const AUTH_ROUTES = ['/login', '/signup', '/forgot-password'];
 
 export async function proxy(request: NextRequest) {
-  console.log('middleware running for the path', request.nextUrl.pathname);
   const { pathname, searchParams } = request.nextUrl;
   const token = request.cookies.get('mppsc_token')?.value;
   const testId = searchParams.get('testId');

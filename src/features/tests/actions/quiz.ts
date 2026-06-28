@@ -34,7 +34,7 @@ export async function getAvailableUnitTests() {
 
   // If user exists, fetch their attempts
   if (user) {
-    const testIds = allUnitTests.map((t) => t.id);
+    const testIds = allUnitTests.map((t: typeof tests.$inferSelect) => t.id);
 
     const attempts = await db
       .select({
@@ -48,7 +48,7 @@ export async function getAvailableUnitTests() {
     attemptsMap = new Map(attempts.map((a) => [a.testId, Number(a.count)]));
   }
 
-  return allUnitTests.map((test) => {
+  return allUnitTests.map((test: typeof tests.$inferSelect) => {
     const attemptsCount = attemptsMap.get(test.id) || 0;
     const attemptsLeft = maxRetries != null ? Math.max(0, maxRetries - attemptsCount) : null;
 

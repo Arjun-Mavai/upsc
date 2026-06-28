@@ -128,9 +128,9 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
 
     const scoring = getExamScoring(exam, 'PYQ'); // Subject practice is usually GS/PYQ style
 
-    const questions: Question[] = questionsSlice.map((q: any) => {
+    const questions: Question[] = questionsSlice.map((q: typeof questionsSlice[0]) => {
       const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
-      let ext = q.extendedData;
+      let ext = (q as any).extendedData;
       if (typeof ext === 'string') {
         try {
           ext = JSON.parse(ext);
@@ -149,7 +149,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
         // 🏷️ INJECT YEAR INTO SUBJECT FIELD FOR DISPLAY
         subject: `PYQ ${q.year}`,
         type: q.type || 'standard',
-        matchPairs: q.matchPairs, // Fixed typo matchPairs
+        matchPairs: (q.matchPairs as any) || undefined,
         extendedData: ext,
         negativeMarks: scoring.negativeMarking,
         marks: scoring.marksPerQuestion,
@@ -220,7 +220,7 @@ export default async function QuizPlayPage({ searchParams }: PageProps) {
   const scoring = getExamScoring(exam, testData.type);
 
   // Map Questions
-  const questions: Question[] = testData.questions.map((q) => {
+  const questions: Question[] = testData.questions.map((q: typeof testData.questions[0]) => {
     // Ensure options are parsed if they come as a stringified array
     const parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : q.options;
 

@@ -116,20 +116,6 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
   const navItems = useMemo(
     () => [
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, color: 'text-slate-700' },
-      {
-        name: 'Test Series',
-        href: '/syllabus/quiz/pyq',
-        icon: GraduationCap,
-        color: 'text-amber-600',
-      },
-      { name: 'Free Daily Quiz', href: '/free-quiz', icon: Zap, color: 'text-orange-500' },
-      // { name: 'Blogs', href: '/blogs', icon: BookOpen, color: 'text-sky-600' },
-      {
-        name: 'Test History',
-        href: '/syllabus/test-history',
-        icon: History,
-        color: 'text-violet-600',
-      },
       { name: 'About Us', href: '/', icon: Info, color: 'text-slate-500' },
     ],
     []
@@ -535,7 +521,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                     <div className="tap-scale-96">
                       <SheetClose asChild>
                         <a
-          href="https://t.me/upsc_zen"
+          href="https://t.me/upsc_zenscroll_support_agent_bot"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-sky-50 hover:text-sky-600"

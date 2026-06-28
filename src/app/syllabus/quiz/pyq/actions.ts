@@ -55,7 +55,7 @@ export async function getSubjectPartAccess(subject: string) {
   ]);
 
   // Build access map with parallel access checks
-  const accessChecks = partTests.map(async (test) => {
+  const accessChecks = partTests.map(async (test: typeof partTests[0]) => {
     const parts = test.slug.split('-');
     const partNum = parseInt(parts[parts.length - 1]);
 

@@ -60,7 +60,7 @@ export async function GET() {
         previousUserId: mppscUsers.previousUserId,
       })
       .from(mppscUsers)
-      .where(eq(mppscUsers.examType, 'upsc')) // Show existing MPPSC users
+      .where(eq(mppscUsers.examType, 'upsc')) // Show only UPSC users
       .orderBy(sql`created_at DESC`);
 
     // ── Calculate Stats ─────────────────────────────────────────

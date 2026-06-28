@@ -143,6 +143,7 @@ export async function POST(request: Request) {
       role: 'guest',
       accessExpiresAt,
       metadata: grantMeta,
+      examType: 'upsc',
     });
 
     // ── Log Activity ──────────────────────────────────────────────
