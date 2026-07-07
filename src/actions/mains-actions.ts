@@ -101,7 +101,7 @@ function blobFromError(error: unknown): string {
 export const getMainsProgressOverview = unstable_cache(
   async () => {
     try {
-      const currentExam = process.env.NEXT_PUBLIC_EXAM_ID || 'upsc';
+      const currentExam = (process.env.NEXT_PUBLIC_EXAM_ID || 'upsc') as 'upsc' | 'mppsc' | 'mppolice';
       const papers = await db.select().from(mainsPapers)
         .where(eq(mainsPapers.examType, currentExam))
         .orderBy(mainsPapers.displayOrder);
@@ -172,7 +172,7 @@ export const getMainsProgressOverview = unstable_cache(
 export async function getMainsDetailedProgressOverview() {
   try {
     await assertAdmin();
-    const currentExam = process.env.NEXT_PUBLIC_EXAM_ID || 'upsc';
+    const currentExam = (process.env.NEXT_PUBLIC_EXAM_ID || 'upsc') as 'upsc' | 'mppsc' | 'mppolice';
     const papers = await db.select().from(mainsPapers)
       .where(eq(mainsPapers.examType, currentExam))
       .orderBy(mainsPapers.displayOrder);
@@ -515,7 +515,7 @@ export async function getTopicContentForAdmin(topicId: string) {
 export const getAllMainsPapersWithSyllabus = unstable_cache(
   async () => {
     try {
-      const currentExam = process.env.NEXT_PUBLIC_EXAM_ID || 'upsc';
+      const currentExam = (process.env.NEXT_PUBLIC_EXAM_ID || 'upsc') as 'upsc' | 'mppsc' | 'mppolice';
       const papers = await db.query.mainsPapers.findMany({
         where: eq(mainsPapers.examType, currentExam),
         orderBy: [asc(mainsPapers.displayOrder)],
