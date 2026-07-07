@@ -205,7 +205,7 @@ ${JSON_SAFETY_ADDENDUM}
 ══════════════════════════════════════════════════════════════════
 SYLLABUS DEPTH & READABILITY (Expert-Rich)
 ══════════════════════════════════════════════════════════════════
-- **Wide/compound syllabus line** (long title, multiple eras/themes): ship **more bullets**, each shorter — student should still skim fast. Prefer optional **third** 7m/10m model only when extra breadth is undeniable.
+- **Wide/compound syllabus line** (long title, multiple eras/themes): ship **more bullets**, each shorter — student should still skim fast. Prefer optional **third** 15m/20m model only when extra breadth is undeniable.
 - **No pasted PYQ stems** → start **pyq_trend_analysis_*** with the required “model framing / not verbatim PYQ” label (see Expert-Rich spec).
 - Narrative prose fields (**except** tiny intros) should still **prefer \`- \` bullets** whenever the schema does not forbid it.
 

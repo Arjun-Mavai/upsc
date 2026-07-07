@@ -854,8 +854,8 @@ export function MainsAdminClient() {
                         <p className="min-w-[200px] flex-1 text-sm font-bold leading-snug text-indigo-950">
                           Validator (nested <code className="text-xs">model_answers_hi</code> +{' '}
                           <code className="text-xs">model_answers_en</code>): P1–P3 →{' '}
-                          <code className="rounded bg-white px-1 text-xs">2×2m+2×7m+2×10m</code> each · P4 →{' '}
-                          <code className="rounded bg-white px-1 text-xs">2×11m</code> · P5–P6 → relaxed (min 2m)
+                          <code className="rounded bg-white px-1 text-xs">2×10m+2×15m</code> each · P4 →{' '}
+                          <code className="rounded bg-white px-1 text-xs">2×20m</code> · P5–P6 → relaxed (min 10m)
                         </p>
                         <Button
                           type="button"
@@ -930,7 +930,7 @@ export function MainsAdminClient() {
                   <Textarea
                     value={jsonDraft}
                     onChange={(e) => setJsonDraft(e.target.value)}
-                    placeholder='{ "schema_version": "mains_history_rich_v1", "cognitive_intro_hi": "...", "model_answers_hi": { "2m": [...] }, "model_answers_en": { ... } }'
+                    placeholder='{ "schema_version": "mains_history_rich_v1", "cognitive_intro_hi": "...", "model_answers_hi": { "10m": [...] }, "model_answers_en": { ... } }'
                     className="h-[160px] min-h-[120px] border-4 border-emerald-500 bg-white font-mono text-sm shadow-inner text-slate-900"
                   />
                   <div className="flex flex-wrap items-center gap-3">

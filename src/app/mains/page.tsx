@@ -39,8 +39,8 @@ export default function MainsLandingPage() {
       icon: Target,
       title: hi ? 'परीक्षक-अनुकूल फॉर्मेट' : 'Examiner-Friendly Formats',
       desc: hi
-        ? '2 व 7 अंक — दो-दो उत्कृष्ट वेरिएंट; लंबे उत्तर GS I–III में 10 अंक व GS IV में 11 अंक + केस स्टडी।'
-        : 'Two premium variants each for 2m & 7m; long answers 10m (GS I–III) or 11m + case study (GS IV).'
+        ? '10 व 15 अंक — उत्कृष्ट वेरिएंट; लंबे उत्तर GS IV में 20 अंक + केस स्टडी।'
+        : 'Premium variants each for 10m & 15m; long answers 20m + case study for GS IV.'
     },
     {
       icon: ShieldCheck,
