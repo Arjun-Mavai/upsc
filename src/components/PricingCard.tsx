@@ -41,7 +41,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 };
 
 interface PricingCardProps {
-  planType: 'lite' | 'pro' | 'upgrade';
+  planType: 'lite' | 'pro' | 'upgrade' | 'mains' | 'combo';
   pricing: PricingData;
   features: PlanFeatureWithIcon[];
   language: 'en' | 'hi';
@@ -66,56 +66,66 @@ export function PricingCard({
   const isLite = planType === 'lite';
   const isPro = planType === 'pro';
   const isUpgrade = planType === 'upgrade';
+  const isMains = planType === 'mains';
+  const isCombo = planType === 'combo';
 
-  const price = isLite ? p.litePrice : isPro ? p.proPrice : p.upgradePrice;
+  const price = isLite ? p.litePrice : isPro ? p.proPrice : isUpgrade ? p.upgradePrice : isMains ? p.mainsPrice : p.comboPrice;
   const originalPrice = isLite
     ? p.liteOriginalPrice
     : isPro
       ? p.proOriginalPrice
-      : p.upgradeOriginalPrice;
+      : isUpgrade
+        ? p.upgradeOriginalPrice
+        : isMains
+          ? p.mainsOriginalPrice
+          : p.comboOriginalPrice;
   const discount = calcDiscount(price, originalPrice);
-  const months = isLite ? p.liteMonths : isPro ? p.proMonths : 1; // months only relevant for full plans
+  const months = isLite ? p.liteMonths : isPro ? p.proMonths : isMains ? p.mainsMonths : p.comboMonths;
   const monthly = calcMonthly(price, months);
   // const validityText = isLite ? p.liteValidityText : p.proValidityText; // hidden for now
 
   // Card Specific Styling
   const cardClasses = cn(
     'relative flex flex-col h-full transition-all duration-300',
-    isPro || isUpgrade
+    (isPro || isUpgrade || isCombo)
       ? 'border-2 border-amber-500 shadow-[0_20px_50px_rgba(245,158,11,0.15)] overflow-hidden scale-[1.02] z-10'
       : 'border border-amber-100 shadow-sm hover:shadow-md'
   );
 
   const titleIcon = isLite ? (
     <Zap className="h-5 w-5 text-amber-500" />
-  ) : isPro ? (
+  ) : (isPro || isCombo) ? (
     <Crown className="h-5 w-5 text-amber-600" />
   ) : (
     <Star className="h-5 w-5 fill-amber-500 text-amber-500" />
   );
-  const title = isLite ? 'Lite' : isPro ? 'Pro' : hi ? 'प्रो में अपग्रेड' : 'Upgrade to Pro';
+  const title = isLite ? 'Lite' : isPro ? 'Pro' : isCombo ? 'Pro+' : isMains ? 'Mains' : hi ? 'प्रो में अपग्रेड' : 'Upgrade to Pro';
   const subtitle = isLite
     ? hi
       ? 'स्मार्ट शुरुआत — प्रीलिम्स तक'
       : 'Smart start — till Prelims'
-    : isPro
+    : (isPro || isCombo)
       ? hi
         ? 'पूरी ताकत — मेन्स तक'
         : 'Full power — till Mains'
-      : hi
-        ? 'लाइट से प्रो — सिर्फ़ अंतर भरें'
-        : 'Lite → Pro — Just pay the difference';
+      : isMains
+        ? hi
+          ? 'सिर्फ मेन्स लाइब्रेरी'
+          : 'Mains Library Only'
+        : hi
+          ? 'लाइट से प्रो — सिर्फ़ अंतर भरें'
+          : 'Lite → Pro — Just pay the difference';
 
   return (
     <div className="group relative h-full">
       {/* Pro/Upgrade Glow Effect */}
-      {(isPro || isUpgrade) && (
+      {(isPro || isUpgrade || isCombo) && (
         <div className="absolute -inset-0.5 animate-pulse rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 opacity-20 blur-md" />
       )}
 
       <Card className={cn(cardClasses, 'bg-white')}>
         {/* Most Popular Badge */}
-        {isPopular && isPro && (
+        {isPopular && (isPro || isCombo) && (
           <div className="absolute top-0 right-0 z-20 rounded-bl-lg bg-amber-600 px-4 py-1.5 text-[10px] font-black tracking-widest text-white uppercase">
             {hi ? 'सबसे लोकप्रिय' : 'MOST POPULAR'}
           </div>
@@ -244,7 +254,7 @@ export function PricingCard({
                   'h-12 w-full rounded-xl font-bold transition-all',
                   isLite &&
                     'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900',
-                  (isPro || isUpgrade) &&
+                  (isPro || isUpgrade || isCombo) &&
                     'bg-slate-950 text-white shadow-lg shadow-amber-900/20 hover:bg-black border border-amber-500/30'
                 )}
               >
@@ -255,11 +265,15 @@ export function PricingCard({
                       : `Get Lite — ₹${price}`
                     : isUpgrade
                       ? hi
-                        ? `₹${price} में प्रो लें`
-                        : `Upgrade to Pro — ₹${price}`
-                      : hi
-                        ? `₹${price} में प्रो लें`
-                        : `Get Pro — ₹${price}`}
+                        ? `₹${price} में प्रो+ लें`
+                        : `Upgrade to Pro+ — ₹${price}`
+                      : isCombo
+                        ? hi
+                          ? `₹${price} में प्रो+ लें`
+                          : `Get Pro+ — ₹${price}`
+                        : hi
+                          ? `₹${price} में प्रो लें`
+                          : `Get Pro — ₹${price}`}
                 </Link>
               </Button>
             </motion.div>
@@ -272,7 +286,7 @@ export function PricingCard({
                   'h-12 w-full rounded-xl font-bold transition-all',
                   isLite &&
                     'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900',
-                  (isPro || isUpgrade) &&
+                  (isPro || isUpgrade || isCombo) &&
                     'bg-slate-950 text-white shadow-lg shadow-amber-900/20 hover:bg-black border border-amber-500/30'
                 )}
               >
@@ -282,11 +296,15 @@ export function PricingCard({
                     : `Get Lite — ₹${price}`
                   : isUpgrade
                     ? hi
-                      ? `₹${price} में प्रो लें`
-                      : `Upgrade to Pro — ₹${price}`
-                    : hi
-                      ? `₹${price} में प्रो लें`
-                      : `Get Pro — ₹${price}`}
+                      ? `₹${price} में प्रो+ लें`
+                      : `Upgrade to Pro+ — ₹${price}`
+                    : isCombo
+                      ? hi
+                        ? `₹${price} में प्रो+ लें`
+                        : `Get Pro+ — ₹${price}`
+                      : hi
+                        ? `₹${price} में प्रो लें`
+                        : `Get Pro — ₹${price}`}
               </Button>
             </motion.div>
           )}

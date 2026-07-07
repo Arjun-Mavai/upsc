@@ -1,0 +1,41 @@
+packages:
+  - "."
+
+# Bantai, ye 7 din (10080 mins) ka quarantine hai naye packages ke liye.
+# Kal ko koi Tanstack ya LottieFiles jaisa attack aaya (jaha hacker fresh malware pelta hai),
+# to apna project 7 din tak wait karega taaki open-source community us virus ko pehle hi dho dale.
+minimumReleaseAge: 10080
+
+# Ye policy third-party ya black-market (jaise direct github URL ya shady links) se download ko maarti hai kick.
+# Strict rules bole toh sirf official verified dukaan (npm registry) se hi code aayega, warna no entry!
+blockExoticSubdeps: true
+
+# Bhau, Vercel Linux (x64) pe chalta hai aur apna Mac M1/M2 (arm64) pe.
+# Ye lockfile ko batata hai ki dono jagah ke binaries ek sath arrange karke rakhe,
+# warna Vercel deploy pe error deke production rok dega!
+supportedArchitectures:
+  os:
+    - current
+  cpu:
+    - x64
+    - arm64
+
+# VIP Guest List! Sirf inhi allowed packages ko install hote waqt background scripts (C++ compile karna etc) chalane ki permission hai.
+# Koi naya anjaan malware chupke se script run karne ka try karega toh pnpm seedha usko laat marke block kar dega.
+onlyBuiltDependencies:
+  - "@sentry/cli"
+  - "esbuild"
+  - "sqlite3"
+  - "better-sqlite3"
+  - "@img/sharp-libvips-darwin-arm64"
+  - "canvas-confetti"
+
+# Supreme Court ka final order: Agar kisi deep-down third-party package ke andar json5 ka hacked version ho,
+# toh usko ignore maar ke zabardasti ye safe naya '^2.2.3' version chipka dene ka. Pure system se purana version saaf!
+overrides:
+  "json5": "^2.2.3"
+
+# Audit Security Scanner: Agar kisi specific CVE (vulnerability ID) ko ignore marna ho toh uska tag idhar dalne ka.
+# Filhal list khali hai, bole toh bugs pe Zero Tolerance!
+auditConfig:
+  ignoreCves: []

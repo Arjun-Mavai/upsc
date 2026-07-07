@@ -1,0 +1,12 @@
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> my-app@0.1.0 db:migrate
+> drizzle-kit migrate
+
+No config path provided, using default 'drizzle.config.ts'
+Reading config file '/Users/arjun/upsc/upsc/drizzle.config.ts'
+🌐 App is talking to TURSO CLOUD
+🚀 DB Connection Type: PRODUCTION (Turso Cloud)
+📍 Connection URL: libsql://mppsc-test-series-arjun-gurjar.aws-ap-south-1.turso.io
+[⣷] applying migrations...[2K[1G[⣯] applying migrations...[2K[1G[⣟] applying migrations...[2K[1G[⡿] applying migrations...[2K[1G[⢿] applying migrations...[2K[1G[⢿] applying migrations...

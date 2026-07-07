@@ -18,19 +18,16 @@ import { useRouter } from 'next/navigation';
 import {
   ChevronDown,
   Shield,
-  Zap,
   Clock,
-  Users,
+  Zap,
   Sparkles,
   Target,
   BookOpen,
   BarChart3,
   FileText,
-  Flame,
   History,
   TrendingUp,
   BrainCircuit,
-  LayoutGrid,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -42,6 +39,7 @@ import { PricingCard } from '@/components/PricingCard';
 import { cn } from '@/lib/utils';
 import { getPricingData } from '@/actions/pricing-actions';
 import { useQuery } from '@tanstack/react-query';
+import { Testimonials } from '@/components/home/Testimonials';
 
 // ── FAQ data — bilingual ────────────────────────────────────
 const faqData = [
@@ -113,7 +111,7 @@ export default function PricingPage() {
   // Payment Modal State
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState({
-    planType: 'pro' as 'pro' | 'upgrade',
+    planType: 'pro' as 'pro' | 'upgrade' | 'combo',
     name: '',
   });
 
@@ -229,11 +227,6 @@ export default function PricingPage() {
                   highlight: true
                 },
                 {
-                  icon: Zap,
-                  label: hi ? 'इंस्टेंट मोड' : 'Instant Mode',
-                  sub: hi ? 'हर विकल्प के पीछे का तर्क' : 'Logic behind every option',
-                },
-                {
                   icon: History,
                   label: hi ? '6 साल के PYQs' : '6 Years PYQs',
                   sub: hi ? 'विस्तृत व्याख्या सहित' : 'With detailed breakdowns',
@@ -241,11 +234,6 @@ export default function PricingPage() {
                     ? ['UPSC 2020-25'] 
                     : ['UPSC 2020-25'],
                   highlight: true
-                },
-                {
-                  icon: LayoutGrid,
-                  label: hi ? 'व्यक्तिगत डैशबोर्ड' : 'Personal Dashboard',
-                  sub: hi ? 'टेस्ट हिस्ट्री और प्रोग्रेस' : 'Test History & Progress',
                 },
                 {
                   icon: TrendingUp,
@@ -310,19 +298,12 @@ export default function PricingPage() {
           {/* FOMO badge */}
           <div className="mb-10 flex justify-center">
             <div className="relative inline-flex items-center gap-3 rounded-full border border-amber-200 bg-amber-50/80 backdrop-blur-sm px-5 py-2.5 shadow-xl shadow-amber-500/5">
-              <Flame className="h-4 w-4 text-orange-600 animate-pulse" />
               <span className="text-sm font-black text-amber-900 uppercase tracking-tight">
                 {hi ? p.urgencyTextHi : p.urgencyText}
               </span>
-              <div className="h-4 w-px bg-amber-200 mx-1" />
-              <Badge className="h-6 border-emerald-200 bg-emerald-100 px-2 py-0 text-xs font-black text-emerald-800 hover:bg-emerald-100">
-                <Users className="mr-1 h-3 w-3" />
-                {p.studentsBought || PRICING_DEFAULTS.studentsBought} joined
-              </Badge>
             </div>
           </div>
 
-          {/* ── Pricing Cards ────────────────────────────── */}
           <div className="mx-auto max-w-md">
             <PricingCard
               planType="pro"
@@ -363,6 +344,11 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
+
+      {/* ── Testimonials Section ──────────────────────────── */}
+      <div className="bg-white">
+        <Testimonials />
+      </div>
 
       {/* Payment Modal Integration */}
       <PaymentModal

@@ -206,7 +206,7 @@ export function hasAccessToContent(
  * 5. Free/Guest → sirf isFree wale
  * 6. Default → LOCKED 🔒
  */
-export function canAccessTopic(topic: Topic, user: User): boolean {
+export function canAccessTopic(topic: Topic, user: AccessControlUser | null): boolean {
   if ((user as any)?.role === 'admin') return true;
   return hasAccessToContent(
     {
@@ -238,7 +238,7 @@ export function canAccessBlog(
     isPremium?: boolean | null;
     examType?: string | null;
   },
-  user: User
+  user: AccessControlUser | null
 ): boolean {
   if ((user as any)?.role === 'admin') return true;
   return hasAccessToContent(
@@ -284,7 +284,7 @@ export function canAccessBlog(
  * @param user - Current user (null = guest)
  * @returns true = test accessible, false = locked 🔒
  */
-export function canAccessTest(test: Test, user: User): boolean {
+export function canAccessTest(test: Test, user: AccessControlUser | null): boolean {
   // ───────────────────────────────────────────────────────────────
   // CHECK 1: Admin = Baap hai, sab khula
   // ───────────────────────────────────────────────────────────────
@@ -343,7 +343,7 @@ export function canAccessTest(test: Test, user: User): boolean {
  *   }
  * }
  */
-export function canAttemptTest(test: Test, user: User, currentAttempts: number): AccessResult {
+export function canAttemptTest(test: Test, user: AccessControlUser | null, currentAttempts: number): AccessResult {
   // ───────────────────────────────────────────────────────────────
   // STEP 1: Admin Check (Bypass all limits)
   // ───────────────────────────────────────────────────────────────

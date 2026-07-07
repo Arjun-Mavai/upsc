@@ -112,7 +112,7 @@ export async function getUserAttempts(testIds: string[], userId?: string) {
       count: sql<number>`count(*)`,
     })
     .from(userAttempts)
-    .where(and(eq(userAttempts.userId, finalUserId), inArray(userAttempts.testId, testIds)))
+    .where(and(eq(userAttempts.userId, finalUserId as string), inArray(userAttempts.testId, testIds)))
     .limit(100)
 
     .groupBy(userAttempts.testId);

@@ -39,6 +39,14 @@ export async function getPricingData(
         urgencyText: row.urgencyText ?? PRICING_DEFAULTS.urgencyText,
         urgencyTextHi: row.urgencyTextHi ?? PRICING_DEFAULTS.urgencyTextHi,
         studentsBought: row.studentsBought ?? PRICING_DEFAULTS.studentsBought,
+        mainsPrice: (row as any).mainsPrice ?? PRICING_DEFAULTS.mainsPrice,
+        mainsOriginalPrice: (row as any).mainsOriginalPrice ?? PRICING_DEFAULTS.mainsOriginalPrice,
+        mainsValidityText: (row as any).mainsValidityText ?? PRICING_DEFAULTS.mainsValidityText,
+        mainsMonths: (row as any).mainsMonths ?? PRICING_DEFAULTS.mainsMonths,
+        comboPrice: (row as any).comboPrice ?? PRICING_DEFAULTS.comboPrice,
+        comboOriginalPrice: (row as any).comboOriginalPrice ?? PRICING_DEFAULTS.comboOriginalPrice,
+        comboValidityText: (row as any).comboValidityText ?? PRICING_DEFAULTS.comboValidityText,
+        comboMonths: (row as any).comboMonths ?? PRICING_DEFAULTS.comboMonths,
       };
       return { pricing };
     }

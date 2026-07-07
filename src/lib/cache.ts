@@ -54,6 +54,19 @@ export const CACHE = {
       revalidate: REVALIDATE_TIME,
     },
   },
+  PYQ: {
+    TAGS: {
+      ALL: 'mains-pyq-papers-list',
+    },
+  },
+  MAINS: {
+    TAGS: {
+      ALL: 'mains-all-topics',
+      UNIT: (unitId: string) => `mains-unit-${unitId}`,
+      PAPER: (paperNumber: number) => `mains-paper-${paperNumber}`,
+      TOPIC: (topicId: string) => `mains-topic-${topicId}`,
+    },
+  },
 };
 
 // Generic cache wrapper
@@ -68,3 +81,24 @@ export const cachedData = <T, Args extends any[]>(
     tags: tags,
   });
 };
+
+export async function revalidatePyqOnUpload(paperNumber?: number) {
+  revalidateTag(CACHE.PYQ.TAGS.ALL, { expire: 0 });
+  revalidateTag('mains-pyq-paper',{expire:0});
+  if (paperNumber !== undefined) {
+    revalidateTag(`mains-pyq-paper-${paperNumber}`, { expire: 0 });
+  }
+}
+
+export async function revalidateMainsOnUpload(paperNumber?: number, unitId?: string, topicId?: string) {
+  revalidateTag(CACHE.MAINS.TAGS.ALL, { expire: 0 });
+  if (paperNumber !== undefined) {
+    revalidateTag(CACHE.MAINS.TAGS.PAPER(paperNumber), { expire: 0 });
+  }
+  if (unitId !== undefined) {
+    revalidateTag(CACHE.MAINS.TAGS.UNIT(unitId), { expire: 0 });
+  }
+  if (topicId !== undefined) {
+    revalidateTag(CACHE.MAINS.TAGS.TOPIC(topicId), { expire: 0 });
+  }
+}

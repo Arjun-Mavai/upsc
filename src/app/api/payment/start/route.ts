@@ -35,6 +35,7 @@ import { checkRateLimit } from '@/lib/rate-limit';
 import { verifyAuth } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
+import { sendLeadNotification } from '@/lib/telegram';
 
 const startSchema = z.object({
   name: z.string().min(2).max(100),
@@ -113,6 +114,22 @@ export async function POST(req: Request) {
         metadata: JSON.stringify({ source }),
         planTier: 'free',
       });
+    }
+
+    // Send Telegram Notification (Checkout Started)
+    try {
+      await sendLeadNotification({
+        type: 'Checkout Started',
+        name: name.trim(),
+        email: normalizedEmail,
+        phone: phone.trim(),
+        plan: planType,
+        exam: 'upsc',
+        source: source || 'Direct',
+        status: 'Initiated',
+      });
+    } catch (e) {
+      logger.error('Failed to send checkout started notification', e as Error);
     }
 
     // ── PHASE 2: Create Razorpay Order (Server-Side Pricing) ──

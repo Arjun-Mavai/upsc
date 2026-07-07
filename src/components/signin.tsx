@@ -30,7 +30,7 @@ export default function LoginPage() {
 
       if (data.success) {
         // Update Global Store with fresh user data
-        useSettingsStore.getState().setUser(data.user, true);
+        useSettingsStore.getState().setUser(data.user as any, true);
         toast.success('Welcome back!', {
           description: 'Accessing your syllabus...',
         });

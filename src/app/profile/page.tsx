@@ -16,5 +16,5 @@ export default async function ProfilePage() {
     redirect('/login');
   }
 
-  return <ProfileClient user={user} />;
+  return <ProfileClient user={{ ...user, email: user.email || '', createdAt: user.createdAt || null }} />;
 }

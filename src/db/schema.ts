@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, index, uniqueIndex, primaryKey } from 'drizzle-orm/sqlite-core';
 import { sql, relations } from 'drizzle-orm';
 
 // MPPSC Users Table
@@ -34,6 +34,10 @@ export const mppscUsers = sqliteTable(
     examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice'] })
       .default('upsc')
       .notNull(),
+    /** Product entitlements JSON string, e.g. `["upsc_pre","upsc_mains"]`. */
+    accessGrants: text('access_grants').$type<string | null>().default(sql`'["upsc_pre"]'`),
+    // Session version for single-device login enforcement
+    sessionVersion: integer('session_version').default(1),
   },
   (table) => [index('idx_users_email').on(table.email)]
 );
@@ -364,6 +368,7 @@ export const syllabusTopics = sqliteTable(
     // New AI-enriched content (Points, PYQ, Mnemonic) - Separate from official syllabus text
     aiContent: text('ai_content', { mode: 'json' }),
     aiContentEn: text('ai_content_en', { mode: 'json' }),
+    currentAffairsData: text('current_affairs_data'),
     order: integer('order').notNull(),
     // ── Access Control Flags ──────────────────────────────────────
     // isFree = old flag (backward compat) — same as isFreeAccess
@@ -592,6 +597,7 @@ export const guests = sqliteTable(
     examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice'] })
       .default('upsc')  // Preserve existing guests as UPSC
       .notNull(),
+    leadSource: text('lead_source'),
   },
   (table) => [
     index('idx_guests_email').on(table.email),
@@ -693,6 +699,41 @@ export const pricingConfig = sqliteTable('pricing_config', {
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
 });
 
+// Intelligence Feedback Table
+export const intelligenceFeedback = sqliteTable(
+  'intelligence_feedback',
+  {
+    id: text('id').primaryKey(),
+    guestId: text('guest_id').references(() => guests.id),
+    questionId: text('question_id').notNull(),
+    questionText: text('question_text'), // Cache of the question stem for admin display
+    testId: text('test_id'),
+    reaction: text('reaction', { enum: ['helpful', 'insightful', 'unhelpful', 'doubt'] }).notNull(),
+    message: text('message'), // For doubt details
+    isPro: integer('is_pro', { mode: 'boolean' }).default(false),
+    source: text('source'), // e.g., 'intelligence_page', 'paper_solution', 'mains_pyq'
+    userId: text('user_id'), // For logged-in users
+    userName: text('user_name'),
+    userMobile: text('user_mobile'),
+    userEmail: text('user_email'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'all', 'mppolice'] })
+      .default('upsc')
+      .notNull(),
+  },
+);
+
+export const intelligenceFeedbackRelations = relations(intelligenceFeedback, ({ one }) => ({
+  guest: one(guests, {
+    fields: [intelligenceFeedback.guestId],
+    references: [guests.id],
+  }),
+  question: one(questions, {
+    fields: [intelligenceFeedback.questionId],
+    references: [questions.id],
+  }),
+}));
+
 // Test Feedback Table
 export const testFeedback = sqliteTable('test_feedback', {
   id: text('id').primaryKey(),
@@ -738,5 +779,387 @@ export const testFeedbackRelations = relations(testFeedback, ({ one }) => ({
   test: one(tests, {
     fields: [testFeedback.testId],
     references: [tests.id],
+  }),
+}));
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🏛️ MPPSC MAINS SECTION TABLES
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// 2. Mains Papers (Paper 1-6)
+export const mainsPapers = sqliteTable('mains_papers', {
+  id: text('id').primaryKey(),
+  paperNumber: integer('paper_number').notNull(),
+  titleHi: text('title_hi').notNull(),
+  titleEn: text('title_en').notNull(),
+  totalMarks: integer('total_marks').notNull(),
+  durationMinutes: integer('duration_minutes').notNull(),
+  displayOrder: integer('display_order').default(0),
+  description: text('description'),
+  examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice'] })
+    .default('upsc')
+    .notNull(),
+});
+
+// 3. Mains Units (Unit 1-10 per part/paper)
+export const mainsUnits = sqliteTable('mains_units', {
+  id: text('id').primaryKey(),
+  paperId: text('paper_id').references(() => mainsPapers.id, { onDelete: 'cascade' }),
+  part: text('part', { enum: ['A', 'B', 'NONE'] }).default('NONE'),
+  unitNumber: integer('unit_number').notNull(),
+  titleHi: text('title_hi').notNull(),
+  titleEn: text('title_en').notNull(),
+  displayOrder: integer('display_order').default(0),
+  examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice'] })
+    .default('upsc')
+    .notNull(),
+}, (t) => [
+  index('idx_mains_units_paper').on(t.paperId),
+  index('idx_mains_units_order').on(t.paperId, t.part, t.unitNumber)
+]);
+
+// 4. Mains Topics (Specific syllabus points)
+export const mainsTopics = sqliteTable('mains_topics', {
+  id: text('id').primaryKey(),
+  unitId: text('unit_id').references(() => mainsUnits.id, { onDelete: 'cascade' }),
+  titleHi: text('title_hi').notNull(),
+  titleEn: text('title_en').notNull(),
+  displayOrder: integer('display_order').default(0),
+  status: text('status', { enum: ['draft', 'published'] }).default('draft'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice'] })
+    .default('upsc')
+    .notNull(),
+}, (t) => [
+  index('idx_mains_topics_unit').on(t.unitId)
+]);
+
+
+// 5. Mains Content (The Deep Explanation & Model Answers)
+export const mainsContent = sqliteTable('mains_content', {
+  id: text('id').primaryKey(),
+  topicId: text('topic_id').references(() => mainsTopics.id, { onDelete: 'cascade' }).unique(),
+  
+  // Concept Explanation
+  conceptHi: text('concept_hi').notNull(),
+  conceptEn: text('concept_en').notNull(),
+  
+  // Expert Strategy & Value Addition (Articles, Cases, MP Context, Mnemonics)
+  expertStrategyHi: text('expert_strategy_hi'),
+  expertStrategyEn: text('expert_strategy_en'),
+  
+  // Model Answers JSON: { "2m": [{ variant1: "" }], "7m": [...], "11m": [...] }
+  modelAnswers: text('model_answers', { mode: 'json' }).notNull(),
+  
+  // 🚀 Future-Proofing: Practice & Revision
+  keyTermsHi: text('key_terms_hi'), // For Quick Revision
+  keyTermsEn: text('key_terms_en'),
+  practiceQuestions: text('practice_questions', { mode: 'json' }), // For student self-practice
+  /** Extended structured JSON (e.g. History-rich bilingual v1). Legacy rows stay null. */
+  richPayload: text('rich_payload', { mode: 'json' }).$type<Record<string, unknown> | null>(),
+
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice'] })
+    .default('upsc')
+    .notNull(),
+});
+
+// 6. Mains Progress Tracking
+export const mainsProgress = sqliteTable('mains_progress', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => mppscUsers.id, { onDelete: 'cascade' }),
+  topicId: text('topic_id').references(() => mainsTopics.id, { onDelete: 'cascade' }),
+  status: text('status', { enum: ['unseen', 'done', 'revision'] }).default('unseen'),
+  lastReviewedAt: integer('last_reviewed_at', { mode: 'timestamp' }),
+}, (table) => [
+  uniqueIndex('idx_mains_progress_user_topic').on(table.userId, table.topicId)
+]);
+
+// 7. Mains Feedback & Doubts
+export const mainsFeedback = sqliteTable('mains_feedback', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => mppscUsers.id, { onDelete: 'cascade' }),
+  topicId: text('topic_id').references(() => mainsTopics.id, { onDelete: 'cascade' }),
+  type: text('type', { enum: ['insightful', 'doubt', 'dislike'] }).notNull(),
+  message: text('message'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+});
+
+// Relations for easy joining
+export const mainsPapersRelations = relations(mainsPapers, ({ many }) => ({
+  units: many(mainsUnits),
+}));
+
+export const mainsUnitsRelations = relations(mainsUnits, ({ one, many }) => ({
+  paper: one(mainsPapers, { fields: [mainsUnits.paperId], references: [mainsPapers.id] }),
+  topics: many(mainsTopics),
+}));
+
+/** Official previous-year mains papers (e.g. 2024 Paper 1) — JSON import + unit-wise questions */
+export const mainsPyqPapers = sqliteTable(
+  'mains_pyq_papers',
+  {
+    id: text('id').primaryKey(),
+    slug: text('slug').unique().notNull(),
+    examYear: integer('exam_year').notNull(),
+    paperNumber: integer('paper_number').notNull(),
+    examLabel: text('exam_label'),
+    titleHi: text('title_hi'),
+    titleEn: text('title_en'),
+    rawJson: text('raw_json'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+    /** Admin: omit from `/mains/syllabus/pyq-library` & non-admin PYQ prompt pools when true */
+    isHidden: integer('is_hidden', { mode: 'boolean' }).default(false).notNull(),
+  },
+  (t) => [index('idx_mains_pyq_papers_year_paper').on(t.examYear, t.paperNumber)]
+);
+
+export const mainsPyqQuestions = sqliteTable(
+  'mains_pyq_questions',
+  {
+    id: text('id').primaryKey(),
+    paperId: text('paper_id')
+      .references(() => mainsPyqPapers.id, { onDelete: 'cascade' })
+      .notNull(),
+    part: text('part').notNull(),
+    unitNumber: integer('unit_number').notNull(),
+    unitTitleHi: text('unit_title_hi'),
+    unitTitleEn: text('unit_title_en'),
+    questionNumber: text('question_number').notNull(),
+    marks: integer('marks').notNull(),
+    questionType: text('question_type').notNull(),
+    questionHi: text('question_hi').notNull(),
+    questionEn: text('question_en'),
+    /** Deep coaching: patterns, reading list, intro–body–close, sources — Hindi */
+    expertInsightsHi: text('expert_insights_hi'),
+    expertInsightsEn: text('expert_insights_en'),
+    currentAffairsData: text('current_affairs_data'),
+    displayOrder: integer('display_order').default(0),
+  },
+  (t) => [
+    index('idx_mains_pyq_q_paper').on(t.paperId),
+    index('idx_mains_pyq_q_unit').on(t.paperId, t.part, t.unitNumber),
+  ]
+);
+
+/** Optional structured theory JSON per topic (vault “Deep Dive” pipeline; complements mains_content). */
+export const mainsTopicTheoryStructured = sqliteTable(
+  'mains_topic_theory_structured',
+  {
+    id: text('id').primaryKey(),
+    topicId: text('topic_id')
+      .references(() => mainsTopics.id, { onDelete: 'cascade' })
+      .notNull()
+      .unique(),
+    payload: text('payload', { mode: 'json' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice'] })
+      .default('upsc')
+      .notNull(),
+  },
+  (t) => [index('idx_mains_theory_topic').on(t.topicId)]
+);
+
+/** Two exam-ready answer variants per imported PYQ stem. */
+export const mainsPyqPreparedVariants = sqliteTable(
+  'mains_pyq_prepared_variants',
+  {
+    id: text('id').primaryKey(),
+    pyqQuestionId: text('pyq_question_id')
+      .references(() => mainsPyqQuestions.id, { onDelete: 'cascade' })
+      .notNull(),
+    variantSlot: integer('variant_slot').notNull(),
+    styleLabel: text('style_label'),
+    /** Short angle label shown when UI language is Hindi (parallel to English `style_label`). */
+    styleLabelHi: text('style_label_hi'),
+    structureBreakdown: text('structure_breakdown'),
+    answerHi: text('answer_hi').notNull(),
+    answerEn: text('answer_en'),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  },
+  (t) => [
+    uniqueIndex('idx_mains_pyq_prep_unique').on(t.pyqQuestionId, t.variantSlot),
+    index('idx_mains_pyq_prep_q').on(t.pyqQuestionId),
+  ]
+);
+
+/** Demo / expected questions generated for a topic when no PYQ match. */
+export const mainsTopicExpectedQuestions = sqliteTable(
+  'mains_topic_expected_questions',
+  {
+    id: text('id').primaryKey(),
+    topicId: text('topic_id')
+      .references(() => mainsTopics.id, { onDelete: 'cascade' })
+      .notNull(),
+    marks: integer('marks').notNull(),
+    wordLimitHint: integer('word_limit_hint'),
+    questionHi: text('question_hi').notNull(),
+    questionEn: text('question_en'),
+    sortOrder: integer('sort_order').default(0),
+    sourceLabel: text('source_label').default('expected'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+    examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice'] })
+      .default('upsc')
+      .notNull(),
+  },
+  (t) => [
+    index('idx_mains_expected_topic').on(t.topicId),
+    index('idx_mains_expected_marks').on(t.topicId, t.marks),
+  ]
+);
+
+export const mainsTopicExpectedVariants = sqliteTable(
+  'mains_topic_expected_variants',
+  {
+    id: text('id').primaryKey(),
+    expectedQuestionId: text('expected_question_id')
+      .references(() => mainsTopicExpectedQuestions.id, { onDelete: 'cascade' })
+      .notNull(),
+    variantSlot: integer('variant_slot').notNull(),
+    styleLabel: text('style_label'),
+    structureBreakdown: text('structure_breakdown'),
+    answerHi: text('answer_hi').notNull(),
+    answerEn: text('answer_en'),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  },
+  (t) => [
+    uniqueIndex('idx_mains_expected_var_unique').on(t.expectedQuestionId, t.variantSlot),
+  ]
+);
+
+/** Manual topic ↔ PYQ link for badges and precise vault filtering. */
+export const mainsTopicPyqLinks = sqliteTable(
+  'mains_topic_pyq_links',
+  {
+    topicId: text('topic_id')
+      .references(() => mainsTopics.id, { onDelete: 'cascade' })
+      .notNull(),
+    pyqQuestionId: text('pyq_question_id')
+      .references(() => mainsPyqQuestions.id, { onDelete: 'cascade' })
+      .notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  },
+  (t) => [
+    primaryKey({ columns: [t.topicId, t.pyqQuestionId] }),
+    index('idx_mains_topic_pyq_q').on(t.pyqQuestionId),
+  ]
+);
+
+export const mainsTopicTheoryStructuredRelations = relations(mainsTopicTheoryStructured, ({ one }) => ({
+  topic: one(mainsTopics, {
+    fields: [mainsTopicTheoryStructured.topicId],
+    references: [mainsTopics.id],
+  }),
+}));
+
+export const mainsPyqPreparedVariantsRelations = relations(mainsPyqPreparedVariants, ({ one }) => ({
+  pyqQuestion: one(mainsPyqQuestions, {
+    fields: [mainsPyqPreparedVariants.pyqQuestionId],
+    references: [mainsPyqQuestions.id],
+  }),
+}));
+
+export const mainsTopicExpectedQuestionsRelations = relations(mainsTopicExpectedQuestions, ({ one, many }) => ({
+  topic: one(mainsTopics, {
+    fields: [mainsTopicExpectedQuestions.topicId],
+    references: [mainsTopics.id],
+  }),
+  variants: many(mainsTopicExpectedVariants),
+}));
+
+export const mainsTopicExpectedVariantsRelations = relations(mainsTopicExpectedVariants, ({ one }) => ({
+  question: one(mainsTopicExpectedQuestions, {
+    fields: [mainsTopicExpectedVariants.expectedQuestionId],
+    references: [mainsTopicExpectedQuestions.id],
+  }),
+}));
+
+export const mainsTopicPyqLinksRelations = relations(mainsTopicPyqLinks, ({ one }) => ({
+  topic: one(mainsTopics, { fields: [mainsTopicPyqLinks.topicId], references: [mainsTopics.id] }),
+  pyqQuestion: one(mainsPyqQuestions, {
+    fields: [mainsTopicPyqLinks.pyqQuestionId],
+    references: [mainsPyqQuestions.id],
+  }),
+}));
+
+export const mainsPyqPapersRelations = relations(mainsPyqPapers, ({ many }) => ({
+  questions: many(mainsPyqQuestions),
+}));
+
+export const mainsPyqQuestionsRelations = relations(mainsPyqQuestions, ({ one, many }) => ({
+  paper: one(mainsPyqPapers, { fields: [mainsPyqQuestions.paperId], references: [mainsPyqPapers.id] }),
+  preparedVariants: many(mainsPyqPreparedVariants),
+  topicLinks: many(mainsTopicPyqLinks),
+}));
+
+export const mainsTopicsRelations = relations(mainsTopics, ({ one, many }) => ({
+  unit: one(mainsUnits, { fields: [mainsTopics.unitId], references: [mainsUnits.id] }),
+  content: one(mainsContent, { fields: [mainsTopics.id], references: [mainsContent.topicId] }),
+  theoryStructured: one(mainsTopicTheoryStructured, {
+    fields: [mainsTopics.id],
+    references: [mainsTopicTheoryStructured.topicId],
+  }),
+  expectedQuestions: many(mainsTopicExpectedQuestions),
+  pyqLinks: many(mainsTopicPyqLinks),
+}));
+
+// System Settings Table (Scalable and isolated configuration storage)
+export const systemSettings = sqliteTable('system_settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+  description: text('description'),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+});
+
+
+export const supportConversations = sqliteTable('support_conversations', {
+  id: text('id').primaryKey(),
+  platform: text('platform', { enum: ['whatsapp', 'telegram'] }).notNull(),
+  guestId: text('guest_id').references(() => guests.id),
+  guestName: text('guest_name'),
+  guestPhone: text('guest_phone'), // WhatsApp number or Telegram ID
+  language: text('language').default('PENDING'), // EN, HI, PENDING
+  status: text('status', { enum: ['open', 'resolved'] }).default('open'),
+  humanActive: integer('human_active', { mode: 'boolean' }).default(false), // true = admin replied, suppress bot
+  unreadCount: integer('unread_count').default(0),
+  lastMessageAt: integer('last_message_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  // Exam type segregation
+  examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice', 'all'] })
+    .default('mppsc') // Old ones were MPPSC
+    .notNull(),
+}, (table) => ({
+  guestPhoneIdx: index('idx_support_conv_guest_phone_upsc').on(table.guestPhone),
+  lastMessageAtIdx: index('idx_support_conv_last_msg_upsc').on(table.lastMessageAt),
+}));
+
+export const supportMessages = sqliteTable('support_messages', {
+  id: text('id').primaryKey(),
+  conversationId: text('conversation_id').references(() => supportConversations.id, { onDelete: 'cascade' }).notNull(),
+  sender: text('sender', { enum: ['user', 'bot', 'admin'] }).notNull(),
+  text: text('text').notNull(),
+  mediaUrl: text('media_url'), // For image messages (WhatsApp image URLs)
+  messageType: text('message_type', { enum: ['text', 'image', 'interactive'] }).default('text'),
+  status: text('status', { enum: ['sent', 'delivered', 'read', 'failed'] }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+}, (table) => ({
+  conversationIdIdx: index('idx_support_msg_conv_id_upsc').on(table.conversationId),
+  createdAtIdx: index('idx_support_msg_created_at_upsc').on(table.createdAt),
+}));
+
+export const supportConversationsRelations = relations(supportConversations, ({ many, one }) => ({
+  messages: many(supportMessages),
+  guest: one(guests, {
+    fields: [supportConversations.guestId],
+    references: [guests.id],
+  }),
+}));
+
+export const supportMessagesRelations = relations(supportMessages, ({ one }) => ({
+  conversation: one(supportConversations, {
+    fields: [supportMessages.conversationId],
+    references: [supportConversations.id],
   }),
 }));

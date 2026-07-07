@@ -1,6 +1,6 @@
 'use client';
 
-import { Mail, MapPin, Phone } from 'lucide-react';
+import { Mail, Phone, Send } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ContactForm } from '@/components/ContactForm';
 
@@ -52,27 +52,67 @@ export default function ContactPage() {
                 <h3 className="text-xl font-bold text-slate-900">{t.contactInfo}</h3>
 
                 <div className="space-y-4">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
-                      <Mail size={18} />
+                  <button
+                    onClick={() => {
+                      window.location.href = `mailto:${contactEmail}`;
+                    }}
+                    className="group relative flex w-full items-center justify-between overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-50 to-violet-50 p-4 border border-indigo-100 shadow-sm transition-all hover:scale-[1.02] hover:shadow-md hover:border-indigo-300 active:scale-[0.98]"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#4f46e5] text-white shadow-sm transition-transform group-hover:scale-110">
+                        <Mail size={20} strokeWidth={2.5} />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-black text-indigo-950 text-[17px] tracking-tight">{t.email}</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-700/80 mt-0.5">Detailed inquiries</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-bold text-slate-900">{t.email}</p>
-                      <p className="text-sm text-slate-500">{contactEmail}</p>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-200/50 text-indigo-700 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-[-4px]">
+                      <span className="font-bold text-lg leading-none">→</span>
                     </div>
-                  </div>
+                  </button>
 
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
-                      <Phone size={18} />
+                  <button
+                    onClick={() => {
+                      const waNumber = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP_NUMBER || '917489388350';
+                      window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent('Hi, I need help with the UPSC App. My query is:')}`, '_blank');
+                    }}
+                    className="group relative flex w-full items-center justify-between overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-50 to-green-50 p-4 border border-green-100 shadow-sm transition-all hover:scale-[1.02] hover:shadow-md hover:border-green-300 active:scale-[0.98]"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white shadow-sm transition-transform group-hover:scale-110">
+                        <Phone size={22} fill="currentColor" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-black text-green-950 text-[17px] tracking-tight">WhatsApp Chat</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-green-700/80 mt-0.5">Instant human support</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-bold text-slate-900">
-                        {language === 'hi' ? 'फ़ोन' : 'Phone'}
-                      </p>
-                      <p className="text-sm text-slate-500">+91 8766451748</p>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-200/50 text-green-700 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-[-4px]">
+                      <span className="font-bold text-lg leading-none">→</span>
                     </div>
-                  </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const botUsername = process.env.NEXT_PUBLIC_SUPPORT_TELEGRAM_BOT_USERNAME || 'upsc_zenscroll_support_agent_bot';
+                      window.open(`https://t.me/${botUsername}?start=general`, '_blank');
+                    }}
+                    className="group relative flex w-full items-center justify-between overflow-hidden rounded-2xl bg-gradient-to-r from-sky-50 to-blue-50 p-4 border border-sky-100 shadow-sm transition-all hover:scale-[1.02] hover:shadow-md hover:border-sky-300 active:scale-[0.98]"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0088cc] text-white shadow-sm transition-transform group-hover:scale-110 group-hover:-rotate-12">
+                        <Send size={20} fill="currentColor" className="ml-[-2px] mt-[2px]" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-black text-sky-950 text-[17px] tracking-tight">Telegram Bot</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-sky-700/80 mt-0.5">Automated queries</p>
+                      </div>
+                    </div>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-200/50 text-sky-700 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-[-4px]">
+                      <span className="font-bold text-lg leading-none">→</span>
+                    </div>
+                  </button>
                 </div>
               </div>
             </motion.div>

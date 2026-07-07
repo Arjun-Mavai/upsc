@@ -1,0 +1,206 @@
+══════════════════════════════════════════════════════════════════
+UPSC IAS MAINS — FULL TOPIC PROMPT (paste entire message into AI)
+══════════════════════════════════════════════════════════════════
+
+FINAL reply = ONE raw JSON object only. No markdown fences. No pre/post text.
+
+──────── LATEST (AUTHORITATIVE — Expert-Rich JSON) ────────
+══════════════════════════════════════════════════════════════════
+LATEST — TARGET + REAL / EXPECTED QUESTIONS
+══════════════════════════════════════════════════════════════════
+Mark discipline: Papers I–III → nested model_answers use 10m / 15m / 10m; Paper IV → 15m (+ case20 when apt); Papers V–VI → Hindi-heavy samples per topic.
+
+TARGET PAPER: 1 — General Studies I
+SECTION PART (unit): NONE
+UNIT: भारतीय विरासत और संस्कृति / Indian Heritage and Culture
+TOPIC LINE (syllabus): प्राचीन काल से आधुनिक काल तक कला के रूप, साहित्य और वास्तुकला / Art forms, literature and architecture from ancient to modern times
+
+--- NO IMPORTED PYQ STEMS FOUND (no topic-link + no unit bucket) ---
+You MUST still output **Expert-Rich JSON** per LATEST spec AND weave THREE **hypothetical "Expected" mains questions** grounded ONLY in TOPIC LINE (no fake years):
+• One 10-mark (150 words) style prompt.
+• One 15-mark (250 words) analytic prompt.
+• One Essay/20-mark analytic prompt.
+List them as brief quoted lines inside **pyq_trend_analysis_hi** and **pyq_trend_analysis_en** (suffix lines labelled "Expected Demo Q1/Q2/Q3") AND ensure **model_answers_hi** and **model_answers_en** each include TWO variants for 10m, 15m (Paper I–III discipline).
+
+
+══════════════════════════════════════════════════════════════════
+LATEST — SCRATCH MODULE (primary lens + demo JSON style)
+Source: UPSC Master Configuration
+══════════════════════════════════════════════════════════════════
+PAPER I — HISTORY, ART & CULTURE, GEOGRAPHY, AND SOCIETY
+**OUTPUT NOTE:** Topic prompts for Paper I use the **History‑Rich JSON v1** schema (see TOPIC TASK appendix). Follow that schema when generating the final JSON.
+
+STRUCTURE & VALUE ADDITION (MANDATORY):
+1. **Real Meaning & Practical Feel (असली मतलब और व्यावहारिक जीवन से जुड़ाव)**: Start by explaining the true essence of the topic. Make the student FEEL the topic by connecting it to real-life practical examples or current events, rather than just bookish definitions.
+2. **Interconnection (बहुआयामी दृष्टिकोण)**: Explicitly show what is included in this topic and how it connects to other subjects (e.g., History connecting to Geography, Polity, or Economy). 
+3. **Topper's Secret & Proof (टॉपर सीक्रेट और प्रमाण)**: Provide a specific "Topper's Secret" on how to score maximum marks in this topic. Don't just give a tip; PROVE IT by showing a mini-example of *how to implement it* in the answer (e.g., "Use this specific map or flowchart here to gain +1 mark").
+4. **Strict Points & Headings Format (बिंदुवार और उचित शीर्षक)**: The entire model answer must be heavily points-based with proper, engaging headings. Avoid long paragraphs. 
+
+MARK DISCIPLINE (10m & 15m Focus):
+- **10 Marks & 15 Marks**: Both must follow the SAME high-quality structure — crisp intro, proper heading, 5-8 bullet points for 10m, and 8-12 bullet points for 15m, ending with a 1-line conclusion. ALWAYS use vertical bullet points.
+
+SUBJECT SPECIFICS:
+- **History**: Cause → Process → Consequence chain. Add India-wide linkages. 
+- **Art & Culture**: Connect ancient philosophy to tangible architecture/literature.
+- **Geography**: Map + Mechanism + Data. Connect physical features to human response, climate change, and Indian agriculture.
+- **Society**: Base arguments on demographic data, recent reports (NCRB, NFHS), and intersectional realities (caste/gender/class).
+
+══════════════════════════════════════════════════════════════════
+LATEST — DYNAMIC EXPERT RULES (Strict formatting & Topper Insights)
+══════════════════════════════════════════════════════════════════
+PAPER I — HISTORY, ART & CULTURE, GEOGRAPHY, AND SOCIETY
+**OUTPUT NOTE:** Topic prompts for Paper I use the **History‑Rich JSON v1** schema (see TOPIC TASK appendix). Follow that schema when generating the final JSON.
+
+STRUCTURE & VALUE ADDITION (MANDATORY):
+1. **Real Meaning & Practical Feel (असली मतलब और व्यावहारिक जीवन से जुड़ाव)**: Start by explaining the true essence of the topic. Make the student FEEL the topic by connecting it to real-life practical examples or current events, rather than just bookish definitions.
+2. **Interconnection (बहुआयामी दृष्टिकोण)**: Explicitly show what is included in this topic and how it connects to other subjects (e.g., History connecting to Geography, Polity, or Economy). 
+3. **Topper's Secret & Proof (टॉपर सीक्रेट और प्रमाण)**: Provide a specific "Topper's Secret" on how to score maximum marks in this topic. Don't just give a tip; PROVE IT by showing a mini-example of *how to implement it* in the answer (e.g., "Use this specific map or flowchart here to gain +1 mark").
+4. **Strict Points & Headings Format (बिंदुवार और उचित शीर्षक)**: The entire model answer must be heavily points-based with proper, engaging headings. Avoid long paragraphs. 
+
+MARK DISCIPLINE (10m & 15m Focus):
+- **10 Marks & 15 Marks**: Both must follow the SAME high-quality structure — crisp intro, proper heading, 5-8 bullet points for 10m, and 8-12 bullet points for 15m, ending with a 1-line conclusion. ALWAYS use vertical bullet points.
+
+SUBJECT SPECIFICS:
+- **History**: Cause → Process → Consequence chain. Add India-wide linkages. 
+- **Art & Culture**: Connect ancient philosophy to tangible architecture/literature.
+- **Geography**: Map + Mechanism + Data. Connect physical features to human response, climate change, and Indian agriculture.
+- **Society**: Base arguments on demographic data, recent reports (NCRB, NFHS), and intersectional realities (caste/gender/class).
+
+
+📜 LIVE DEMO (UPSC STANDARD STYLE):
+{
+  "expert_evaluator_lens_applied": "UPSC Top Ranker (Focus: Bureaucratic perspective, 2nd ARC, Real-life Application)",
+  "syllabus_grasp_en": [
+    "- **Core Essence:** This topic is not just about historical dates; it's about understanding the continuity of Indian culture and its soft power potential today.",
+    "- **UPSC's Hidden Intent:** The examiner tests your ability to link ancient achievements with modern constitutional values (e.g., Ashoka's Dhamma ↔ Article 51A).",
+    "- **Syllabus Micro-Detailing:**\n  - 1. Evolution of Temple Architecture.\n  - 2. Bhakti-Sufi impact on social harmony.\n  - 3. Secularism in Indian art.",
+    "- **Current Affairs Interlinkage:** Link the recent UNESCO World Heritage tags (e.g., Hoysala Temples) to the static syllabus.",
+    "- **Out of Scope:** Do not memorize every single king's battle dates; focus strictly on socio-cultural impacts."
+  ],
+  "pyq_trend_analysis_en": [
+    "- (UPSC Mains · model/practice framing — not a verbatim past-year PYQ)",
+    "- UPSC usually frames 15-markers asking to trace the 'evolution' or 'impact on society' rather than factual details.",
+    "- Often interlinks Art & Culture with Modern History (e.g., use of cultural symbols during the freedom struggle)."
+  ],
+  "cognitive_intro_en": [
+    "- Avoid generic definitions like 'Culture is a way of life.'",
+    "- Elite Approach: Start with a powerful quote from A.L. Basham or a constitutional reference, immediately connecting the past to the present.",
+    "- Sequence facts chronologically but analyze them thematically (Political, Social, Economic)."
+  ],
+  "desi_analogy_en": [
+    "- Think of Ashoka's Dhamma not as a religion, but as ancient India's 'Corporate Social Responsibility (CSR)' or a proto-Fundamental Duties framework to unite a diverse empire."
+  ],
+  "authentic_source_citation_en": [
+    "- 🏛️ **Brahmaastra:** Historian Romila Thapar argues that Dhamma was a political invention by Ashoka to prevent his empire from fracturing."
+  ]
+}
+
+══════════════════════════════════════════════════════════════════
+LATEST — REQUIRED EXPERT-RICH JSON (must match this key set)
+══════════════════════════════════════════════════════════════════
+--- LATEST — REQUIRED OUTPUT: EXPERT-RICH JSON (single object) ---
+🚨 CRITICAL DIRECTIVE FOR LLM (PREVENT TRUNCATION): Because this is a highly comprehensive bilingual prompt, you MUST write dense, ultra-crisp, and compact responses.
+- Keep all bullet points to a maximum of 1-2 lines.
+- Do NOT write verbose narrative or explanatory fluff outside the requested bullet formats.
+- Limit flashcard decks (key_terms_cards_hi/en) to exactly 8-10 high-value cards per language.
+- By being precise and concise, you guarantee that the entire JSON generates successfully in a single turn without getting cut off mid-way.
+
+Authority order: (1) scratch module DEMO + lens above, (2) this key list. Do **NOT** emit legacy flat keys ('concept_hi', 'expert_strategy_*', top-level flat 'model_answers').
+
+Set "schema_version": "mains_history_rich_v1" (exact string).
+
+Optional meta:
+- "expert_evaluator_lens_applied": short string naming the examiner mindset (mirror scratch header if useful).
+
+Mandatory bilingual narrative blocks (mirror scratch property names — use BOTH _hi and _en suffixes everywhere below):
+- **"syllabus_grasp_hi" / "_en" (lead block — do not bury it)** — 10–18 lines, MUST be 100% bullet points (start each with "- "). Act as a Top Ranker decoding the syllabus deeply for a student. Include: (1) **Core Essence (टॉपिक क्या है?)**: Break down the topic into a crystal-clear, simple definition. No jargon, just pure understanding. (2) **UPSC's Hidden Intent (यूपीएससी ने इसे सिलेबस में क्यों रखा?)**: What is the examiner looking for? What administrative quality, constitutional value, or governance challenge does this topic test? Give the "bureaucratic reason" behind this topic. (3) **Syllabus Micro-Detaling (क्या-क्या पढ़ना है?)**: Decode the vague UPSC line into 4-6 explicit, highly specific sub-topics/dimensions that the student MUST prepare. Use numbered points here (e.g., "- 1. ...\n- 2. ..."). (4) **Current Affairs Interlinkage (करेंट अफेयर्स लिंक)**: How does this static topic connect to recent headlines? (5) **Out of Scope (क्या नहीं पढ़ना है?)**: Clear boundaries to save time. No paragraphs allowed — bullets only for max readability.
+- "pyq_trend_analysis_hi" / "_en" — how UPSC typically frames THIS topic by marks (tie to stems if listed above; else hypothetical 'likely' wording, no fake years). **When no official PYQ stems were pasted in the prompt**, start each language block with ONE explicit label line exactly: "(UPSC Mains · model/practice framing — not a verbatim past-year PYQ)" then continue with bullets only.
+- "cognitive_intro_hi" / "_en" — sharp **mental model** opener: still "- " bullets only (4–8 lines). Play with student psychology — tell them exactly how to structure their thoughts in the exam hall. What separates an average student's answer from a Topper's answer? Give an "Elite Approach" feel. Explain how to sequence facts for this specific topic to impress the evaluator.
+- "desi_analogy_hi" / "_en" — one strong India / exam-hall analogy per language (not cheesy).
+- "authentic_source_citation_hi" / "_en" — one exam-safe authoritative anchor each (Acts, surveys, reputed bodies — no fabricated quotes).
+
+Structured arrays/strings:
+- "dynamic_dimensions_hi" / "_en" — array of { "dimension_name", "bullets": string[] }; minimum **3** objects per language, topic-appropriate headings. **CRITICAL REQUIREMENT:** For History (Papers 1, 2, 3) or any timeline-based topic, at least ONE dimension MUST be a strict "Chronological / Phase-wise Breakdown" (कालक्रम / प्रमुख चरण) detailing exactly what happened in which phase, who were the key personalities (kon-kon tha), and the point-wise sequence of events.
+- **Interlinking (both languages)** — Prefer **JSON arrays** under "interlinking_dots_*" OR "multidimensional_interlinking_*" (either key is OK):
+  - **Option A — array of strings** (easiest): 6–12 items like "- ↔ Geography: …" already embedded OR plain lines we can bullet.
+  - **Option B — array of objects**: { "to": "GS Paper II Polity — Local govt", "bullet": "Panchayat ↔ this topic because …" } with **truthful** links only.
+  Plain multi-line prose is allowed as fallback only if arrays are inconvenient — still MUST be one idea per "- " line, never one dense paragraph.
+- "psychological_memory_hook_hi" / "_en"
+- "visual_infographic_cue_hi" / "_en" — hall-ready diagram / map / matrix cue.
+- "examiner_trap_hi" / "_en"
+- "topper_x_factor_hi" / "_en" — MUST include a concrete "hands-on" proof or example (e.g., "औसत छात्र लिखेगा X, लेकिन टॉपर लिखेगा Y" or a specific diagram layout/catchy phrase). PROVE how to implement it in the exam sheet to gain an extra +1 mark. Make it extremely practical and demonstrable.
+
+Model answers — **strictly bilingual**: you MUST fill **both** "model_answers_hi" **and** "model_answers_en" for the same mark keys (10m/15m/20m). Hindi block = authentic Hindi stems + Hindi "- " bullets; English block = authentic English stems + English bullets — **not** lazy word-for-word translation; same facts, natural wording in each language. 
+EXCEPTION: For Language Papers (e.g., Paper A/B or Hindi Literature), you MUST set all opposing keys to 'null' or empty arrays.
+
+Shape (each language block mirrors the other in **structure** — same number of variants per band):
+{ "10m": [{"stem":"Variant 1 Q","text":"- ..."}, {"stem":"Variant 2 Q","text":"- ..."}], "15m": [{"stem":"...","text":"..."}, {"stem":"...","text":"..."}], "20m": [...] }
+
+**Every object MUST include "stem" + "text".** stem language = parent block language (HI → Hindi question, EN → English question).
+
+**Inside every model-answer "text" field (mandatory formatting — matches student PYQ desk UI):**
+- Use **vertical points only**: each non-empty line starts with hyphen + space "- " (hyphen then space). (EXCEPTION: For Essay, you may use standard paragraphs without the '- ' prefix).
+- **Tables for Difference Questions:** If the question explicitly asks for "Difference between X and Y" (अंतर स्पष्ट करें), you MUST use a Markdown table format. Example: '| बिंदु | विषय A | विषय B |\n|---|---|---|'. You can skip the '- ' prefix for table lines, the UI will parse them as tables.
+- **Quotes & Case References:** For powerful quotes, article names, or case study references (especially in Essays and Ethics), use a Markdown Blockquote ('> '). Example: '> "Quote text here"'. This will render with a beautiful visual highlight in the UI. You can skip the '- ' prefix for blockquotes.
+- Use **"## Short section title"** lines for 10m/15m/20m whenever you switch theme (e.g. context → features → significance). 
+- For **inline subsection labels** inside a bullet, prefer **"- **Label:** fact…"** OR **"- Label: fact…"** (short Label before colon) so the UI can emphasise headings like tooling/technique lines.
+- Stay within mark word budgets (150 words for 10m, 250 words for 15m); prefer **many short bullets** over a few heavy paragraphs.
+
+**Breadth:** If TOPIC LINE is compound (many commas / “and” chains), widen coverage with **extra crisp bullets** (not longer sentences). Student must still skim in under a few minutes.
+
+Mark discipline (mirror UPSC GS marking scheme; fill unused keys as [] arrays):
+- **GS Papers I–III:** You MUST provide at least **one** variant each for **10m** and **15m** in BOTH model_answers_hi and model_answers_en. Prefer two distinct variants when the topic breadth supports it. Set "20m" to [] unless a rare essay-type tangent truly fits.
+- **GS Paper IV (Ethics):** You MUST provide at least **one** **10m** variant; **20m**: one full Case Study (प्रकरण अध्ययन) ONLY if the syllabus line suits stakeholder ethics — else [].
+- **Essay:** model_answers_hi and _en MUST include strong Essay samples. Put these in **15m** or **20m** arrays as appropriate.
+
+Flash terms — UI parses **key_terms_cards_*** arrays as strict JSON — valid JSON only (double quotes on keys/strings, commas between objects, **no trailing comma**, UTF-8).
+- **REQUIRED:** "key_terms_cards_hi" AND "key_terms_cards_en" — each exactly **8–12** objects of this shape (keys as written):
+  {"emoji":"📜","term":"…","hint":"…"}
+  - **emoji** — one symbol per card (exam-relevant catalogue: 📜🗺️🏛️⚖️📊🧭 etc.), not spam.
+  - **term** — **2–5 words**, scan-friendly headline (not a full sentence).
+  - **hint** — **15–35 words**. Must be highly valuable and structured. If explaining multiple aspects or facts, use newline bullet points ('\n- ') INSIDE the string so it renders as a proper list in the UI. 
+  - **_hi cards:** बोलचाल की नैचुरल Hindi — ज़्यादा शुद्ध संस्कृत/किशोर शास्त्रीय घिसी पट्टी नहीं; छात्र असल में बोलते वैसे शब्द।
+  - **_en cards:** **plain**, simple sentences — vocabulary a serious UPSC Hindi‑medium aspirant comfortably reads (no GRE fluff). 
+  - Cards in HI and EN are **independent** (not lazy translation pairs) but should cover comparable **ideas** across the topic.
+- **Forbidden:** dumping all hints in **one JSON string**, markdown fences wrapping the arrays, ellipsis-only hints, duplicated identical term rows.
+- **Parallel:** mirror as "key_terms_hi" / "key_terms_en" newline bullets (pattern: "- **Emoji Term**: hint") where possible so search/admin fallbacks stay populated.
+
+STYLE
+Bullets-first everywhere (conceptual blocks too where the schema allows bullets), examiner-grade, bilingual independence (not lazy translation). Emoji: at most **one purposeful emoji per subsection title** — no spam.
+
+══════════════════════════════════════════════════════════════════
+JSON SAFETY ADDENDUM
+══════════════════════════════════════════════════════════════════
+JSON SAFETY ADDENDUM
+- Output one raw JSON object only. No markdown fences, no commentary, no prefix/suffix text.
+- Never escape key names. Write `"schema_version":`, not \"schema_version\": or `"schema_version\":`.
+- Keep every key exactly as named in the schema; do not invent aliases or rename fields.
+- If a value needs quotes, use single quotes inside prose or shorten the sentence instead of breaking JSON.
+- Prefer slightly shorter content over risky punctuation if the answer is getting long.
+
+══════════════════════════════════════════════════════════════════
+SYLLABUS DEPTH & READABILITY (Expert-Rich)
+══════════════════════════════════════════════════════════════════
+- **Wide/compound syllabus line** (long title, multiple eras/themes): ship **more bullets**, each shorter — student should still skim fast. Prefer optional **third** 10m/15m model only when extra breadth is undeniable.
+- **No pasted PYQ stems** → start **pyq_trend_analysis_*** with the required “model framing / not verbatim PYQ” label (see Expert-Rich spec).
+- Narrative prose fields (**except** tiny intros) should still **prefer `- ` bullets** whenever the schema does not forbid it.
+
+══════════════════════════════════════════════════════════════════
+FINAL CHECK BEFORE YOU OUTPUT JSON (Expert-Rich only)
+══════════════════════════════════════════════════════════════════
+- Do **NOT** output legacy keys: concept_hi / concept_en / expert_strategy_* / single top-level model_answers blob.
+- Narrative blocks feel **alive + interlinked** (not Wikipedia).
+- When REAL stems appear in the PYQ section, answers must **mirror that demand** (hooks, word economy, India tilt) — original prose, no plagiarism.
+- Openers: **syllabus_grasp** = bullets-first “what this line means”; **cognitive_intro** = how to order thinking in the hall (not a repeat wall).
+- Interlinking: prefer **JSON array** (strings or {to, bullet}) under interlinking_dots_* — no interlinking paragraph mush. Focus heavily on deep conceptual UPSC interlinkages.
+- **Model answers:** always populate **both** model_answers_hi and model_answers_en with the **same band keys** and **same variant counts**; stems + bullets must be **native** in each language.
+- Prefer **key_terms_cards_hi/en** (structured) + matching key_terms strings; every model row = **stem + text** per Expert-Rich spec.
+
+──────── TONE (short — Expert-Rich contract is in the LATEST block) ────────
+COACHING TONE (micro — Expert-Rich JSON shape already defined above)
+- Bullets-first, examiner-respectful, word discipline by marks (10m tiny → 15m tight).
+- Hindi + English blocks must feel native in each language (not lazy translation).
+- Key-term cards: HI = natural spoken-student Hindi; EN = short simple English — structured JSON for flash UI.
+- When PYQ stems are listed, align model_answers_* hooks and framing to that demand — original prose only.
+
+--- END — output Expert-Rich JSON now. ---

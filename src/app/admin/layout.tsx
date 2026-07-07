@@ -49,6 +49,12 @@ const ADMIN_ROUTES = [
     description: 'User activity & test history',
   },
   {
+    href: '/admin/support-inbox',
+    label: 'Support Inbox',
+    icon: HelpCircle,
+    description: 'WhatsApp & Telegram messages',
+  },
+  {
     href: '/admin/test-access',
     label: 'Test Access',
     icon: Shield,
@@ -80,15 +86,27 @@ const ADMIN_ROUTES = [
   },
   {
     href: '/admin/syllabus-upload',
-    label: 'Syllabus Upload',
+    label: 'Prelims Syllabus',
     icon: BookOpen,
-    description: 'Upload syllabus data',
+    description: 'Upload prelims syllabus data',
   },
   {
-    href: '/admin/syllabus-enrichment',
-    label: 'AI Enrichment',
+    href: '/admin/mains-syllabus-upload',
+    label: 'Mains Syllabus',
+    icon: BookOpen,
+    description: 'Auto-decode & upload mains JSON',
+  },
+  {
+    href: '/admin/mains',
+    label: 'Mains Content & AI',
     icon: Brain,
-    description: 'Enrich topics with AI',
+    description: 'Enrich Mains topics with AI & PYQ',
+  },
+  {
+    href: '/admin/mains-pyq',
+    label: 'Mains PYQ Upload',
+    icon: Upload,
+    description: 'Upload & link Mains PYQ JSON',
   },
   {
     href: '/admin/pyq-insights',

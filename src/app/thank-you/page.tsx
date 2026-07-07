@@ -102,7 +102,7 @@ function ThankYouContent() {
   }
 
   const handleWhatsApp = () => {
-    const message = 'I just bought the Pro plan and need help getting started';
+    const message = 'Hello UPSC ZenScroll team, I just bought the Pro plan and need help getting started!';
     window.open(`https://wa.me/918766451748?text=${encodeURIComponent(message)}`, '_blank');
   };
 

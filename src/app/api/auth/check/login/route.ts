@@ -125,11 +125,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
+    // ── Increment session version for Single Device Login ────────
+    const newSessionVersion = (user.sessionVersion || 0) + 1;
+    await db
+      .update(mppscUsers)
+      .set({ sessionVersion: newSessionVersion })
+      .where(eq(mppscUsers.id, user.id));
+
     // ── Sign JWT Token ──────────────────────────────────────────
     const payload = {
       userId: user.id,
       email: user.email,
       role: user.role,
+      sessionVersion: newSessionVersion,
     };
 
     const { signToken } = await import('@/lib/jwt');

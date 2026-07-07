@@ -5,6 +5,7 @@ import { logger } from '@/lib/logger';
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { sendTelegramNotification, escapeHTML } from '@/lib/tg-notify';
+import { sendHumanRequestTelegramNotification, sendTelegramEventNotification } from '@/lib/telegram';
 
 /**
  * 📧 ADMIN NOTIFICATION SYSTEM
@@ -29,6 +30,9 @@ interface PaymentNotification {
   orderId: string;
   paymentId: string;
   isUpgrade?: boolean;
+  phone?: string | null;
+  source?: string | null;
+  attemptCount?: number;
 }
 
 interface EmailFailureNotification {
@@ -58,7 +62,7 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
     const fromAddress = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
     const fromEmail = `${fromName} <${fromAddress}>`;
 
-    const { type, userName, userEmail, planTier, amountInRupees, orderId, paymentId, isUpgrade } = data;
+    const { type, userName, userEmail, planTier, amountInRupees, orderId, paymentId, isUpgrade, phone, source, attemptCount } = data;
 
     // 📧 Different subject lines based on event type
     const subjects: Record<string, string> = {
@@ -143,13 +147,17 @@ export async function notifyAdminOnPayment(data: PaymentNotification) {
         `━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
         `👤 <b>User:</b> ${escapeHTML(userName)}\n` +
         `📧 <b>Email:</b> ${escapeHTML(userEmail)}\n` +
+        (phone ? `📞 <b>Phone:</b> <code>${escapeHTML(phone)}</code>\n` : '') +
         `💵 <b>Amount:</b> <code>₹${amountInRupees}</code>\n` +
-        `🎟️ <b>Plan:</b> <code>${planTier.toUpperCase()}</code>${isUpgrade ? ' (Upgrade)' : ''}\n\n` +
+        `🎟️ <b>Plan:</b> <code>${planTier.toUpperCase()}</code>${isUpgrade ? ' (Upgrade)' : ''}\n` +
+        `📋 <b>Exam:</b> <code>UPSC</code>\n` +
+        (source ? `🔍 <b>Source:</b> <code>${escapeHTML(source)}</code>\n` : '') +
+        (attemptCount && attemptCount > 1 ? `🔄 <b>Payment Attempt:</b> #${attemptCount}\n` : '') +
         `🆔 <b>Order ID:</b> <code>${orderId}</code>\n` +
         `🆔 <b>Payment ID:</b> <code>${paymentId}</code>\n\n` +
         `⚡ <b>Status:</b> <i>${type === 'failed' ? 'Failed Attempt' : 'Automated access granted'}</i>`;
 
-      await sendTelegramNotification(tgMessage);
+      await sendHumanRequestTelegramNotification(tgMessage);
     } catch (tgErr) {
       logger.error('Failed to send admin Telegram notification', tgErr, { category: 'email' });
     }
@@ -237,7 +245,7 @@ export async function notifyAdminOnEmailFailure(data: EmailFailureNotification) 
         `❌ <b>Error:</b> <i>${escapeHTML(errorMessage)}</i>\n\n` +
         `⚠️ <b>Bhai, manual action lo:</b> Send setup link from admin panel ASAP!`;
 
-      await sendTelegramNotification(tgMessage);
+      await sendHumanRequestTelegramNotification(tgMessage);
     } catch (tgErr) {
       logger.error('Failed to send admin failure Telegram notification', tgErr, { category: 'email' });
     }

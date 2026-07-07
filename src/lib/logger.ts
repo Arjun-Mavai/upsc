@@ -21,7 +21,9 @@ export type LogCategory =
   | 'admin'
   | 'ui'
   | 'error-boundary'
-  | 'production-error';
+  | 'production-error'
+  | 'telegram'
+  | 'whatsapp';
 
 export type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 

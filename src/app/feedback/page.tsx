@@ -95,7 +95,7 @@ export default function FeedbackPage() {
         <div className="mb-10 space-y-2 text-center">
           <h1 className="font-display text-3xl font-bold text-slate-900">We Value Your Feedback</h1>
           <p className="text-slate-500">
-            Help us make UPSC 2026 the best preparation platform for you.
+            Help us make Mindful UPSC the best preparation platform for you.
           </p>
         </div>
 
@@ -223,7 +223,7 @@ export default function FeedbackPage() {
                       <MapPin className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
                       <Input
                         id="location"
-                        placeholder="Indore, Bhopal..."
+                        placeholder="Delhi, Mumbai..."
                         className="pl-9"
                         {...register('location')}
                       />

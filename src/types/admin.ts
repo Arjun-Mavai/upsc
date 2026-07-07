@@ -2,6 +2,7 @@ export interface AdminDashboardStats {
   totalTests: number;
   totalQuestions: number;
   totalBlogs: number;
+  openPyq2026LeadCount: number;
   typeCount: {
     FLT: number;
     UNIT: number;
@@ -29,6 +30,7 @@ export interface RecentGuest {
   email: string | null;
   mobile: string | null;
   createdAt: Date | null;
+  leadSource?: string | null;
 }
 
 export interface AdminDashboardResponse {
@@ -37,6 +39,7 @@ export interface AdminDashboardResponse {
   recentUploads?: RecentUpload[];
   recentBlogs?: any[];
   recentGuests?: RecentGuest[];
+  recentOpenPyqLeads?: RecentGuest[];
   topicCoverage?: Record<string, string[]>;
   error?: string;
 }

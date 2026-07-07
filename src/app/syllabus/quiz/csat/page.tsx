@@ -32,7 +32,7 @@ async function CSATPageData() {
   const tier = getUserTier(user);
   const maxRetries = attemptLimits['CSAT'] ?? null;
 
-  const enrichedTests = tests.map((test) => {
+  const enrichedTests = tests.map((test: any) => {
     const hasAccess =
       user?.role === 'admin' ||
       hasAccessToContent(

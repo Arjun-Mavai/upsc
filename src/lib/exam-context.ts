@@ -30,7 +30,7 @@ export async function generateExamMetadata(): Promise<any> {
     description: exam.description,
     keywords: [
       'UPSC Prelims',
-      'UPSC CSE 2026',
+      'UPSC CSE',
       'UPSC PYQ',
       'Civil Services',
       'IAS Preparation',

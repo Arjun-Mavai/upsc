@@ -15,6 +15,7 @@ import { GlobalLockModal } from '@/components/GlobalLockModal';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { Toaster } from '@/components/ui/sonner';
 import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary';
+import { PWARouteTracker } from '@/components/PWARouteTracker';
 import dynamic from 'next/dynamic';
 import { VersionManager } from '@/components/VersionManager';
 import Script from 'next/script';
@@ -53,18 +54,18 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: {
-      default: exam.title,
+      default: `${exam.name} | Elite Preparation Hub`,
       template: `%s | ${exam.name}`,
     },
-    description: exam.description,
+    description: `Master UPSC CSE Prelims & Mains with ZenScroll. Dive into Syllabus tree mapping, Year-wise PYQ Analytics, and Expert 4-Point Answer Writing Frameworks.`,
     keywords: [
-      `${exam.name} 2026 Test Series`,
-      `${exam.name} Prelims Mock Test`,
-      `${exam.name} Previous Year Papers`,
-      `${exam.name} Analysis`,
-      `${exam.name} PYQ Intelligence`,
+      `UPSC 2026`,
+      `UPSC Syllabus Hub`,
+      `UPSC Mains Framework`,
+      `UPSC Previous Year Papers`,
+      `UPSC Analysis`,
+      `UPSC PYQ Intelligence`,
       'Conceptual Core',
-      'Core Pillar',
       'Logic Path',
       'Trap Watch',
     ],
@@ -73,23 +74,23 @@ export async function generateMetadata(): Promise<Metadata> {
       type: 'website',
       locale: 'en_IN',
       url: baseUrl,
-      title: `${exam.name} Elite Test Series | सर्वोत्तम अभ्यास`,
-      description: exam.description,
+      title: `${exam.name} | Advanced Syllabus & Mains Hub`,
+      description: `Master UPSC CSE Prelims & Mains with ZenScroll. Dive into Syllabus tree mapping, Year-wise PYQ Analytics, and Expert Answer Writing Frameworks.`,
       siteName: exam.name,
       images: [
         {
-          url: '/og-hero.webp',
+          url: '/upsc-og.png',
           width: 1200,
           height: 630,
-          alt: `Mindful ${exam.name} - Crack ${exam.id.toUpperCase()}`,
+          alt: `UPSC ZenScroll - Master CSE Preparation`,
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${exam.name} | Best App for aspirants`,
-      description: exam.description,
-      images: ['/og-hero.webp'],
+      title: `${exam.name} | Advanced Syllabus & Mains Hub`,
+      description: `Master UPSC CSE Prelims & Mains with ZenScroll. Dive into Syllabus tree mapping, Year-wise PYQ Analytics, and Expert Answer Writing Frameworks.`,
+      images: ['/upsc-og.png'],
     },
     manifest: '/manifest.json',
     icons: {
@@ -115,20 +116,9 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // 1. Fetch User on Server (Once per request)
-  const user = await verifyAuth();
-
-  // 2. Transform for Navbar
-  const navbarUser = user
-    ? {
-        name: user.name,
-        email: user.email,
-        image: null, // Add image if in DB
-        role: user.role || undefined,
-        is_subscribed: user.isSubscribed || undefined,
-        plan_tier: user.planTier || undefined,
-      }
-    : null;
+  // ⚡ PERFORMANCE: Removed server-side auth check to make the layout and homepage static (SSG).
+  // AppNavbar will handle user fetching on the client side.
+  const navbarUser = null;
 
   const exam = await getExamContext();
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `https://${exam.id}.zenscroll.app`;
@@ -258,6 +248,9 @@ export default async function RootLayout({
         <GlobalErrorBoundary>
           <PwaRegistry />
           <Providers>
+            <Suspense fallback={null}>
+              <PWARouteTracker />
+            </Suspense>
             <AppNavbar user={navbarUser} />
             <MainContentWrapper>{children}</MainContentWrapper>
 

@@ -23,11 +23,13 @@ interface GuestData {
   name: string;
   email?: string;
   mobile?: string;
+  leadSource?: string;
+  referrer?: string;
 }
 
 export async function createGuestEntry(data: GuestData) {
   try {
-    const { name, email, mobile } = data;
+    const { name, email, mobile, leadSource } = data;
     
     // ✅ UPSERT LOGIC: Mobile is the unique identifier
     if (mobile && mobile.trim().length >= 10) {
@@ -44,6 +46,7 @@ export async function createGuestEntry(data: GuestData) {
           .set({
             name: name.trim(), // Always use latest name
             email: email?.trim() || existingGuest.email, // Keep old email if new one is empty
+            leadSource: leadSource || existingGuest.leadSource, // Update leadSource if provided
           })
           .where(eq(guests.id, existingGuest.id));
         
@@ -57,6 +60,7 @@ export async function createGuestEntry(data: GuestData) {
         name: name.trim(),
         email: email?.trim() || null,
         mobile: normalizedMobile,
+        leadSource: leadSource || null,
         examType: 'upsc' as const, // UPSC-only repo
       });
       
