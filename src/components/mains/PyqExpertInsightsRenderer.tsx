@@ -237,7 +237,7 @@ export function PyqExpertInsightsRenderer({
                         "text-[10px] font-bold italic ml-1",
                         themeDeep ? "text-slate-400" : "text-slate-500"
                       )}>
-                        ({hi ? '7 व 10 मार्कर के लिए अत्यधिक उपयोगी' : 'Highly useful for 7 & 10 markers'})
+                        ({hi ? '10 व 15 मार्कर के लिए अत्यधिक उपयोगी' : 'Highly useful for 10 & 15 markers'})
                       </span>
                     )}
                   </div>
@@ -429,7 +429,7 @@ export function PyqExpertInsightsRenderer({
               {hi ? 'करंट अफेयर्स व वैल्यू एडिशन' : 'Current Affairs & Value Add'}
             </span>
             <span className="text-[10px] font-bold text-emerald-700/80 dark:text-emerald-300/80 italic ml-1">
-              ({hi ? '7 व 10 मार्कर के लिए अत्यधिक उपयोगी' : 'Highly useful for 7 & 10 markers'})
+              ({hi ? '10 व 15 मार्कर के लिए अत्यधिक उपयोगी' : 'Highly useful for 10 & 15 markers'})
             </span>
           </div>
           

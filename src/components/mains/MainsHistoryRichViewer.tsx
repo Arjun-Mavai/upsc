@@ -57,13 +57,12 @@ function bulletizeMemoryHook(raw: string): string {
   return raw;
 }
 
-type ModelBand = '2m' | '7m' | '10m' | '11m' | 'case18';
+type ModelBand = '10m' | '15m' | '20m' | 'case18';
 
 function marksForBand(b: ModelBand): number {
-  if (b === '2m') return 2;
-  if (b === '7m') return 7;
   if (b === '10m') return 10;
-  if (b === '11m') return 11;
+  if (b === '15m') return 15;
+  if (b === '20m') return 20;
   return 18;
 }
 
@@ -71,10 +70,9 @@ const BAND_META: Record<
   ModelBand,
   { hi: string; en: string; emoji: string }
 > = {
-  '2m': { hi: '२ अंक', en: '2 marks', emoji: '⚡' },
-  '7m': { hi: '७ अंक', en: '7 marks', emoji: '🎯' },
   '10m': { hi: '१० अंक', en: '10 marks', emoji: '📌' },
-  '11m': { hi: '११ अंक', en: '11 marks', emoji: '📌' },
+  '15m': { hi: '१५ अंक', en: '15 marks', emoji: '🔥' },
+  '20m': { hi: '२० अंक', en: '20 marks', emoji: '💎' },
   case18: { hi: 'केस १८', en: 'Case 18', emoji: '⚖️' },
 };
 
@@ -442,7 +440,7 @@ export function MainsHistoryRichViewer({
               >
                 {(() => {
                   const allVariants: Array<{ variant: typeof ma[ModelBand][number]; band: ModelBand }> = [];
-                  (['2m', '7m', '10m', '11m', 'case18'] as ModelBand[]).forEach((band) => {
+                  (['10m', '15m', '20m', 'case18'] as ModelBand[]).forEach((band) => {
                     const variants = ma[band] || [];
                     variants.forEach((v) => {
                       allVariants.push({ variant: v, band });

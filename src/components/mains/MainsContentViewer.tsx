@@ -43,11 +43,10 @@ interface ContentProps {
   standalonePage?: boolean;
 }
 
-function marksForBand(mark: '2m' | '7m' | '10m' | '11m' | 'case18'): number {
-  if (mark === '2m') return 2;
-  if (mark === '7m') return 7;
+function marksForBand(mark: '10m' | '15m' | '20m' | 'case18'): number {
   if (mark === '10m') return 10;
-  if (mark === '11m') return 11;
+  if (mark === '15m') return 15;
+  if (mark === '20m') return 20;
   return 18;
 }
 
@@ -66,10 +65,9 @@ export function MainsContentViewer({ topic, content, language, onMarkDone, isDon
   ];
 
   const markMeta: Record<string, { badge: string; emoji: string; hi: string; en: string }> = {
-    '2m': { badge: '2M', emoji: '⚡', hi: '२ अंक · अल्ट्रा-संक्षेप', en: '2 marks · ultra-crisp' },
-    '7m': { badge: '7M', emoji: '🎯', hi: '७ अंक · बहु-कोण', en: '7 marks · multi-angle' },
     '10m': { badge: '10M', emoji: '📌', hi: '१० अंक · दीर्घ उत्तर', en: '10 marks · long answer' },
-    '11m': { badge: '11M', emoji: '📌', hi: '११ अंक · GS-IV स्टाइल', en: '11 marks · GS-IV style' },
+    '15m': { badge: '15M', emoji: '🔥', hi: '१५ अंक · विस्तृत उत्तर', en: '15 marks · detailed answer' },
+    '20m': { badge: '20M', emoji: '💎', hi: '२० अंक · गहन विश्लेषण', en: '20 marks · deep analysis' },
     case18: { badge: '18M', emoji: '⚖️', hi: 'केस स्टडी', en: 'Case study' },
   };
 
@@ -81,7 +79,7 @@ export function MainsContentViewer({ topic, content, language, onMarkDone, isDon
     const answers = content.modelAnswers;
     return (
       <div className="space-y-10">
-        {(['2m', '7m', '10m', '11m', 'case18'] as const).map((mark) => {
+        {(['10m', '15m', '20m', 'case18'] as const).map((mark) => {
           const variants = answers[mark] || [];
           if (variants.length === 0) return null;
           const meta = markMeta[mark];
