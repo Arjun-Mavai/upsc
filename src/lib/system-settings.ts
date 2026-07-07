@@ -17,7 +17,7 @@ export async function getTelemetryEnabled(): Promise<boolean> {
       .limit(1);
 
     if (row.length === 0) {
-      return false; // Default is disabled (fail-closed)
+      return true; // Default is enabled (fail-open)
     }
 
     return row[0].value === 'true';

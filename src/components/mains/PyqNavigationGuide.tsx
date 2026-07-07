@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Target, Sparkles, Filter, Layers, MousePointer2, ListTree, HelpCircle } from 'lucide-react';
+import { Target, Sparkles, Filter, MousePointer2, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import {
@@ -23,26 +23,6 @@ const STEPS = [
     desc: { 
       en: 'Click the target icon (top right) to switch between different exam years and papers seamlessly.', 
       hi: 'विभिन्न वर्षों और पेपर्स के बीच स्विच करने के लिए टारगेट आइकन (ऊपर दाएँ) पर क्लिक करें।' 
-    }
-  },
-  {
-    id: 'parts',
-    icon: Layers,
-    colorClass: 'text-pink-500 bg-pink-500/10 border-pink-500/20',
-    title: { en: 'Parts Filter', hi: 'खंड फ़िल्टर (Part A/B)' },
-    desc: { 
-      en: 'Filter questions by Part A or Part B of the syllabus.', 
-      hi: 'प्रश्नों को Part A या Part B के अनुसार छाँटें।' 
-    }
-  },
-  {
-    id: 'topics',
-    icon: ListTree,
-    colorClass: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
-    title: { en: 'Topic Filter', hi: 'विषय फ़िल्टर (Topics)' },
-    desc: { 
-      en: 'Click the circular flag icon next to parts to drill down into specific syllabus topics.', 
-      hi: 'विशिष्ट विषयों को चुनने के लिए पार्ट्स के बगल वाले गोल (फ़्लैग) आइकन पर क्लिक करें।' 
     }
   },
   {
@@ -223,7 +203,7 @@ export function PyqNavigationGuide({ themeDeep, triggerType = 'banner' }: { them
                   <div className="flex gap-2 relative">
                     <div className={cn(
                       "h-6 w-6 rounded-full flex items-center justify-center transition-all",
-                      activeStep === 3 ? "bg-sky-500 text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] scale-110" : themeDeep ? "bg-slate-800 text-slate-500" : "bg-slate-100 text-slate-400"
+                      activeStep === 2 ? "bg-sky-500 text-white shadow-[0_0_15px_rgba(14,165,233,0.5)] scale-110" : themeDeep ? "bg-slate-800 text-slate-500" : "bg-slate-100 text-slate-400"
                     )}>
                       <Sparkles className="h-3 w-3" />
                     </div>
@@ -258,52 +238,19 @@ export function PyqNavigationGuide({ themeDeep, triggerType = 'banner' }: { them
                   </div>
                 </div>
 
-                {/* Filters Area (Collapses on Step 4) */}
+                {/* Filters Area (Collapses on Step 2) */}
                 <motion.div
-                  animate={{ height: activeStep === 4 ? 0 : 'auto', opacity: activeStep === 4 ? 0 : 1 }}
+                  animate={{ height: activeStep === 2 ? 0 : 'auto', opacity: activeStep === 2 ? 0 : 1 }}
                   className="overflow-hidden mb-4"
                 >
                   <div className="space-y-3 pb-1">
-                    {/* Parts & Topic (Steps 1 & 2) */}
-                    <div className={cn(
-                      "p-2 rounded-xl border-2 transition-all flex flex-col gap-2",
-                      (activeStep === 1 || activeStep === 2) ? (activeStep === 1 ? "border-pink-400 bg-pink-500/10" : "border-emerald-400 bg-emerald-500/10") : "border-transparent"
-                    )}>
-                      <div className="flex gap-1 items-center">
-                        <div className={cn("h-4 px-2 rounded-full flex items-center justify-center text-[6px] font-black uppercase tracking-wider", activeStep === 1 ? "bg-pink-500 text-white" : themeDeep ? "bg-slate-700 text-slate-400" : "bg-slate-200 text-slate-500")}>PART A</div>
-                        <div className={cn("h-4 px-2 rounded-full flex items-center justify-center text-[6px] font-black uppercase tracking-wider", themeDeep ? "bg-slate-800 text-slate-500" : "bg-slate-100 text-slate-400")}>PART B</div>
-                        {/* Circular Flag Icon Mockup */}
-                        <div className={cn("h-4 w-4 rounded-full overflow-hidden flex flex-col ml-1 border transition-all", activeStep === 2 ? "border-emerald-400 scale-110 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "border-slate-300 dark:border-slate-600")}>
-                           <div className="w-full h-1/3 bg-orange-400"></div>
-                           <div className="w-full h-1/3 bg-white flex items-center justify-center">
-                             <div className="h-1 w-1 rounded-full border-[0.5px] border-blue-800"></div>
-                           </div>
-                           <div className="w-full h-1/3 bg-green-500"></div>
-                        </div>
-                      </div>
-                      
-                      <AnimatePresence>
-                        {activeStep === 2 && (
-                          <motion.div 
-                            initial={{ opacity: 0, height: 0 }} 
-                            animate={{ opacity: 1, height: 'auto' }} 
-                            exit={{ opacity: 0, height: 0 }}
-                            className={cn("h-6 w-full rounded flex items-center px-2", themeDeep ? "bg-slate-800" : "bg-slate-100")}
-                          >
-                            <div className={cn("text-[7px] font-bold text-emerald-500")}>
-                              All Topics (Syllabus topic-wise)
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
 
-                    {/* Marks (Step 3) */}
+                    {/* Marks (Step 1) */}
                     <div className={cn(
                       "p-2 rounded-xl border-2 transition-all flex gap-1",
-                      activeStep === 3 ? "border-orange-400 bg-orange-500/10" : "border-transparent"
+                      activeStep === 1 ? "border-orange-400 bg-orange-500/10" : "border-transparent"
                     )}>
-                       <div className={cn("h-5 px-2 rounded-full flex items-center justify-center text-[7px] font-black", activeStep === 3 ? "bg-orange-500 text-white" : themeDeep ? "bg-slate-800 text-slate-400" : "bg-slate-200 text-slate-500")}>ALL</div>
+                       <div className={cn("h-5 px-2 rounded-full flex items-center justify-center text-[7px] font-black", activeStep === 1 ? "bg-orange-500 text-white" : themeDeep ? "bg-slate-800 text-slate-400" : "bg-slate-200 text-slate-500")}>ALL</div>
                        <div className={cn("h-5 px-1.5 rounded-full flex items-center justify-center text-[7px] font-bold", themeDeep ? "bg-slate-800 text-slate-500" : "bg-slate-100 text-slate-400")}>10m</div>
                        <div className={cn("h-5 px-1.5 rounded-full flex items-center justify-center text-[7px] font-bold", themeDeep ? "bg-slate-800 text-slate-500" : "bg-slate-100 text-slate-400")}>15m</div>
                        <div className={cn("h-5 px-1.5 rounded-full flex items-center justify-center text-[7px] font-bold", themeDeep ? "bg-slate-800 text-slate-500" : "bg-slate-100 text-slate-400")}>20m</div>
@@ -329,9 +276,7 @@ export function PyqNavigationGuide({ themeDeep, triggerType = 'banner' }: { them
                   className="absolute z-50 text-slate-800 dark:text-white drop-shadow-lg"
                   animate={
                     activeStep === 0 ? { top: 12, right: 12 } :
-                    activeStep === 1 ? { top: 85, right: 120 } :
-                    activeStep === 2 ? { top: 85, right: 80 } :
-                    activeStep === 3 ? { top: 120, right: 150 } :
+                    activeStep === 1 ? { top: 75, right: 150 } :
                     { top: 12, right: 45 }
                   }
                   transition={{ type: "spring", stiffness: 100, damping: 20 }}
@@ -341,8 +286,7 @@ export function PyqNavigationGuide({ themeDeep, triggerType = 'banner' }: { them
                     className={cn(
                       "absolute -top-2 -left-2 h-8 w-8 rounded-full border-4 opacity-0 scale-50",
                       activeStep === 0 ? "border-amber-400" :
-                      activeStep === 1 ? "border-pink-400" :
-                      activeStep === 2 ? "border-orange-400" :
+                      activeStep === 1 ? "border-orange-400" :
                       "border-sky-400"
                     )}
                     animate={{ opacity: [0, 0.8, 0], scale: [0.5, 1.2, 1.5] }}

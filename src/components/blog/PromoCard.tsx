@@ -38,7 +38,7 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
           <div className="flex-1 space-y-1">
             <div className="flex items-center gap-2">
               <h3 className="font-display text-lg font-black tracking-tight text-white">
-                Ace UPSC 2026
+                Ace UPSC 
               </h3>
               {isPro && (
                 <span className="flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold tracking-wider text-amber-300 uppercase">
@@ -109,7 +109,7 @@ export function PromoCard({ user, variant = 'vertical', className }: PromoCardPr
       </div>
 
       <h3 className="font-display relative z-10 mb-2 text-xl font-bold tracking-tight">
-        Ace UPSC 2026
+        Ace UPSC 
       </h3>
 
       {isPro ? (

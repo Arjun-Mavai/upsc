@@ -41,6 +41,7 @@ import {
   LayoutDashboard,
   GraduationCap,
   Zap,
+  BookOpen,
   History,
   Info,
   BarChart2,
@@ -72,15 +73,19 @@ interface AppNavbarProps {
 // Helper type to handle both Store (camelCase) and API/Prop (snake_case) user shapes
 type UnifiedUser = StoreUser & PropUser;
 
+import { effectiveAccessGrants } from '@/lib/access-grants';
+
 // ✅ PERFORMANCE: Utility function to normalize user object (extracted from inline)
 const normalizeUser = (rawUser: UnifiedUser | null) => {
-  return rawUser
-    ? {
-        ...rawUser,
-        isSubscribed: rawUser.isSubscribed ?? rawUser.is_subscribed,
-        planTier: rawUser.planTier ?? rawUser.plan_tier,
-      }
-    : null;
+  if (!rawUser) return null;
+  const grants = effectiveAccessGrants(rawUser);
+  const isPro = grants.includes('upsc_mains') || grants.includes('upsc_pre') || rawUser.isSubscribed;
+  return {
+    ...rawUser,
+    isSubscribed: rawUser.isSubscribed ?? rawUser.is_subscribed,
+    planTier: rawUser.planTier ?? rawUser.plan_tier,
+    isPro,
+  };
 };
 
 // ✅ PERFORMANCE: Utility function to convert user to store format
@@ -89,6 +94,7 @@ const createUserToStore = (user: any) => ({
   role: user.role ?? undefined,
   isSubscribed: user.isSubscribed ?? user.is_subscribed ?? undefined,
   planTier: user.planTier ?? user.plan_tier ?? undefined,
+  accessGrants: user.accessGrants ?? undefined,
 });
 
 export function AppNavbar({ user: initialUser }: AppNavbarProps) {
@@ -174,16 +180,24 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
 
   // Effect 4: Handle session data from React Query
   useEffect(() => {
-    if (globalUser) return;
-
     if (sessionData) {
       if (sessionData.user) {
-        logger.info('Session restored successfully for:', {
-          category: 'auth',
-          user: sessionData.user,
-        });
+        // Sync user data to store if it differs or if not present
         const userToStore = createUserToStore(sessionData.user);
-        setUser(userToStore, true);
+        
+        // Only update store if critical data changed to avoid infinite loops
+        if (!globalUser || 
+            globalUser.planTier !== userToStore.planTier || 
+            globalUser.isSubscribed !== userToStore.isSubscribed ||
+            JSON.stringify(globalUser.accessGrants) !== JSON.stringify(userToStore.accessGrants)) {
+          logger.info('Session restored/updated successfully for:', {
+            category: 'auth',
+            user: sessionData.user,
+          });
+          setUser(userToStore, true);
+        } else if (authCheckStatus === 'idle' || authCheckStatus === 'loading') {
+          setAuthCheckStatus('checked');
+        }
       } else {
         logger.debug('No active session found during hydration.');
         setAuthCheckStatus('checked');
@@ -193,7 +207,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
       setAuthCheckStatus('checked');
     }
 
-    if (isSessionLoading) {
+    if (isSessionLoading && authCheckStatus === 'idle') {
       setAuthCheckStatus('loading');
     }
   }, [
@@ -368,11 +382,6 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                                 <span className="text-sm leading-none font-bold text-slate-900">
                                   {user.name}
                                 </span>
-                                {user.isPro && (
-                                  <span className="rounded border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-amber-700 uppercase">
-                                    Pro
-                                  </span>
-                                )}
                               </div>
                               <span className="mt-1 max-w-[180px] truncate text-xs text-slate-500">
                                 {user.email}
@@ -475,9 +484,46 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                               </SheetClose>
                             </div>
 
-                            {/* ✅ PYQ INSIGHTS DROPDOWN — Specifically positioned after Dashboard */}
+                            {/* ✅ PYQ INSIGHTS & MAINS DROPDOWNS — Specifically positioned after Dashboard */}
                             {item.name === 'Dashboard' && (
-                              <div className="px-0 py-1">
+                              <div className="px-0 py-1 space-y-2">
+                                {/* MAINS PREP HUB */}
+                                <Accordion type="single" collapsible className="w-full border-none">
+                                  <AccordionItem value="mains-prep" className="border-none">
+                                    <AccordionTrigger className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:no-underline active:bg-slate-100 [&[data-state=open]]:bg-slate-50">
+                                      <div className="flex items-center gap-3">
+                                        <Crown size={18} className="text-emerald-600" />
+                                        <span>Mains Prep Hub</span>
+                                      </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="pt-1 pb-2 pl-6 pr-2">
+                                      <div className="flex flex-col gap-1 border-l-2 border-slate-100 ml-2">
+                                        <SheetClose asChild>
+                                          <Link
+                                            href="/mains/syllabus"
+                                            prefetch={true}
+                                            className="mx-2 flex items-center gap-3 rounded-lg py-3 px-3 text-xs font-bold text-slate-600 transition-all hover:bg-emerald-50 hover:text-emerald-700 active:scale-95"
+                                          >
+                                            <BookOpen size={14} className="text-purple-500" />
+                                            Syllabus Deep-Dive
+                                          </Link>
+                                        </SheetClose>
+                                        <SheetClose asChild>
+                                          <Link
+                                            href="/mains/syllabus/pyq-library"
+                                            prefetch={true}
+                                            className="mx-2 flex items-center gap-3 rounded-lg py-3 px-3 text-xs font-bold text-slate-600 transition-all hover:bg-amber-50 hover:text-amber-700 active:scale-95"
+                                          >
+                                            <Database size={14} className="text-amber-500" />
+                                            Mains PYQ Library
+                                          </Link>
+                                        </SheetClose>
+                                      </div>
+                                    </AccordionContent>
+                                  </AccordionItem>
+                                </Accordion>
+
+                                {/* PYQ INSIGHTS */}
                                 <Accordion type="single" collapsible className="w-full border-none">
                                   <AccordionItem value="pyq-analysis" className="border-none">
                                     <AccordionTrigger className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:no-underline active:bg-slate-100 [&[data-state=open]]:bg-slate-50">
@@ -533,7 +579,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                     </div>
 
                     <div className="pt-3">
-                      {user?.isSubscribed && user.planTier === 'pro' ? (
+                      {user?.isPro ? (
                         <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 p-[1.5px] shadow-lg shadow-amber-200/40">
                           <div className="relative z-10 flex items-center gap-3 rounded-[11px] bg-slate-900 p-4 transition-all group-hover:bg-slate-800">
                             {/* Glossy overlay */}
@@ -546,7 +592,7 @@ export function AppNavbar({ user: initialUser }: AppNavbarProps) {
                             </div>
                             <div className="relative">
                               <h4 className="text-sm leading-tight font-black tracking-wider text-white uppercase">
-                                Pro Active
+                                PRO+ Active
                               </h4>
                               <p className="text-[10px] font-bold tracking-widest text-amber-500/80 uppercase">
                                 Premium Access Unlocked

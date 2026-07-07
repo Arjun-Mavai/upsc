@@ -97,8 +97,7 @@ export const verifyAuthInternal = cache(async (): Promise<AuthenticatedUser | nu
         tokenVersion,
         dbVersion: user.sessionVersion,
       });
-      // TEMP FIX: Bypass remote logout for now to avoid locking out the admin due to DB switches
-      // return { ...user, _mismatch: true };
+      return { ...user, _mismatch: true };
     }
 
     return user;

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookMarked, BookOpen, Filter, Moon, Sparkles, SunMedium, Target, SlidersHorizontal } from 'lucide-react';
+import { ArrowLeft, BookMarked, BookOpen, Filter, Moon, Sparkles, SunMedium, Target, SlidersHorizontal, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { MAIN_SYLLABUS_CARD_HUES, mainsSyllabusTileSkin } from '@/components/mains/mainsSyllabusTileSkin';
@@ -341,75 +341,59 @@ export function MainsSyllabusHubClient({
 
         <MainsSyllabusStructure hi={hi} />
 
-        <div className="mb-8">
+        <div className="mb-10">
           <Link
             href="/mains/syllabus/pyq-library"
             className={cn(
-              'flex items-center justify-between gap-4 overflow-hidden rounded-[2.25rem] px-5 py-4 transition-all duration-300 sm:rounded-[2.5rem] sm:py-5 interactive-tile',
-              mainsSyllabusTileSkin('sky', themeDeep).frame,
-              mainsSyllabusTileSkin('sky', themeDeep).rowHover
+              'group relative flex flex-col overflow-hidden rounded-[2.25rem] px-6 py-8 transition-all duration-500 sm:rounded-[3rem] sm:p-10 interactive-tile shadow-lg',
+              themeDeep 
+                ? 'bg-gradient-to-br from-sky-950/80 via-slate-900 to-slate-950 border-2 border-sky-900/50 hover:border-sky-700 shadow-black/50' 
+                : 'bg-gradient-to-br from-sky-50 via-white to-sky-50/50 border-2 border-sky-100 hover:border-sky-300 shadow-sky-100/50 hover:shadow-sky-200/50'
             )}
           >
-            <div className="flex min-w-0 items-start gap-3">
-              <span
-                className={cn(
-                  'mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl shadow-inner',
-                  themeDeep ? 'bg-black/30' : 'bg-white/80'
-                )}
-                aria-hidden
-              >
-                📑
-              </span>
-              <div className="min-w-0">
-                <p
-                  className={cn(
-                    'font-black text-base md:text-lg',
-                    hi ? 'font-[family-name:var(--font-pyq-dev)]' : 'font-[family-name:var(--font-pyq-serif)]',
-                    themeDeep ? 'text-slate-50' : 'text-slate-900'
-                  )}
-                >
-                  {hi ? 'UPSC मेंस PYQ लाइब्रेरी' : 'UPSC Mains PYQ Library'}
-                </p>
-                <p
-                  className={cn(
-                    'mt-0.5 text-sm opacity-85',
-                    hi ? 'font-[family-name:var(--font-pyq-dev)]' : 'font-[family-name:var(--font-pyq-serif)]',
-                    themeDeep ? 'text-slate-400' : 'text-slate-600'
-                  )}
-                >
-                  {hi
-                    ? 'सभी वर्षों के प्रश्नपत्र और 2 अलग-अलग मॉडल उत्तर'
-                    : 'All previous years\' papers & 2 distinct model answers'}
-                </p>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <span
-                    className={cn(
-                      'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide',
-                      themeDeep
-                        ? 'border-white/15 bg-black/25 text-amber-200'
-                        : 'border-amber-200/90 bg-amber-50 text-amber-900'
-                    )}
-                  >
-                    <Sparkles className="h-3 w-3 text-amber-500" />
-                    {hi ? 'सभी सॉल्व्ड' : '100% Solved'}
-                  </span>
-                  <span
-                    className={cn(
-                      'text-[11px] font-bold',
-                      themeDeep ? 'text-slate-500' : 'text-slate-500'
-                    )}
-                  >
-                    {hi ? '2 अलग-अलग स्टाइल उत्तर' : '2 distinct writing styles'}
-                  </span>
-                </div>
-              </div>
+            {/* Background embellishments */}
+            <div className="absolute -top-32 -right-32 h-72 w-72 rounded-full bg-sky-500/10 blur-3xl transition-transform duration-700 group-hover:scale-125" />
+            <div className="absolute -bottom-32 -left-32 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl transition-transform duration-700 group-hover:scale-125" />
+            
+            <div className="relative z-10 flex flex-col md:flex-row gap-8 md:items-center">
+               <div className="flex-1 space-y-5">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-3.5 py-1.5 text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 w-fit">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    {hi ? 'नया स्मार्ट अनुभव ✨' : 'New Smart Experience ✨'}
+                  </div>
+                  
+                  <h3 className={cn(
+                    'text-3xl sm:text-4xl font-black tracking-tight leading-tight',
+                    themeDeep ? 'text-white' : 'text-slate-900'
+                  )}>
+                    {hi ? 'UPSC मेंस PYQ लाइब्रेरी' : 'UPSC Mains PYQ Library'}
+                  </h3>
+                  
+                  <p className={cn(
+                    'text-sm sm:text-base font-semibold leading-relaxed max-w-xl',
+                    themeDeep ? 'text-sky-200/90' : 'text-slate-600'
+                  )}>
+                    {hi 
+                      ? 'सभी वर्षों के प्रश्नपत्र और 2 अलग-अलग मॉडल उत्तर अब आपकी उंगलियों पर। एक "Bird Eye View" में स्मार्ट फ़िल्टर्स के साथ इमर्सिव रीडिंग का अनुभव लें।' 
+                      : 'All previous years\' papers & 2 distinct model answers at your fingertips. Practice with smart filters in a seamless bird\'s eye view.'}
+                  </p>
+
+                  <div className="flex flex-wrap gap-2.5 pt-2">
+                    <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-wider", themeDeep ? "border-slate-700 bg-slate-800 text-slate-300" : "border-slate-200 bg-white text-slate-600")}>🎯 {hi ? 'वर्ष व पेपर' : 'Year & Paper'}</span>
+                    <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-wider", themeDeep ? "border-slate-700 bg-slate-800 text-slate-300" : "border-slate-200 bg-white text-slate-600")}>📑 {hi ? 'खंड व विषय' : 'Parts & Topics'}</span>
+                    <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-wider", themeDeep ? "border-slate-700 bg-slate-800 text-slate-300" : "border-slate-200 bg-white text-slate-600")}>✍️ {hi ? 'मार्क्स फ़िल्टर' : 'Marks Filter'}</span>
+                  </div>
+               </div>
+
+               <div className="flex md:justify-end">
+                 <div className={cn(
+                   "h-14 w-14 sm:h-20 sm:w-20 rounded-full flex items-center justify-center transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12 shadow-xl border-4",
+                   themeDeep ? "bg-sky-500/20 text-sky-400 border-sky-900" : "bg-sky-100 text-sky-600 border-white"
+                 )}>
+                   <ArrowRight className="h-6 w-6 sm:h-8 sm:w-8" />
+                 </div>
+               </div>
             </div>
-            <BookMarked
-              className={cn(
-                'h-9 w-9 shrink-0 opacity-85',
-                themeDeep ? 'text-sky-400' : 'text-sky-600'
-              )}
-            />
           </Link>
         </div>
 

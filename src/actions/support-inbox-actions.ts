@@ -26,6 +26,7 @@ export async function saveIncomingMessage({
   text,
   messageType = 'text',
   mediaUrl,
+  examType,
 }: {
   platform: 'whatsapp' | 'telegram';
   guestPhone: string;
@@ -33,20 +34,23 @@ export async function saveIncomingMessage({
   text: string;
   messageType?: 'text' | 'image' | 'interactive';
   mediaUrl?: string;
+  examType?: string;
 }) {
   try {
+    type ExamTypeEnum = 'upsc' | 'mppsc' | 'mppolice' | 'all';
+    const currentExam = (examType || process.env.NEXT_PUBLIC_EXAM_ID || 'upsc') as ExamTypeEnum;
     // Normalize phone: remove '+', spaces, etc.
     // For WhatsApp, this gives us the pure number (e.g., 91999...)
     // For Telegram, this gives us the numeric user ID
     const cleanPhone = guestPhone.replace(/\D/g, '');
     let isFirstMessage = false;
 
-    // 1. Find existing conversation for this phone/ID and platform
-    // Search using both normalized and raw formats to be safe
+    // 1. Find existing conversation for this phone/ID, platform, and examType
     let conv = await db.select().from(supportConversations)
       .where(
         and(
           eq(supportConversations.platform, platform),
+          eq(supportConversations.examType, currentExam),
           or(
             eq(supportConversations.guestPhone, cleanPhone),
             eq(supportConversations.guestPhone, guestPhone),
@@ -77,6 +81,7 @@ export async function saveIncomingMessage({
         guestId,
         guestName: guestName || 'Unknown User',
         guestPhone: cleanPhone, // Store normalized phone for consistency
+        examType: currentExam,
         unreadCount: 1,
         lastMessageAt: new Date(),
         humanActive: false,
@@ -134,7 +139,7 @@ export async function saveIncomingMessage({
   }
 }
 
-export async function saveOutgoingMessage(conversationId: string, text: string, sender: 'bot' | 'admin', messageId?: string) {
+export async function saveOutgoingMessage(conversationId: string, text: string, sender: 'bot' | 'admin', messageId?: string, mediaUrl?: string) {
   try {
     await db.insert(supportMessages).values({
       id: messageId || nanoid(),
@@ -142,6 +147,8 @@ export async function saveOutgoingMessage(conversationId: string, text: string, 
       sender,
       text,
       status: 'sent',
+      mediaUrl,
+      messageType: mediaUrl ? 'image' : 'text',
       createdAt: new Date(),
     });
 
@@ -187,10 +194,13 @@ export async function toggleHumanActive(conversationId: string, isActive: boolea
 export async function getConversations() {
   try {
     await assertAdmin();
+    type ExamTypeEnum = 'upsc' | 'mppsc' | 'mppolice' | 'all';
+    const currentExam = (process.env.NEXT_PUBLIC_EXAM_ID || 'upsc') as ExamTypeEnum;
     // SCALABILITY FIX: Limit to 100 most recent conversations to prevent slow loads.
     // If you need older conversations, we can implement server-side search/pagination later.
     const convs = await db.select()
       .from(supportConversations)
+      .where(eq(supportConversations.examType, currentExam))
       .orderBy(desc(supportConversations.lastMessageAt))
       .limit(100);
     return { success: true, conversations: convs };
@@ -225,7 +235,7 @@ export async function markAsRead(conversationId: string) {
   }
 }
 
-export async function sendAdminReply(conversationId: string, text: string, options?: { buttons?: { id: string, title: string }[] }) {
+export async function sendAdminReply(conversationId: string, text: string, options?: { buttons?: { id: string, title: string }[], mediaUrl?: string }) {
   try {
     await assertAdmin();
     const conv = await db.select().from(supportConversations).where(eq(supportConversations.id, conversationId)).limit(1).then(res => res[0]);
@@ -233,6 +243,7 @@ export async function sendAdminReply(conversationId: string, text: string, optio
 
     let apiSuccess = false;
     let metaMessageId: string | undefined = undefined;
+    let errorMessage = 'Failed to send via API';
 
     if (conv.platform === 'telegram') {
       const BOT_TOKEN = process.env.TELEGRAM_CONVERSATION_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
@@ -244,14 +255,24 @@ export async function sendAdminReply(conversationId: string, text: string, optio
           };
         }
 
-        const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        let method = 'sendMessage';
+        let body: any = {
+          chat_id: conv.guestPhone,
+          reply_markup
+        };
+        
+        if (options?.mediaUrl) {
+          method = 'sendPhoto';
+          body.photo = options.mediaUrl;
+          if (text) body.caption = text;
+        } else {
+          body.text = text;
+        }
+
+        const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            chat_id: conv.guestPhone, 
-            text,
-            reply_markup 
-          })
+          body: JSON.stringify(body)
         });
         if (res.ok) {
           apiSuccess = true;
@@ -260,6 +281,14 @@ export async function sendAdminReply(conversationId: string, text: string, optio
         } else {
           const errorText = await res.text();
           logger.error('Telegram Admin Reply API error', new Error(errorText), { category: 'telegram' });
+          try {
+            const errData = JSON.parse(errorText);
+            if (errData.description) {
+              errorMessage = `Telegram Error: ${errData.description}`;
+            }
+          } catch (e) {
+            // ignore parse error
+          }
         }
       }
     } else if (conv.platform === 'whatsapp') {
@@ -272,7 +301,11 @@ export async function sendAdminReply(conversationId: string, text: string, optio
           to: conv.guestPhone,
         };
 
-        if (options?.buttons && options.buttons.length > 0 && options.buttons.length <= 3) {
+        if (options?.mediaUrl) {
+          bodyPayload.type = 'image';
+          bodyPayload.image = { link: options.mediaUrl };
+          if (text) bodyPayload.image.caption = text;
+        } else if (options?.buttons && options.buttons.length > 0 && options.buttons.length <= 3) {
           bodyPayload.type = 'interactive';
           bodyPayload.interactive = {
             type: 'button',
@@ -304,15 +337,23 @@ export async function sendAdminReply(conversationId: string, text: string, optio
         } else {
           const errorText = await res.text();
           logger.error('WhatsApp Admin Reply API error', new Error(errorText), { category: 'api' });
+          try {
+            const errData = JSON.parse(errorText);
+            if (errData.error?.message) {
+              errorMessage = `WhatsApp Error: ${errData.error.message}`;
+            }
+          } catch (e) {
+            // ignore parse error
+          }
         }
       }
     }
 
     if (apiSuccess) {
-      await saveOutgoingMessage(conversationId, text, 'admin', metaMessageId);
+      await saveOutgoingMessage(conversationId, text, 'admin', metaMessageId, options?.mediaUrl);
       return { success: true };
     } else {
-      return { success: false, error: 'Failed to send via API' };
+      return { success: false, error: errorMessage };
     }
   } catch (error) {
     logger.error('Error sending admin reply', error, { category: 'api' });

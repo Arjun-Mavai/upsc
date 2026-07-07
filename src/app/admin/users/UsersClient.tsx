@@ -76,6 +76,21 @@ export default function UsersClient() {
   const [tab, setTab] = useState<TabFilter>('all');
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [showActionHelp, setShowActionHelp] = useState(false);
+  const [selectedConsent, setSelectedConsent] = useState<{
+    type: 'payment' | 'user';
+    name: string;
+    email: string;
+    phone: string;
+    consent: {
+      accepted?: boolean;
+      consentAccepted?: boolean;
+      ip?: string;
+      ipAddress?: string;
+      version?: string;
+      timestamp?: string;
+      userAgent?: string;
+    };
+  } | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -1032,6 +1047,36 @@ export default function UsersClient() {
                                     : 'No Password'}
                               </span>
                             )}
+                            {/* 🛡️ Consent Status */}
+                            {(() => {
+                              let consentObj = null;
+                              if (user.metadata) {
+                                try {
+                                  const metaObj = typeof user.metadata === 'string' ? JSON.parse(user.metadata) : user.metadata;
+                                  if (metaObj && metaObj.consent) {
+                                    consentObj = metaObj.consent;
+                                  }
+                                } catch {}
+                              }
+                              if (consentObj) {
+                                return (
+                                  <button
+                                    onClick={() => setSelectedConsent({
+                                      type: 'user',
+                                      name: user.name || '—',
+                                      email: user.email || '—',
+                                      phone: user.phone || '—',
+                                      consent: consentObj
+                                    })}
+                                    className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100 transition-all select-none cursor-pointer"
+                                    title="View consent signature & legal audit trail"
+                                  >
+                                    <Shield className="h-2.5 w-2.5 text-emerald-600" /> Consent
+                                  </button>
+                                );
+                              }
+                              return null;
+                            })()}
                             {user.role === 'admin' && (
                               <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700">
                                 ADMIN
@@ -1460,6 +1505,127 @@ Wish you all the best for your preparation! 👍`;
             )}
           </div>
         </>
+      )}
+
+      {/* ── Consent Audit Dialog ── */}
+      {selectedConsent && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 sm:p-0 transition-opacity">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+            
+            {/* Header */}
+            <div className="bg-slate-50 border-b border-slate-100 px-5 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                  <Shield className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-950">Consent Audit Record</h3>
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Clickwrap Consent Log</p>
+                </div>
+              </div>
+              <button type="button" aria-label="Close consent audit dialog" 
+                onClick={() => setSelectedConsent(null)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-5 space-y-4 text-sm">
+              <div className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-800">
+                <Check className="w-5 h-5 text-emerald-600 shrink-0" />
+                <div>
+                  <p className="font-bold">{selectedConsent.consent.accepted || selectedConsent.consent.consentAccepted ? 'Electronically Signed & Verified' : 'Consent Not Accepted'}</p>
+                  <p className="text-xs text-emerald-600/80">Captured via checkout modal clickwrap</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="grid grid-cols-[100px_1fr] gap-2 items-center text-xs">
+                  <span className="text-slate-500 font-semibold">Student Name:</span>
+                  <div className="flex bg-slate-50 px-2 py-1.5 rounded-md border border-slate-100">
+                    <span className="font-bold text-slate-800">{selectedConsent.name}</span>
+                  </div>
+                  
+                  <span className="text-slate-500 font-semibold">Email Auth:</span>
+                  <div className="flex bg-slate-50 px-2 py-1.5 rounded-md border border-slate-100">
+                    <span className="font-medium text-slate-800 break-all">{selectedConsent.email}</span>
+                  </div>
+
+                  <span className="text-slate-500 font-semibold">Phone:</span>
+                  <div className="flex bg-slate-50 px-2 py-1.5 rounded-md border border-slate-100">
+                    <span className="font-medium text-slate-800">{selectedConsent.phone}</span>
+                  </div>
+                </div>
+
+                <div className="h-px w-full bg-slate-100 my-2"></div>
+
+                <div className="grid grid-cols-[100px_1fr] gap-2 items-center text-[11px]">
+                  <span className="text-slate-500 font-semibold">IP Address:</span>
+                  <div className="flex bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                    <span className="font-bold text-slate-800 font-mono">{selectedConsent.consent.ip || selectedConsent.consent.ipAddress || 'unknown'}</span>
+                  </div>
+
+                  <span className="text-slate-500 font-semibold">Doc Version:</span>
+                  <div className="flex bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                    <span className="font-bold text-slate-800 font-mono">v{selectedConsent.consent.version || '1.2'}</span>
+                  </div>
+
+                  <span className="text-slate-500 font-semibold">Timestamp:</span>
+                  <div className="flex bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                    <span className="font-bold text-slate-800 font-mono">
+                      {selectedConsent.consent.timestamp 
+                        ? new Date(selectedConsent.consent.timestamp).toLocaleString('en-IN', {
+                          dateStyle: 'medium', timeStyle: 'long'
+                        }) 
+                        : 'unknown'}
+                    </span>
+                  </div>
+
+                  <span className="text-slate-500 font-semibold">User Agent:</span>
+                  <div className="flex bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                    <span className="text-slate-600 font-mono text-[9px] break-all leading-tight">
+                      {selectedConsent.consent.userAgent || 'unknown'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Legal Notice */}
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-blue-800 leading-relaxed font-medium">
+                    Under Section 10A of the Information Technology Act, 2000 (IT Act), agreements concluded through electronic means (including checkbox clickwrap consents) are legally valid, binding, and fully enforceable in a court of law.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="bg-slate-50 border-t border-slate-100 p-4 flex gap-2 justify-end">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="text-xs h-8 text-slate-600 border-slate-200 hover:bg-slate-100"
+                onClick={() => {
+                  navigator.clipboard.writeText(JSON.stringify(selectedConsent.consent, null, 2));
+                  toast.success('Consent Audit JSON copied');
+                }}
+              >
+                Copy Raw JSON
+              </Button>
+              <Button 
+                size="sm"
+                className="text-xs h-8 bg-slate-900 text-white hover:bg-slate-800"
+                onClick={() => setSelectedConsent(null)}
+              >
+                Close Record
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

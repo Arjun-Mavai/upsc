@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { mppscUsers, pricingConfig, payments } from '@/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, count } from 'drizzle-orm';
 import { PRICING_DEFAULTS } from '@/config/pricing';
 import { verifyAuth } from '@/lib/auth';
 import { v4 as uuidv4 } from 'uuid';
@@ -13,12 +13,14 @@ import crypto from 'crypto';
 import { z } from 'zod';
 import { sendTelegramNotification, escapeHTML } from '@/lib/tg-notify';
 import { notifyAdminOnPayment, notifyAdminOnEmailFailure } from '@/lib/admin-notify';
+import { sendLeadNotification } from '@/lib/telegram';
 import { verificationTokens } from '@/db/schema';
 import { render } from '@react-email/render';
 import WelcomeSetPasswordEmail from '@/components/emails/WelcomeSetPasswordEmail';
 import { appPath } from '@/lib/app-url';
 import { Resend } from 'resend';
 import { serializeAccessGrants } from '@/lib/access-grants';
+import { headers } from 'next/headers';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 💳 START PAYMENT (Register + Create Order)
@@ -31,6 +33,10 @@ const startPaymentSchema = z.object({
   source: z.string().optional(),
   planType: z.enum(['pro', 'upgrade', 'combo', 'mains']),
   examId: z.string().default('upsc'), // Added examId
+  consentAccepted: z.boolean().refine((val) => val === true, {
+    message: 'Consent to terms is mandatory to proceed',
+  }),
+  consentVersion: z.string().default('v1.2'),
 });
 
 interface StartPaymentInput extends z.infer<typeof startPaymentSchema> {}
@@ -51,8 +57,24 @@ export async function startPayment(input: StartPaymentInput) {
       };
     }
 
-    const { name, email, phone, source, planType, examId } = validatedInput.data;
+    const { name, email, phone, source, planType, examId, consentAccepted, consentVersion } = validatedInput.data;
     const normalizedEmail = email.toLowerCase().trim();
+
+    // 🌍 Retrieve IP and User Agent for consent audit trail
+    const reqHeaders = await headers();
+    const forwardedFor = reqHeaders.get('x-forwarded-for');
+    const ipAddress = forwardedFor 
+      ? forwardedFor.split(',')[0].trim() 
+      : reqHeaders.get('x-real-ip') || '127.0.0.1';
+    const userAgent = reqHeaders.get('user-agent') || 'unknown';
+
+    const consentInfo = {
+      accepted: consentAccepted,
+      version: consentVersion,
+      ip: ipAddress,
+      userAgent: userAgent,
+      timestamp: new Date().toISOString(),
+    };
 
     // ── PHASE 1: Find existing user by email
     const existingUser = await db.query.mppscUsers.findFirst({
@@ -85,7 +107,7 @@ export async function startPayment(input: StartPaymentInput) {
         .set({
           name: name.trim(),
           phone: phone.trim(),
-          metadata: { ...existingMeta, source },
+          metadata: { ...existingMeta, source, consent: consentInfo },
         })
         .where(eq(mppscUsers.id, existingUser.id));
       userId = existingUser.id;
@@ -100,10 +122,35 @@ export async function startPayment(input: StartPaymentInput) {
         password: tempPassword,
         isActive: false,
         role: 'user',
-        metadata: { source },
+        metadata: { source, consent: consentInfo },
         planTier: 'free',
         examType: 'upsc', // UPSC platform forces upsc type
       });
+    }
+
+    // Send Telegram Notification (Checkout Started)
+    try {
+      const formattedTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST';
+      const consentDetails = 
+        `\n\n🛡️ <b>Clickwrap Consent Captured:</b>\n` +
+        `• Accepted: ${consentAccepted ? '✅ Yes' : '❌ No'}\n` +
+        `• Version: <code>${consentVersion}</code>\n` +
+        `• IP Address: <code>${ipAddress}</code>\n` +
+        `• Device/UA: <code>${userAgent.slice(0, 100)}${userAgent.length > 100 ? '...' : ''}</code>\n` +
+        `• Time: <code>${formattedTime}</code>`;
+
+      await sendLeadNotification({
+        type: existingUser ? 'Returning Lead' : 'New Lead',
+        name: name.trim(),
+        email: normalizedEmail,
+        phone: phone.trim(),
+        plan: planType,
+        exam: 'upsc',
+        source: source || 'Direct',
+        status: `Initiated${consentDetails}`,
+      });
+    } catch (e) {
+      logger.error('Failed to send checkout started notification', e as Error);
     }
 
     // ── PHASE 2: Create Razorpay Order (Server-Side Pricing)
@@ -277,15 +324,40 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         where: eq(mppscUsers.id, userId),
       });
 
-      notifyAdminOnPayment({
-        type: 'failed',
-        userName: user?.name || 'Unknown',
-        userEmail: user?.email || 'N/A',
-        planTier: 'pro',
-        amountInRupees: amountInPaise / 100,
-        orderId: razorpay_order_id,
-        paymentId: razorpay_payment_id,
-      }).catch(() => {});
+      let source = 'Direct';
+      if (user?.metadata) {
+        try {
+          const meta = typeof user.metadata === 'string' ? JSON.parse(user.metadata) : user.metadata;
+          source = meta.source || 'Direct';
+        } catch (e) {}
+      }
+
+      const getAttemptCount = async () => {
+        try {
+          const [payCount] = await db
+            .select({ count: count() })
+            .from(payments)
+            .where(eq(payments.userId, userId));
+          return Number(payCount?.count ?? 0) + 1;
+        } catch (e) {
+          return 1;
+        }
+      };
+
+      getAttemptCount().then((attemptCount) => {
+        notifyAdminOnPayment({
+          type: 'failed',
+          userName: user?.name || 'Unknown',
+          userEmail: user?.email || 'N/A',
+          planTier: 'pro',
+          amountInRupees: amountInPaise / 100,
+          orderId: razorpay_order_id,
+          paymentId: razorpay_payment_id,
+          phone: user?.phone,
+          source: source,
+          attemptCount: attemptCount,
+        }).catch(() => {});
+      });
 
       return { error: 'Payment amount does not match any valid plan' };
     }
@@ -294,6 +366,28 @@ export async function verifyPayment(input: VerifyPaymentInput) {
     // On the UPSC platform, we always set the user's examType to 'upsc'
     // This prevents cross-platform access if the database is shared.
     const nextExamType: 'upsc' | 'mppsc' | 'mppolice' = 'upsc';
+
+    // Calculate expiry (6 months from now)
+    const expiresAt = new Date();
+    expiresAt.setMonth(expiresAt.getMonth() + 6);
+
+    const userForConsent = await db.query.mppscUsers.findFirst({
+      where: eq(mppscUsers.id, userId),
+    });
+
+    let consentFromMeta = null;
+    if (userForConsent?.metadata) {
+      try {
+        const metaObj = typeof userForConsent.metadata === 'string'
+          ? JSON.parse(userForConsent.metadata)
+          : userForConsent.metadata;
+        if (metaObj && metaObj.consent) {
+          consentFromMeta = metaObj.consent;
+        }
+      } catch (e) {
+        // safe catch
+      }
+    }
 
     await db.transaction(async (tx) => {
       await tx.insert(payments).values({
@@ -306,6 +400,16 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         planTier,
         status: 'captured',
         examType: 'upsc', // Log as UPSC payment
+        notes: JSON.stringify({
+          planType: order.notes?.planType || planTier,
+          consent: consentFromMeta || {
+            accepted: true,
+            version: 'v1.2',
+            timestamp: new Date().toISOString(),
+            ip: 'unknown_at_verify',
+            userAgent: 'unknown_at_verify'
+          }
+        }),
       });
 
       await tx
@@ -316,6 +420,7 @@ export async function verifyPayment(input: VerifyPaymentInput) {
           isActive: true,
           examType: nextExamType,
           accessGrants: serializeAccessGrants(['upsc_pre', 'upsc_mains']),
+          accessExpiresAt: expiresAt,
         })
         .where(eq(mppscUsers.id, userId));
     });
@@ -326,6 +431,20 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         where: eq(mppscUsers.id, userId),
       });
 
+      let source = 'Direct';
+      if (user?.metadata) {
+        try {
+          const meta = typeof user.metadata === 'string' ? JSON.parse(user.metadata) : user.metadata;
+          source = meta.source || 'Direct';
+        } catch (e) {}
+      }
+
+      const [payCount] = await db
+        .select({ count: count() })
+        .from(payments)
+        .where(eq(payments.userId, userId));
+      const attemptCount = Number(payCount?.count ?? 1);
+
       await notifyAdminOnPayment({
         type: 'new_payment',
         userName: user?.name || 'Unknown',
@@ -334,6 +453,9 @@ export async function verifyPayment(input: VerifyPaymentInput) {
         amountInRupees: amountInPaise / 100,
         orderId: razorpay_order_id,
         paymentId: razorpay_payment_id,
+        phone: user?.phone,
+        source: source,
+        attemptCount: attemptCount,
       });
 
       // 📧 Step 7: Send Welcome Email + Set Password Link (For New Users)

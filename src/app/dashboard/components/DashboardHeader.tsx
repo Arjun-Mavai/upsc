@@ -42,22 +42,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          {user.planTier === 'pro' ? (
-            <div className="group relative flex items-center gap-2 overflow-hidden rounded-xl border border-amber-200 p-[1px] shadow-sm">
-              <div className="absolute inset-0 animate-[shimmer_3s_linear_infinite] bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600" />
-              <div className="relative flex items-center gap-2 rounded-[11px] bg-white px-3 py-1.5 text-[8px] font-black tracking-[0.2em] text-amber-700 uppercase">
-                <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-50" />
-                PRO
-              </div>
-            </div>
-          ) : (
-            <Badge variant="outline" className="h-7 rounded-lg border-slate-200 bg-slate-50 text-[8px] font-black tracking-widest text-slate-500 uppercase">
-              {user.planTier || 'Free'}
-            </Badge>
-          )}
-          
-          <div className="h-6 w-px bg-slate-100" />
-          
+
           <button 
             onClick={() => router.push('/profile')}
             className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition-all hover:bg-slate-200 hover:text-slate-900 active:scale-90"

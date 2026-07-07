@@ -155,7 +155,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Loader2, X, Target } from 'lucide-react';
+import { Loader2, X, Send } from 'lucide-react';
 
 interface GuestEntryDialogProps {
   open: boolean;
@@ -218,33 +218,28 @@ export function GuestEntryDialog({
           style={dialogStyle}
         >
           {/* Header */}
-          <DialogHeader className="relative overflow-hidden border-b border-slate-100 bg-gradient-to-b from-slate-50/80 to-white px-6 py-6 sm:px-6">
+          <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white overflow-hidden">
             {/* Background Decor */}
-            <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-slate-200/40 blur-2xl" />
-            <div className="absolute -left-4 top-10 h-16 w-16 rounded-full bg-indigo-100/30 blur-xl" />
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 h-40 w-40 rounded-full bg-emerald-500/10 blur-3xl" />
 
             <button
               onClick={onExit}
-              className="absolute right-4 top-4 z-10 rounded-full bg-white/80 p-2 text-slate-500 shadow-sm backdrop-blur-md transition-all hover:bg-slate-100 hover:text-slate-800 active:scale-90"
+              className="absolute right-4 top-4 z-10 rounded-full bg-slate-800/80 p-2 text-slate-300 shadow-sm backdrop-blur-md transition-all hover:bg-slate-700 hover:text-white active:scale-90"
             >
               <X className="h-4 w-4 stroke-[2.5]" />
               <span className="sr-only">Close</span>
             </button>
 
-            <div className="relative z-10 flex flex-col gap-2">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white shadow-md shadow-slate-900/20">
-                  <Target className="h-5 w-5" />
-                </div>
-                <DialogTitle className="pr-4 text-left text-xl font-black text-slate-900 sm:text-2xl">
-                  Welcome to UPSC 2026!
-                </DialogTitle>
-              </div>
-              <DialogDescription className="text-left text-sm font-medium leading-relaxed text-slate-500">
-                Name and mobile help us show your detailed results.
+            <DialogHeader className="relative z-10 text-left">
+              <DialogTitle className="text-xl font-black tracking-tight flex items-center gap-2">
+                <Send className="h-5 w-5 text-emerald-400" />
+                Welcome to UPSC Prelims!
+              </DialogTitle>
+              <DialogDescription className="text-slate-400 font-medium text-sm pt-1">
+                Just name and mobile to get started
               </DialogDescription>
-            </div>
-          </DialogHeader>
+            </DialogHeader>
+          </div>
 
           {/* Form Content */}
           <div className="flex-1 space-y-3 px-6 py-5 sm:px-6">

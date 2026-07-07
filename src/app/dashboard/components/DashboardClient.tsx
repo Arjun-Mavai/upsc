@@ -75,7 +75,6 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
   const { language } = useSettingsStore();
   const isHindi = language === 'hi';
   
-  const [activeTab, setActiveTab] = React.useState<'study' | 'analytics'>('study');
   const [quote, setQuote] = React.useState(STUDY_QUOTES[0]);
 
   React.useEffect(() => {
@@ -135,7 +134,7 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                 return (
                   <div className="flex items-center gap-1.5 rounded-full bg-amber-400/10 px-3 py-1.5 text-[10px] font-black tracking-[0.2em] text-amber-400 border border-amber-400/20 shadow-2xl backdrop-blur-md">
                     <Crown size={12} className="fill-amber-400" />
-                    PRO
+                    PRO+
                   </div>
                 );
               })()}
@@ -194,44 +193,12 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
           </div>
         </div>
 
-        {/* PREMIUM SEGMENTED TABS */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex rounded-full bg-white p-1 shadow-sm border border-slate-200/60">
-            <button
-              onClick={() => setActiveTab('study')}
-              className={cn(
-                "flex items-center gap-2 rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer",
-                activeTab === 'study' 
-                  ? "bg-slate-900 text-white shadow-sm" 
-                  : "text-slate-500 hover:text-slate-900"
-              )}
-            >
-              <Compass size={12} />
-              <span>Study Hub</span>
-            </button>
-            
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={cn(
-                "flex items-center gap-2 rounded-full px-5 py-2.5 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer",
-                activeTab === 'analytics' 
-                  ? "bg-slate-900 text-white shadow-sm" 
-                  : "text-slate-500 hover:text-slate-900"
-              )}
-            >
-              <BarChart2 size={12} />
-              <span>My Progress</span>
-            </button>
-          </div>
-        </div>
-
         {/* TAB 1: STUDY HUB (LAUNCHPAD PORTAL) */}
-        {activeTab === 'study' && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               
-              {/* 1. PRELIMS PREP HUB */}
-              <LauncherCard
+              {/* 1. PRELIMS PREP HUB - HIDDEN TEMPORARILY */}
+              {/* <LauncherCard
                 title={isHindi ? 'प्रिलिम्स विजय पथ' : 'Prelims Victory Path'}
                 subtitle={isHindi ? 'तैयारी का आधार' : 'The Foundation'}
                 icon={<GraduationCap className="h-6 w-6" />}
@@ -249,8 +216,7 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                   description={isHindi ? 'सिलेबस टॉपिक्स की गहरी समझ, सक्रिय याद करने की पद्धति और एक्सपर्ट एक्सप्लेनेशन।' : 'Deep understanding of syllabus topics with active recall questions and expert explanations.'}
                   color="amber"
                 />
-
-              </LauncherCard>
+              </LauncherCard> */}
 
               {/* 2. MAINS PREP HUB */}
               <LauncherCard
@@ -308,14 +274,13 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                 />
               </LauncherCard>
 
-              {/* 4. STRATEGIES & RECORD KEEPER */}
-              <LauncherCard
+              {/* 4. STRATEGIES & RECORD KEEPER - HIDDEN TEMPORARILY */}
+              {/* <LauncherCard
                 title={isHindi ? 'रणनीति और इतिहास' : 'Strategy & History'}
                 subtitle={isHindi ? 'सफलता का रोडमैप' : 'Success Roadmap'}
                 icon={<Compass className="h-6 w-6" />}
                 color="purple"
               >
-
                 <LauncherLink
                   href="/blogs"
                   icon={<BookOpen size={18} />}
@@ -323,67 +288,10 @@ export function DashboardClient({ user, analyticsData, syllabusProgress, totalTo
                   description={isHindi ? 'अधिकारी बनने के टिप्स, बुकलिस्ट और सरकारी नोटिफिकेशन' : 'Explanatory posts, topper recommended tips and notifications'}
                   color="amber"
                 />
-              </LauncherCard>
+              </LauncherCard> */}
 
-            </div>
           </div>
-        )}
-
-        {/* TAB 2: MY PROGRESS & DETAILED ANALYTICS */}
-        {activeTab === 'analytics' && (
-          <div className="animate-in fade-in duration-300">
-            <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
-              {/* 📝 STUDY PROGRESS — LEFT HUB */}
-              <div className="lg:col-span-8 space-y-10">
-                <div className="space-y-2">
-                  <h1 className="text-3xl font-black tracking-tight text-slate-900 leading-tight">
-                    {isHindi ? 'प्रगति और रिपोर्ट' : 'My Performance Report'}
-                  </h1>
-                  <div className="flex items-center gap-3">
-                    <div className="h-1 w-10 rounded-full bg-indigo-500/20" />
-                    <p className="text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase">
-                      {isHindi ? 'परीक्षा परफॉरमेंस' : 'Exam Performance Insights'}
-                    </p>
-                  </div>
-                </div>
-                
-                <AnalyticsDashboardWrapper 
-                  analytics={analyticsData} 
-                  actionCard={<DashboardActionCard totalTests={analyticsData?.totalTests || 0} />}
-                />
-              </div>
-
-              {/* 📊 ANALYTICS — RIGHT SIDEBAR */}
-              <div className="lg:col-span-4 lg:pl-4">
-                <div className="lg:sticky lg:top-32 space-y-10">
-                  {/* Subject Mastery — Desktop Optimized */}
-                  <div className="hidden lg:block">
-                    <div className="mb-4 space-y-2">
-                      <h3 className="text-xs font-black tracking-[0.2em] text-slate-500 uppercase">
-                        {isHindi ? 'विषयवार प्रवीणता' : 'Subject Mastery'}
-                      </h3>
-                      <div className="h-1 w-6 rounded-full bg-indigo-500/20" />
-                    </div>
-                    <SubjectMasteryWidget mastery={analyticsData?.mastery || []} />
-                  </div>
-
-                  {/* Progress Pod */}
-                  <div className="group relative">
-                    <div className="mb-4 space-y-2">
-                      <h3 className="text-xs font-black tracking-[0.2em] text-slate-500 uppercase">
-                        {isHindi ? 'सिलेबस की प्रगति' : 'Syllabus Progress'}
-                      </h3>
-                      <div className="h-1 w-6 rounded-full bg-indigo-500/20" />
-                    </div>
-                    
-                    <SyllabusProgressWidget data={syllabusProgress} totalTopics={totalTopics} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
+        </div>
       </main>
     </div>
   );

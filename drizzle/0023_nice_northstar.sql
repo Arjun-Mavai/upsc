@@ -1,0 +1,1 @@
+ALTER TABLE `support_conversations` ADD `exam_type` text DEFAULT 'mppsc' NOT NULL;

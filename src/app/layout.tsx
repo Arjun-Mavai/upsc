@@ -15,6 +15,7 @@ import { GlobalLockModal } from '@/components/GlobalLockModal';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { Toaster } from '@/components/ui/sonner';
 import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary';
+import { PWARouteTracker } from '@/components/PWARouteTracker';
 import dynamic from 'next/dynamic';
 import { VersionManager } from '@/components/VersionManager';
 import Script from 'next/script';
@@ -247,6 +248,9 @@ export default async function RootLayout({
         <GlobalErrorBoundary>
           <PwaRegistry />
           <Providers>
+            <Suspense fallback={null}>
+              <PWARouteTracker />
+            </Suspense>
             <AppNavbar user={navbarUser} />
             <MainContentWrapper>{children}</MainContentWrapper>
 

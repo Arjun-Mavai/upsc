@@ -14,6 +14,7 @@ export interface User {
   isPro?: boolean; // Legacy flag support
   planTier?: 'free' | 'lite' | 'pro'; // Fixed: camelCase to match DB
   examType?: 'upsc' | 'mppsc' | 'mppolice' | 'all'; // Added examType
+  accessGrants?: string[];
 }
 
 interface SettingsState {

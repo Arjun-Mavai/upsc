@@ -29,7 +29,7 @@ export interface PricingData {
 }
 
 export const PRICING_DEFAULTS: PricingData = {
-  proPrice: 249,
+  proPrice: 499,
   proOriginalPrice: 999,
   litePrice: 99,
   liteOriginalPrice: 499,
@@ -39,8 +39,8 @@ export const PRICING_DEFAULTS: PricingData = {
   liteValidityText: 'Valid till UPSC Prelims 2026',
   upgradePrice: 150,
   upgradeOriginalPrice: 700,
-  urgencyText: 'Special pricing for first 100 UPSC aspirants',
-  urgencyTextHi: 'पहले 100 UPSC अभ्यर्थियों के लिए विशेष मूल्य',
+  urgencyText: 'Early Bird Offer — UPSC 🚀',
+  urgencyTextHi: 'अर्ली बर्ड ऑफर — UPSC 🚀',
   studentsBought: 47,
   mainsPrice: 999,
   mainsOriginalPrice: 1999,
@@ -68,15 +68,13 @@ export interface PlanFeatureWithIcon extends PlanFeature {
  */
 export const PRO_FEATURES: PlanFeatureWithIcon[] = [
   { en: 'Prelims PYQ Papers (2020-2025)', hi: 'प्रीलिम्स PYQ पेपर्स (2020-2025)', icon: 'Target' },
-  { en: 'UPSC Mains Expert Library (GS1 - GS4)', hi: 'UPSC मेन्स एक्सपर्ट लाइब्रेरी (GS1 - GS4)', icon: 'BookOpen' },
+  { en: 'Write Mains Answers Like a Topper (GS1-GS4)', hi: 'टॉपर की तरह मेन्स आंसर लिखें (GS1-GS4)', icon: 'BookOpen' },
   { 
     en: 'Expert Wisdom (Verdict, Logic, Topper Intro)', 
     hi: 'विशेषज्ञ व्याख्याएं (फैसला, तर्क, टॉपर भूमिका)', 
     icon: 'Sparkles' 
   },
   { en: 'Subject-Wise & Year-Wise Organised PYQs', hi: 'विषय-वार और वर्ष-वार व्यवस्थित PYQs', icon: 'LayoutGrid' },
-  { en: 'Instant Mode: Logic Behind Every Option', hi: 'इंस्टेंट मोड: हर विकल्प के पीछे का तर्क', icon: 'Zap' },
-  { en: 'Personal Test History & Analytics Dashboard', hi: 'व्यक्तिगत टेस्ट हिस्ट्री और एनालिटिक्स', icon: 'History' },
   // { en: 'Premium PYQ Analysis & Insights', hi: 'प्रीमियम PYQ विश्लेषण और इनसाइट्स', icon: 'TrendingUp' }, // hidden for now
 ];
 

@@ -1126,6 +1126,10 @@ export const supportConversations = sqliteTable('support_conversations', {
   lastMessageAt: integer('last_message_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
+  // Exam type segregation
+  examType: text('exam_type', { enum: ['upsc', 'mppsc', 'mppolice', 'all'] })
+    .default('mppsc') // Old ones were MPPSC
+    .notNull(),
 }, (table) => ({
   guestPhoneIdx: index('idx_support_conv_guest_phone_upsc').on(table.guestPhone),
   lastMessageAtIdx: index('idx_support_conv_last_msg_upsc').on(table.lastMessageAt),

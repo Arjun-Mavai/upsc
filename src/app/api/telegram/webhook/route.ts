@@ -98,12 +98,17 @@ export async function POST(req: Request) {
             ]
           ]
         };
-      } else if (textContent === '/mains') {
-        responseText = `🔥 *Mains Syllabus Hub:*\nNot a traditional PDF dump! Get deep structural clarity mapped directly to the syllabus tree.`;
+      } else if (textContent === '/mains' || textContent === 'mains') {
+        responseText = `🔥 *Mains Gyankosh (UPSC):*\n\nHumara focus notes ya PDFs ke dump par bilkul nahi hai! Hum aapko UPSC Mains Syllabus ke har ek keyword ka deep structural analysis aur uske PYQs ka exact mapping dete hain.\n\nExplore here: 🔗 https://upsc.zenscroll.app/mains`;
         inlineKeyboard = {
           inline_keyboard: [[{ text: 'Chat with Human', callback_data: 'SUPPORT_EN' }]]
         };
-      } else if (textContent === '/prelims') {
+      } else if (textContent === '/syllabus' || textContent === 'syllabus') {
+        responseText = `📚 *UPSC Syllabus Hub:*\n\nSyllabus aur PYQ ki understanding UPSC clear karne ki sabse badi seedhi hai. Yahan aapko proper topic-wise breakup aur questions ka integration milega, koi random notes nahi.\n\nStart your journey: 🔗 https://upsc.zenscroll.app/syllabus`;
+        inlineKeyboard = {
+          inline_keyboard: [[{ text: 'Chat with Human', callback_data: 'SUPPORT_EN' }]]
+        };
+      } else if (textContent === '/prelims' || textContent === 'prelims') {
         responseText = `🎯 *Prelims Intelligence:*\nSystematically organized (Year-wise, Unit-wise) PYQ analytics and retention mnemonics. No rote learning.`;
         inlineKeyboard = {
           inline_keyboard: [[{ text: 'Chat with Human', callback_data: 'SUPPORT_EN' }]]
@@ -447,13 +452,13 @@ export async function POST(req: Request) {
 
         // Alert Admin via Telegram
         await sendHumanRequestTelegramNotification(
-          `🚨 *Human Support Requested (UPSC)!* 🚨\n\n` +
-          `👤 *Student:* ${guestName}\n` +
-          `💬 *Chat ID:* ${chatId}\n` +
-          `🔵 *Platform:* Telegram Bot\n` +
-          `📌 *Issue Type:* ${issueType}\n` +
-          `⏰ *Time:* ${formattedTime}\n\n` +
-          `⚡ _Please reply via the Admin Support Inbox._`
+          `🚨 <b>Human Support Requested (UPSC)!</b> 🚨\n\n` +
+          `👤 <b>Student:</b> ${guestName}\n` +
+          `💬 <b>Chat ID:</b> ${chatId}\n` +
+          `🔵 <b>Platform:</b> Telegram Bot\n` +
+          `📌 <b>Issue Type:</b> ${issueType}\n` +
+          `⏰ <b>Time:</b> ${formattedTime}\n\n` +
+          `⚡ <i>Please reply via the Admin Support Inbox.</i>`
         );
       }
       else if (data === 'FDBK_EXC' || data === 'FDBK_AVG') {

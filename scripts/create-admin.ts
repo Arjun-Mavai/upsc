@@ -1,41 +1,33 @@
-import { db } from '../src/db';
-import { mppscUsers } from '../src/db/schema';
-import { v4 as uuidv4 } from 'uuid';
-import bcrypt from 'bcryptjs';
-import { eq } from 'drizzle-orm';
+import { config } from 'dotenv';
+config({ path: '.env' });
+config({ path: '.env.local', override: true });
 
-async function main() {
-  const email = 'arju@gmail.com';
-  const passwordStr = 'Arjun@123';
-  
-  // Check if user exists
-  const existing = await db.select().from(mppscUsers).where(eq(mppscUsers.email, email)).limit(1);
-  
-  const hashedPassword = await bcrypt.hash(passwordStr, 10);
+import { db } from '../src/db/index';
+import { mppscUsers as users } from '../src/db/schema';
+import { hash } from 'bcryptjs';
 
-  if (existing.length > 0) {
-    console.log(`User ${email} already exists. Updating to admin + upsc...`);
-    await db.update(mppscUsers).set({
+async function run() {
+  const passwordHash = await hash('ZenAdmin@123', 10);
+  await db.insert(users).values({
+    id: 'local_admin_2026',
+    name: 'Zen Admin',
+    email: 'admin@zenscroll.app',
+    phone: '9999999999',
+    password: passwordHash,
+    role: 'admin',
+    planTier: 'combo',
+    isSubscribed: true,
+    accessGrants: '["upsc_pre", "upsc_mains"]',
+  }).onConflictDoUpdate({
+    target: users.email,
+    set: {
+      password: passwordHash,
       role: 'admin',
-      examType: 'upsc',
-      password: hashedPassword, // Reset password
-      isActive: true,
-      deletedAt: null
-    }).where(eq(mppscUsers.email, email));
-    console.log('Updated successfully!');
-  } else {
-    console.log(`Creating new user ${email}...`);
-    await db.insert(mppscUsers).values({
-      id: uuidv4(),
-      email,
-      name: 'Arjun',
-      password: hashedPassword,
-      role: 'admin',
-      examType: 'upsc',
-      isActive: true
-    });
-    console.log('Created successfully!');
-  }
+      planTier: 'combo',
+      accessGrants: '["upsc_pre", "upsc_mains"]'
+    }
+  });
+  console.log('✅ Admin user created/updated in local DB with Mains Access!');
+  process.exit(0);
 }
-
-main().catch(console.error);
+run().catch(console.error);

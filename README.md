@@ -1482,3 +1482,14 @@ import { CANONICAL_TEST_IDS } from "@/lib/pyq-constants";
 3. Touch only what you must. Clean up only your own mess.
 
 4. Define success criteria. Loop until verified.
+
+---
+
+## 🔐 Local Admin Credentials
+
+These credentials are used to access the admin dashboard in the **Local Environment** (`mppsc_local_dev.db`).
+
+- **Email**: `admin@zenscroll.app`
+- **Password**: `ZenAdmin@123`
+- **Role**: `admin`
+- **Access**: `Combo` (Full Access)

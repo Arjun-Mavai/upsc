@@ -60,7 +60,7 @@ export const DesktopNavigation = memo(function DesktopNavigation({
         })}
       
       {/* User Badge */}
-      {user && user.isSubscribed && user.planTier === 'pro' ? (
+      {user && user.isPro ? (
         /* Pro Badge — Premium Gold/Amber Gradient style */
         <div className="group relative overflow-hidden rounded-full p-[1px]">
           {/* Animated Gradient Border */}
@@ -70,7 +70,7 @@ export const DesktopNavigation = memo(function DesktopNavigation({
             <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-50" />
             <Sparkles size={12} className="relative z-10 fill-amber-400 text-amber-400" />
             <span className="relative z-10 text-[10px] font-black tracking-widest uppercase">
-              Pro
+              PRO+
             </span>
           </div>
         </div>
@@ -90,7 +90,7 @@ export const DesktopNavigation = memo(function DesktopNavigation({
           {/* Static Rainbow Gradient for 'Award Winning' look - Only animate opacity/scale on hover if needed */}
           <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 opacity-80 transition-opacity duration-300 group-hover:opacity-100" />
           <Link
-            href="/upgrade"
+            href="/pricing"
             className="relative flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2 text-sm font-bold text-white transition-all duration-200 hover:bg-slate-800 hover:shadow-lg hover:shadow-purple-500/20"
           >
             <Sparkles size={14} className="fill-white/20 text-yellow-400" />

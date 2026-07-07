@@ -35,6 +35,7 @@ export async function getCurrentUser() {
       role: user.role ?? undefined,
       examType: user.examType ?? 'mppsc', // Added examType
       accessExpiresAt: user.accessExpiresAt ?? undefined,
+      accessGrants: user.accessGrants ?? undefined,
     },
   };
 }
@@ -147,11 +148,19 @@ export async function loginUserAction(formData: LoginParams) {
       return { error: 'Invalid credentials' };
     }
 
+    // ── Increment session version for Single Device Login ────────
+    const newSessionVersion = (user.sessionVersion || 0) + 1;
+    await db
+      .update(mppscUsers)
+      .set({ sessionVersion: newSessionVersion })
+      .where(eq(mppscUsers.id, user.id));
+
     // ── Sign JWT Token ──────────────────────────────────────────
     const payload = {
       userId: user.id,
       email: user.email,
       role: user.role,
+      sessionVersion: newSessionVersion,
     };
 
     const { signToken } = await import('@/lib/jwt');
@@ -182,6 +191,7 @@ export async function loginUserAction(formData: LoginParams) {
         role: user.role ?? undefined,
         examType: user.examType ?? 'mppsc', // Added examType
         accessExpiresAt: user.accessExpiresAt ?? undefined,
+        accessGrants: user.accessGrants ?? undefined,
       },
     };
   } catch (error) {

@@ -70,7 +70,13 @@ export function OverallWeightage({
             percentage: totalQuestions > 0 ? Math.round((count / totalQuestions) * 100) : 0,
           };
         })
-        .sort((a, b) => b.count - a.count);
+        .sort((a, b) => {
+          const aIsFree = FREE_SUBJECTS.includes(a.name);
+          const bIsFree = FREE_SUBJECTS.includes(b.name);
+          if (aIsFree && !bIsFree) return -1;
+          if (!aIsFree && bIsFree) return 1;
+          return b.count - a.count;
+        });
     }
 
     // For non-UPSC mode or when exam context isn't fully established
@@ -95,7 +101,13 @@ export function OverallWeightage({
             : 0,
       }))
       .filter((sub) => sub.count > 0 || examSubjects.includes(sub.name))
-      .sort((a, b) => b.count - a.count);
+      .sort((a, b) => {
+        const aIsFree = FREE_SUBJECTS.includes(a.name);
+        const bIsFree = FREE_SUBJECTS.includes(b.name);
+        if (aIsFree && !bIsFree) return -1;
+        if (!aIsFree && bIsFree) return 1;
+        return b.count - a.count;
+      });
   }, [simpleSubjectStats, totalQuestions, examId, isUPSC]);
 
   const toggleMainSection = () => {

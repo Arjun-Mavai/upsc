@@ -80,11 +80,13 @@ export function effectiveAccessGrants(user: UserAccessInfo): string[] {
   // ── Legacy fallback: no grants column, derive from plan_tier ──
   const tier = String(user.planTier ?? (user as any).plan_tier ?? 'free').toLowerCase();
 
-  if (tier === 'combo') return [ACCESS_PRE, ACCESS_MAINS];
-  if (tier === 'mains') return [ACCESS_MAINS]; // Mains-only → NO Pre access
-  if (tier === 'lite' || tier === 'pro') return [ACCESS_PRE];
-  // isSubscribed=true but no tier info → safe default: Pre access
-  if (user.isSubscribed) return [ACCESS_PRE];
+  // In UPSC, there is only one premium plan (combo), so any paid tier grants full access
+  if (tier === 'combo' || tier === 'pro' || tier === 'lite' || tier === 'mains') {
+    return [ACCESS_PRE, ACCESS_MAINS];
+  }
+  
+  // isSubscribed=true but no tier info → safe default: Full access for UPSC
+  if (user.isSubscribed) return [ACCESS_PRE, ACCESS_MAINS];
 
   return [];
 }

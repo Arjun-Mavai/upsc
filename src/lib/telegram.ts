@@ -82,7 +82,7 @@ export async function sendHumanRequestTelegramNotification(message: string) {
       body: JSON.stringify({
         chat_id: CHAT_ID,
         text: message,
-        parse_mode: 'Markdown', // Using Markdown here since webhook routes format human alerts in Markdown
+        parse_mode: 'HTML', // Changed to HTML to prevent parsing errors
       }),
       signal: controller.signal,
     });
@@ -146,7 +146,7 @@ export async function sendTelegramEventNotification(message: string) {
 }
 
 interface LeadNotificationInput {
-  type: 'New Lead' | 'Returning Lead' | 'Registration' | 'Admin Grant';
+  type: 'New Lead' | 'Returning Lead' | 'Registration' | 'Admin Grant' | 'Checkout Started';
   name: string | null | undefined;
   email: string;
   phone?: string | null | undefined;
@@ -191,5 +191,5 @@ export async function sendLeadNotification(input: LeadNotificationInput) {
     `⏱️ Time: ${formattedTime} IST\n\n` +
     `⚠️ <i>Status: ${status || 'System Logged'}</i>`;
 
-  return sendTelegramNotification(message);
+  return sendTelegramEventNotification(message);
 }

@@ -77,7 +77,7 @@ export function MainsPremiumMarketing({ onClose }: MainsPremiumMarketingProps) {
       <div className="mb-8 flex justify-center">
         <div className="relative inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2">
           <span className="text-xs font-bold text-amber-900 uppercase tracking-tight">
-            {hi ? 'अर्ली बर्ड ऑफर — UPSC 2027 🚀' : 'Early Bird Offer — UPSC 2027 🚀'}
+            {hi ? 'अर्ली बर्ड ऑफर — UPSC 🚀' : 'Early Bird Offer — UPSC 🚀'}
           </span>
         </div>
       </div>

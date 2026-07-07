@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SyllabusLockMainsModal } from '@/features/mains/components/SyllabusLockMainsModal';
 
-type Topic = { id: string; titleHi: string; titleEn: string; unitId: string; paperId?: string; paperNumber?: number };
+type Topic = { id: string; titleHi: string; titleEn: string; unitId: string; paperId?: string; paperNumber?: number; unitPart?: string; unitNumber?: number; };
 
 type ContentShape = {
   conceptHi: string;
@@ -22,6 +22,7 @@ type ContentShape = {
   keyTermsHi?: string | null;
   keyTermsEn?: string | null;
   richPayload?: Record<string, unknown> | null;
+  linkedPyqs?: { id: string, year: number, marks: number, questionHi: string, questionEn: string | null }[];
 };
 
 export function MainsTopicContentClient({
@@ -151,8 +152,46 @@ export function MainsTopicContentClient({
       />
     );
 
+  const pyqSection = content.linkedPyqs && content.linkedPyqs.length > 0 ? (
+    <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 py-10 px-5 md:px-10">
+      <div className="max-w-4xl mx-auto">
+        <div className="inline-flex items-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-6">
+          <FileQuestion className="h-4 w-4" />
+          {lang === 'hi' ? 'इस टॉपिक से पूछे गए प्रश्न (PYQ)' : 'Previous Year Questions from this Topic'}
+        </div>
+        <ul className="space-y-4">
+          {content.linkedPyqs.map(q => (
+            <li key={q.id} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <span className="inline-block rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-1 text-[10px] font-black tracking-widest text-slate-600 dark:text-slate-400 uppercase">
+                  Mains {q.year}
+                </span>
+                <span className="inline-block rounded-md bg-sky-100 dark:bg-sky-900/30 px-2 py-1 text-[10px] font-black tracking-widest text-sky-700 dark:text-sky-400 uppercase">
+                  {q.marks} {lang === 'hi' ? 'अंक' : 'Marks'}
+                </span>
+              </div>
+              <p className="text-[15px] font-bold text-slate-900 dark:text-slate-100 leading-relaxed font-[family-name:var(--font-pyq-dev)]">
+                {q.questionHi}
+              </p>
+              {q.questionEn && (
+                <p className="mt-2 text-[14px] font-medium text-slate-600 dark:text-slate-400 leading-relaxed font-[family-name:var(--font-pyq-serif)]">
+                  {q.questionEn}
+                </p>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  ) : null;
+
   if (!vaultLocked) {
-    return inner;
+    return (
+      <div className="flex-1 overflow-y-auto">
+        {inner}
+        {pyqSection}
+      </div>
+    );
   }
 
   const hi = lang === 'hi';

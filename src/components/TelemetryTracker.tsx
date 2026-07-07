@@ -29,5 +29,22 @@ export function TelemetryTracker() {
     };
   }, [pathname, searchParams]);
 
+  // 🖨️ Track when user tries to Print or Export to PDF (Cmd+P / Ctrl+P / Print Button)
+  useEffect(() => {
+    const handleBeforePrint = () => {
+      const url = window.location.pathname + window.location.search;
+      trackAction('🖨️ Page Print / PDF Export', {
+        type: 'action',
+        path: url,
+        actionDetails: `User triggered Print / PDF Export on: ${url}`,
+      });
+    };
+
+    window.addEventListener('beforeprint', handleBeforePrint);
+    return () => {
+      window.removeEventListener('beforeprint', handleBeforePrint);
+    };
+  }, []);
+
   return null;
 }
