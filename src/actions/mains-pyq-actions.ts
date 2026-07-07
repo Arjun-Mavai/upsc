@@ -87,16 +87,11 @@ export async function importMainsPyqPaperJson(rawText: string) {
 
   try {
   const stats = await db.transaction(async (tx) => {
-    const currentExam = process.env.NEXT_PUBLIC_EXAM_ID || 'upsc';
     const dupes = await tx
       .select()
       .from(mainsPyqPapers)
       .where(
-        and(
-          eq(mainsPyqPapers.examType, currentExam),
-          eq(mainsPyqPapers.examYear, parsed.examYear), 
-          eq(mainsPyqPapers.paperNumber, parsed.paperNumber)
-        )
+        and(eq(mainsPyqPapers.examYear, parsed.examYear), eq(mainsPyqPapers.paperNumber, parsed.paperNumber))
       )
       .orderBy(desc(mainsPyqPapers.createdAt));
 
@@ -110,7 +105,6 @@ export async function importMainsPyqPaperJson(rawText: string) {
       await tx.insert(mainsPyqPapers).values({
         id: paperId,
         slug,
-        examType: currentExam,
         examYear: parsed.examYear,
         paperNumber: parsed.paperNumber,
         examLabel: parsed.examLabel,
@@ -239,7 +233,6 @@ export async function listMainsPyqPapers() {
   await assertAdmin();
   
   // Single optimized query for papers and their question counts
-  const currentExam = process.env.NEXT_PUBLIC_EXAM_ID || 'upsc';
   const papers = await db
     .select({
       paper: mainsPyqPapers,
@@ -247,7 +240,6 @@ export async function listMainsPyqPapers() {
     })
     .from(mainsPyqPapers)
     .leftJoin(mainsPyqQuestions, eq(mainsPyqQuestions.paperId, mainsPyqPapers.id))
-    .where(eq(mainsPyqPapers.examType, currentExam))
     .groupBy(mainsPyqPapers.id)
     .orderBy(desc(mainsPyqPapers.examYear), mainsPyqPapers.paperNumber);
 
@@ -290,10 +282,7 @@ export async function getMainsPyqDetailedOverview() {
     await assertAdmin();
     
     // 1. Fetch all papers
-    const currentExam = process.env.NEXT_PUBLIC_EXAM_ID || 'upsc';
-    const papers = await db.select().from(mainsPyqPapers)
-      .where(eq(mainsPyqPapers.examType, currentExam))
-      .orderBy(desc(mainsPyqPapers.examYear), mainsPyqPapers.paperNumber);
+    const papers = await db.select().from(mainsPyqPapers).orderBy(desc(mainsPyqPapers.examYear), mainsPyqPapers.paperNumber);
     
     // 2. Optimized: Get total question counts per paper in one query
     const totalCounts = await db
@@ -1024,10 +1013,8 @@ export async function adminGetCAQuestionsToProcess(examYear: number, paperNumber
   try {
     await assertAdmin();
     // First find the paper
-    const currentExam = process.env.NEXT_PUBLIC_EXAM_ID || 'upsc';
     const paper = await db.query.mainsPyqPapers.findFirst({
       where: and(
-        eq(mainsPyqPapers.examType, currentExam),
         eq(mainsPyqPapers.examYear, examYear),
         eq(mainsPyqPapers.paperNumber, paperNumber)
       )
@@ -1069,10 +1056,8 @@ export async function adminGetCAQuestionsToProcess(examYear: number, paperNumber
 export async function adminGetCAStats(examYear: number, paperNumber: number, part: string = 'ALL') {
   try {
     await assertAdmin();
-    const currentExam = process.env.NEXT_PUBLIC_EXAM_ID || 'upsc';
     const paper = await db.query.mainsPyqPapers.findFirst({
       where: and(
-        eq(mainsPyqPapers.examType, currentExam),
         eq(mainsPyqPapers.examYear, examYear),
         eq(mainsPyqPapers.paperNumber, paperNumber)
       )
