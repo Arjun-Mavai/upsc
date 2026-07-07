@@ -144,7 +144,7 @@ function getDiagnostics(parsed: Record<string, unknown>, ma: ReturnType<typeof e
     parsed.modelanswers
   ) as Record<string, unknown> | undefined;
   const maKeys = findMaObj && typeof findMaObj === 'object' ? Object.keys(findMaObj) : [];
-  return `[Diagnostics — schema_version: "${parsed.schema_version ?? 'missing'}", has_model_answers_hi: ${!!parsed.model_answers_hi}, has_model_answers: ${!!parsed.model_answers}, root_keys: [${rootKeys.join(', ')}], ma_subkeys: [${maKeys.join(', ')}], counted_models: 2m=${ma['2m'].length}, 7m=${ma['7m'].length}, 10m=${ma['10m'].length}, 11m=${ma['11m'].length}, case18=${ma.case18.length}]`;
+  return `[Diagnostics — schema_version: "${parsed.schema_version ?? 'missing'}", has_model_answers_hi: ${!!parsed.model_answers_hi}, has_model_answers: ${!!parsed.model_answers}, root_keys: [${rootKeys.join(', ')}], ma_subkeys: [${maKeys.join(', ')}], counted_models: 10m=${ma['10m'].length}, 15m=${ma['15m'].length}, 20m=${ma['20m'].length}, case18=${ma.case18.length}]`;
 }
 
 function validateModelShape(
@@ -152,10 +152,9 @@ function validateModelShape(
   ma: ReturnType<typeof extractModelAnswersForValidation>
 ): string | null {
   const hasModels =
-    ma['2m'].length +
-      ma['7m'].length +
-      ma['10m'].length +
-      ma['11m'].length +
+    ma['10m'].length +
+      ma['15m'].length +
+      ma['20m'].length +
       ma.case18.length >
     0;
   // Relaxing strict paper-based validation for UPSC as the schema is evolving to 10m / 15m format.
@@ -269,7 +268,7 @@ export async function adminApplyMainsContentJson(topicId: string, rawText: strin
       // Validate English model answers (bilingual requirement, relaxed for Paper 5 & 6)
       const maEn = extractModelAnswersEn(parsed);
       const needEn =
-        maEn['2m'].length + maEn['7m'].length + maEn['10m'].length + maEn['11m'].length + maEn.case18.length;
+        maEn['10m'].length + maEn['15m'].length + maEn['20m'].length + maEn.case18.length;
       
       if (needEn === 0 && !isPaper5or6) {
         return {

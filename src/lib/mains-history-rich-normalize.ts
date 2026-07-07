@@ -166,14 +166,11 @@ export function extractModelAnswersForValidation(parsed: Record<string, unknown>
     parsed.modelanswers
   ) as ModelBlock | Record<string, unknown> | undefined;
   if (!raw || typeof raw !== 'object') {
-    return { '2m': [], '7m': [], '10m': [], '11m': [], '15m': [], '20m': [], case18: [] };
+    return { '10m': [], '15m': [], '20m': [], case18: [] };
   }
   const o = raw as Record<string, unknown>;
   return {
-    '2m': normalizeVariantArr(o['2m'] ?? o['2'] ?? o['2-mark'] ?? o['2marks'] ?? o['2_marks']),
-    '7m': normalizeVariantArr(o['7m'] ?? o['7'] ?? o['7-mark'] ?? o['7marks'] ?? o['7_marks']),
     '10m': normalizeVariantArr(o['10m'] ?? o['10'] ?? o['10-mark'] ?? o['10marks'] ?? o['10_marks']),
-    '11m': normalizeVariantArr(o['11m'] ?? o['11'] ?? o['11-mark'] ?? o['11marks'] ?? o['11_marks']),
     '15m': normalizeVariantArr(o['15m'] ?? o['15'] ?? o['15-mark'] ?? o['15marks'] ?? o['15_marks']),
     '20m': normalizeVariantArr(o['20m'] ?? o['20'] ?? o['20-mark'] ?? o['20marks'] ?? o['20_marks']),
     case18: normalizeVariantArr(o.case18 ?? o['18'] ?? o['18m'] ?? o['case_18'] ?? o['case-18']),
@@ -187,14 +184,13 @@ export function extractModelAnswersEn(parsed: Record<string, unknown>): ModelBlo
     parsed.modelanswers_en
   ) as Record<string, unknown> | undefined;
   if (!raw || typeof raw !== 'object') {
-    return { '2m': [], '7m': [], '10m': [], '11m': [], '15m': [], '20m': [], case18: [] };
+    return { '10m': [], '15m': [], '20m': [], case18: [] };
   }
   const o = raw as Record<string, unknown>;
   return {
-    '2m': normalizeVariantArr(o['2m'] ?? o['2'] ?? o['2-mark'] ?? o['2marks'] ?? o['2_marks']),
-    '7m': normalizeVariantArr(o['7m'] ?? o['7'] ?? o['7-mark'] ?? o['7marks'] ?? o['7_marks']),
     '10m': normalizeVariantArr(o['10m'] ?? o['10'] ?? o['10-mark'] ?? o['10marks'] ?? o['10_marks']),
-    '11m': normalizeVariantArr(o['11m'] ?? o['11'] ?? o['11-mark'] ?? o['11marks'] ?? o['11_marks']),
+    '15m': normalizeVariantArr(o['15m'] ?? o['15'] ?? o['15-mark'] ?? o['15marks'] ?? o['15_marks']),
+    '20m': normalizeVariantArr(o['20m'] ?? o['20'] ?? o['20-mark'] ?? o['20marks'] ?? o['20_marks']),
     case18: normalizeVariantArr(o.case18 ?? o['18'] ?? o['18m'] ?? o['case_18'] ?? o['case-18']),
   };
 }
@@ -206,13 +202,10 @@ export function extractModelAnswers(parsed: Record<string, unknown>, lang: 'hi' 
   // If English model answers are empty, fallback to Hindi model answers as backup
   if (!isHi) {
     const hasAnyEn =
-      primary['2m'].length +
-      primary['7m'].length +
-      primary['10m'].length +
-      (primary['11m'] ? primary['11m'].length : 0) +
+      (primary['10m'] ? primary['10m'].length : 0) +
       (primary['15m'] ? primary['15m'].length : 0) +
       (primary['20m'] ? primary['20m'].length : 0) +
-      primary.case18.length > 0;
+      (primary.case18 ? primary.case18.length : 0) > 0;
     if (!hasAnyEn) {
       return extractModelAnswersForValidation(parsed);
     }
